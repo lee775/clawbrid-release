@@ -1,0 +1,43 @@
+{
+  "name": "clawbrid",
+  "version": "1.0.0",
+  "description": "Claude Code Bridge - Connect Claude Code to Slack & Telegram with a monitoring dashboard",
+  "main": "src/index.js",
+  "files": [
+    "bin/",
+    "src/"
+  ],
+  "bin": {
+    "clawbrid": "bin/clawbrid.js"
+  },
+  "scripts": {
+    "start": "node bin/clawbrid.js",
+    "dev": "node bin/clawbrid.js"
+  },
+  "keywords": [
+    "claude",
+    "claude-code",
+    "slack",
+    "telegram",
+    "bridge",
+    "chatbot",
+    "ai",
+    "monitor"
+  ],
+  "author": "lee775",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lee775/clawbrid-release.git"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@slack/bolt": "^4.1.0",
+    "dotenv": "^16.4.0",
+    "node-cron": "^4.2.1",
+    "node-telegram-bot-api": "^0.66.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

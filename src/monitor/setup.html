@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>ClawBrid - 초기 설정</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+      background: #0f1117; color: #e1e4e8;
+      height: 100vh; display: flex; flex-direction: column;
+    }
+    .header {
+      padding: 24px 32px; background: #161b22; border-bottom: 1px solid #30363d;
+      text-align: center; -webkit-app-region: drag;
+    }
+    .header h1 { font-size: 24px; color: #58a6ff; margin-bottom: 4px; }
+    .header p { font-size: 13px; color: #8b949e; }
+    .content { flex: 1; overflow-y: auto; padding: 24px 32px; }
+
+    /* 스텝 */
+    .steps { display: flex; justify-content: center; gap: 8px; margin-bottom: 28px; }
+    .step-dot {
+      width: 10px; height: 10px; border-radius: 50%; background: #30363d; transition: all 0.3s;
+    }
+    .step-dot.active { background: #58a6ff; width: 28px; border-radius: 5px; }
+    .step-dot.done { background: #3fb950; }
+
+    .step-panel { display: none; }
+    .step-panel.active { display: block; animation: fadeIn 0.3s; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; } }
+
+    .section { margin-bottom: 24px; }
+    .section-title { font-size: 16px; font-weight: 600; color: #c9d1d9; margin-bottom: 16px; }
+    .section-desc { font-size: 13px; color: #8b949e; margin-bottom: 16px; line-height: 1.6; }
+
+    .field { margin-bottom: 14px; }
+    .field label { display: block; font-size: 13px; color: #8b949e; margin-bottom: 6px; }
+    .field input, .field textarea {
+      width: 100%; padding: 10px 14px; background: #0d1117; border: 1px solid #30363d;
+      border-radius: 6px; color: #c9d1d9; font-size: 13px; font-family: 'Cascadia Code', monospace;
+      outline: none; transition: border 0.2s;
+    }
+    .field input:focus, .field textarea:focus { border-color: #58a6ff; }
+    .field textarea { resize: vertical; min-height: 60px; }
+    .field .hint { font-size: 11px; color: #484f58; margin-top: 4px; }
+
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; background: #161b22; border: 1px solid #30363d;
+      border-radius: 8px; margin-bottom: 12px; cursor: pointer;
+    }
+    .toggle-row:hover { border-color: #484f58; }
+    .toggle-label { font-size: 14px; font-weight: 500; }
+    .toggle-label span { font-size: 20px; margin-right: 10px; }
+    .toggle {
+      width: 44px; height: 24px; border-radius: 12px; background: #30363d;
+      position: relative; transition: background 0.2s; flex-shrink: 0;
+    }
+    .toggle.on { background: #58a6ff; }
+    .toggle::after {
+      content: ''; position: absolute; top: 3px; left: 3px;
+      width: 18px; height: 18px; border-radius: 50%; background: #fff;
+      transition: transform 0.2s;
+    }
+    .toggle.on::after { transform: translateX(20px); }
+
+    .btn-row { display: flex; justify-content: space-between; padding: 20px 32px; border-top: 1px solid #30363d; background: #161b22; }
+    .btn {
+      padding: 10px 28px; border-radius: 6px; font-size: 14px; font-weight: 500;
+      cursor: pointer; border: 1px solid #30363d; transition: all 0.15s;
+    }
+    .btn-secondary { background: #21262d; color: #c9d1d9; }
+    .btn-secondary:hover { background: #30363d; }
+    .btn-primary { background: #238636; color: #fff; border-color: #238636; }
+    .btn-primary:hover { background: #2ea043; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .check-result { margin-top: 8px; font-size: 12px; padding: 8px 12px; border-radius: 6px; }
+    .check-ok { background: #3fb95020; color: #3fb950; }
+    .check-fail { background: #f8514920; color: #f85149; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <h1>⚡ ClawBrid</h1>
+  <p>Claude Code Bridge 초기 설정</p>
+</div>
+
+<div class="content">
+  <div class="steps" id="step-dots"></div>
+
+  <!-- Step 1: Claude Code 확인 -->
+  <div class="step-panel active" data-step="0">
+    <div class="section">
+      <div class="section-title">1. Claude Code 연결 확인</div>
+      <div class="section-desc">
+        ClawBrid는 Claude Code CLI를 사용합니다.<br>
+        먼저 Claude Code가 설치되어 있고 인증이 완료되어 있는지 확인합니다.
+      </div>
+      <button class="btn btn-secondary" onclick="checkAll()" id="btn-check">🔍 환경 확인</button>
+      <div id="claude-check-result"></div>
+    </div>
+    <div class="section">
+      <div class="section-title">작업 디렉터리</div>
+      <div class="field">
+        <label>기본 작업 디렉터리</label>
+        <input type="text" id="cfg-workdir" value="C:/">
+        <div class="hint">Claude Code가 작업할 기본 경로</div>
+      </div>
+      <div class="field">
+        <label>추가 접근 디렉터리 (쉼표 구분)</label>
+        <input type="text" id="cfg-adddirs" value="C:/, D:/">
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: 플랫폼 선택 -->
+  <div class="step-panel" data-step="1">
+    <div class="section">
+      <div class="section-title">2. 연결할 플랫폼 선택</div>
+      <div class="section-desc">Slack, Telegram 또는 둘 다 연결할 수 있습니다.</div>
+
+      <div class="toggle-row" onclick="togglePlatform('slack')">
+        <div class="toggle-label"><span>💬</span> Slack</div>
+        <div class="toggle" id="toggle-slack"></div>
+      </div>
+      <div class="toggle-row" onclick="togglePlatform('telegram')">
+        <div class="toggle-label"><span>📱</span> Telegram</div>
+        <div class="toggle" id="toggle-telegram"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: Slack 설정 -->
+  <div class="step-panel" data-step="2">
+    <div class="section">
+      <div class="section-title">3. Slack 설정</div>
+      <div class="section-desc">
+        <a href="https://api.slack.com/apps" style="color:#58a6ff;">api.slack.com/apps</a>에서 앱을 생성하고 토큰을 입력하세요.<br>
+        필요 권한: chat:write, files:read, app_mentions:read, im:history, im:read, im:write<br>
+        Socket Mode를 활성화하고 App-Level Token을 생성하세요.
+      </div>
+      <div class="field">
+        <label>Bot Token (xoxb-...)</label>
+        <input type="password" id="cfg-slack-bot" placeholder="xoxb-...">
+      </div>
+      <div class="field">
+        <label>Signing Secret</label>
+        <input type="password" id="cfg-slack-secret" placeholder="Signing Secret">
+      </div>
+      <div class="field">
+        <label>App Token (xapp-...)</label>
+        <input type="password" id="cfg-slack-app" placeholder="xapp-...">
+        <div class="hint">Socket Mode 활성화 후 생성되는 앱 레벨 토큰</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4: Telegram 설정 -->
+  <div class="step-panel" data-step="3">
+    <div class="section">
+      <div class="section-title">4. Telegram 설정</div>
+      <div class="section-desc">
+        <a href="https://t.me/BotFather" style="color:#58a6ff;">@BotFather</a>에서 봇을 생성하고 토큰을 입력하세요.
+      </div>
+      <div class="field">
+        <label>Bot Token</label>
+        <input type="password" id="cfg-tg-token" placeholder="123456:ABC-DEF...">
+      </div>
+      <div class="field">
+        <label>관리자 User ID</label>
+        <input type="text" id="cfg-tg-admin" placeholder="숫자 ID (예: 8700817067)">
+        <div class="hint">Telegram에서 @userinfobot에게 메시지 보내면 ID 확인 가능</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 5: 완료 -->
+  <div class="step-panel" data-step="4">
+    <div class="section" style="text-align:center; padding-top: 40px;">
+      <div style="font-size:48px; margin-bottom:20px;">🎉</div>
+      <div class="section-title" style="font-size:20px;">설정 완료!</div>
+      <div class="section-desc" style="font-size:14px;">
+        ClawBrid가 준비되었습니다.<br>
+        대시보드에서 실시간으로 상태를 모니터링할 수 있습니다.
+      </div>
+      <div id="summary" style="text-align:left; max-width:400px; margin:20px auto; padding:16px; background:#161b22; border-radius:8px; font-size:13px;"></div>
+    </div>
+  </div>
+</div>
+
+<div class="btn-row">
+  <button class="btn btn-secondary" id="btn-back" onclick="goBack()" style="margin-right:auto;">← 돌아가기</button>
+  <button class="btn btn-secondary" id="btn-prev" onclick="prevStep()" disabled>← 이전</button>
+  <button class="btn btn-primary" id="btn-next" onclick="nextStep()">다음 →</button>
+</div>
+
+<script src="tauri-bridge.js"></script>
+<script>
+
+let currentStep = 0;
+const platforms = { slack: false, telegram: false };
+
+// 총 스텝 계산 (동적)
+function getSteps() {
+  const steps = ['claude', 'platform'];
+  if (platforms.slack) steps.push('slack');
+  if (platforms.telegram) steps.push('telegram');
+  steps.push('done');
+  return steps;
+}
+
+function renderDots() {
+  const steps = getSteps();
+  document.getElementById('step-dots').innerHTML = steps.map((_, i) => {
+    let cls = 'step-dot';
+    if (i === currentStep) cls += ' active';
+    else if (i < currentStep) cls += ' done';
+    return `<div class="${cls}"></div>`;
+  }).join('');
+}
+
+function showStep(idx) {
+  const steps = getSteps();
+  // 스텝 매핑: 실제 panel data-step과 매칭
+  const panelMap = { claude: 0, platform: 1, slack: 2, telegram: 3, done: 4 };
+  document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
+  const targetPanel = panelMap[steps[idx]];
+  document.querySelector(`[data-step="${targetPanel}"]`).classList.add('active');
+
+  document.getElementById('btn-prev').disabled = idx === 0;
+  const btn = document.getElementById('btn-next');
+  if (idx === steps.length - 1) {
+    btn.textContent = '🚀 시작하기';
+    btn.onclick = finishSetup;
+    showSummary();
+  } else {
+    btn.textContent = '다음 →';
+    btn.onclick = nextStep;
+  }
+  renderDots();
+}
+
+function nextStep() {
+  const steps = getSteps();
+  if (currentStep < steps.length - 1) { currentStep++; showStep(currentStep); }
+}
+
+function prevStep() {
+  if (currentStep > 0) { currentStep--; showStep(currentStep); }
+}
+
+function togglePlatform(name) {
+  platforms[name] = !platforms[name];
+  document.getElementById(`toggle-${name}`).classList.toggle('on', platforms[name]);
+  renderDots();
+}
+
+function checkAll() {
+  const el = document.getElementById('claude-check-result');
+  let html = '';
+
+  // Claude Code 확인
+  if (IS_ELECTRON) {
+    try {
+      const version = bridge.execSync('claude --version').trim();
+      html += `<div class="check-result check-ok">✅ Claude Code: ${version}</div>`;
+    } catch {
+      html += `<div class="check-result check-fail">❌ Claude Code 미설치<br><code>npm install -g @anthropic-ai/claude-code</code></div>`;
+    }
+
+    // PM2 확인 및 자동 설치
+    try {
+      const pm2ver = bridge.execSync('pm2 --version').trim();
+      html += `<div class="check-result check-ok" style="margin-top:6px;">✅ PM2: v${pm2ver}</div>`;
+    } catch {
+      html += `<div class="check-result check-fail" style="margin-top:6px;">⏳ PM2 설치 중...</div>`;
+      el.innerHTML = html;
+      try {
+        bridge.execSync('npm install -g pm2', { timeout: 60000 });
+        const pm2ver = bridge.execSync('pm2 --version').trim();
+        html = html.replace('⏳ PM2 설치 중...', `✅ PM2: v${pm2ver} (자동 설치됨)`);
+        html = html.replace('check-fail', 'check-ok');
+      } catch (e) {
+        html = html.replace('⏳ PM2 설치 중...', `❌ PM2 자동 설치 실패. 수동 설치 필요:<br><code>npm install -g pm2</code>`);
+      }
+    }
+  } else {
+    html += `<div class="check-result check-ok">✅ Tauri 모드 - 환경 체크 스킵</div>`;
+  }
+
+  el.innerHTML = html;
+}
+
+function showSummary() {
+  const parts = [];
+  parts.push(`<strong>작업 디렉터리:</strong> ${document.getElementById('cfg-workdir').value}`);
+  if (platforms.slack) parts.push('💬 <strong>Slack</strong> 연결됨');
+  if (platforms.telegram) parts.push('📱 <strong>Telegram</strong> 연결됨');
+  if (!platforms.slack && !platforms.telegram) parts.push('⚠️ 플랫폼 미선택 (나중에 설정 가능)');
+  document.getElementById('summary').innerHTML = parts.join('<br>');
+}
+
+function finishSetup() {
+  const cfg = {
+    claude: {
+      workDir: document.getElementById('cfg-workdir').value || 'C:/',
+      addDirs: document.getElementById('cfg-adddirs').value.split(',').map(s => s.trim()).filter(Boolean),
+      maxTurns: 50,
+      timeout: 600000,
+      confirmBeforeEdit: true,
+    },
+    slack: {
+      enabled: platforms.slack,
+      botToken: document.getElementById('cfg-slack-bot').value,
+      signingSecret: document.getElementById('cfg-slack-secret').value,
+      appToken: document.getElementById('cfg-slack-app').value,
+    },
+    telegram: {
+      enabled: platforms.telegram,
+      botToken: document.getElementById('cfg-tg-token').value,
+      adminUser: document.getElementById('cfg-tg-admin').value,
+      allowedUsers: [],
+    },
+    monitor: { autoStart: true, minimizeToTray: true },
+    cleanup: { maxAgeDays: 7, intervalHours: 24 },
+  };
+  bridge.setupComplete(cfg);
+}
+
+// 기존 설정 로드 (재설정 시)
+async function loadExistingConfig() {
+  try {
+    const cfg = await bridge.loadConfig();
+    if (!cfg || Object.keys(cfg).length === 0) return;
+
+    if (cfg.claude) {
+      if (cfg.claude.workDir) document.getElementById('cfg-workdir').value = cfg.claude.workDir;
+      if (cfg.claude.addDirs) document.getElementById('cfg-adddirs').value = cfg.claude.addDirs.join(', ');
+    }
+    if (cfg.slack) {
+      if (cfg.slack.enabled) { platforms.slack = true; document.getElementById('toggle-slack').classList.add('on'); }
+      if (cfg.slack.botToken) document.getElementById('cfg-slack-bot').value = cfg.slack.botToken;
+      if (cfg.slack.signingSecret) document.getElementById('cfg-slack-secret').value = cfg.slack.signingSecret;
+      if (cfg.slack.appToken) document.getElementById('cfg-slack-app').value = cfg.slack.appToken;
+    }
+    if (cfg.telegram) {
+      if (cfg.telegram.enabled) { platforms.telegram = true; document.getElementById('toggle-telegram').classList.add('on'); }
+      if (cfg.telegram.botToken) document.getElementById('cfg-tg-token').value = cfg.telegram.botToken;
+      if (cfg.telegram.adminUser) document.getElementById('cfg-tg-admin').value = cfg.telegram.adminUser;
+    }
+    renderDots();
+  } catch (e) {
+    console.log('No existing config to load:', e.message);
+  }
+}
+
+function goBack() {
+  bridge.goBack();
+}
+
+// 초기화
+loadExistingConfig();
+renderDots();
+</script>
+</body>
+</html>
