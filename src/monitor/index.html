@@ -241,6 +241,100 @@
 
     /* 크론 폼 숨김 */
     .cron-form-hidden { display: none !important; }
+
+    /* ── 채팅 ── */
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 140px);
+    }
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 0;
+    }
+    .chat-bubble {
+      max-width: 85%;
+      padding: 10px 14px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      line-height: 1.6;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+    .chat-bubble.user {
+      background: #1f6feb;
+      color: #fff;
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+    .chat-bubble.assistant {
+      background: #21262d;
+      color: #c9d1d9;
+      margin-right: auto;
+      border-bottom-left-radius: 4px;
+    }
+    .chat-bubble.error {
+      background: #f8514922;
+      color: #f85149;
+      margin-right: auto;
+      border-bottom-left-radius: 4px;
+    }
+    .chat-bubble code {
+      background: #0d1117;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 12px;
+    }
+    .chat-bubble pre {
+      background: #0d1117;
+      padding: 10px;
+      border-radius: 6px;
+      overflow-x: auto;
+      margin: 6px 0;
+      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-size: 12px;
+    }
+    .chat-input-area {
+      display: flex;
+      gap: 8px;
+      padding: 12px 0 0;
+      border-top: 1px solid #30363d;
+    }
+    .chat-input-area textarea {
+      flex: 1;
+      padding: 10px 12px;
+      background: #0d1117;
+      border: 1px solid #30363d;
+      border-radius: 8px;
+      color: #c9d1d9;
+      font-size: 13px;
+      font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+      resize: none;
+      min-height: 42px;
+      max-height: 120px;
+    }
+    .chat-input-area textarea:focus { outline: none; border-color: #58a6ff; }
+    .chat-input-area .btn { align-self: flex-end; min-width: 60px; }
+    .chat-status {
+      font-size: 11px;
+      color: #8b949e;
+      padding: 4px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .chat-status .spinner {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 2px solid #30363d;
+      border-top-color: #58a6ff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
@@ -259,6 +353,7 @@
   <div class="tab" data-tab="logs-slack">로그: Slack</div>
   <div class="tab" data-tab="logs-telegram">로그: Telegram</div>
   <div class="tab" data-tab="cron">크론 작업</div>
+  <div class="tab" data-tab="chat">채팅</div>
 </div>
 
 <div class="content">
@@ -341,6 +436,25 @@
       <tbody id="cron-table"></tbody>
     </table>
     <div id="cron-empty" style="color:#8b949e; text-align:center; padding:40px; display:none;">등록된 크론 작업이 없습니다.</div>
+  </div>
+
+  <!-- 채팅 -->
+  <div class="tab-panel" id="panel-chat">
+    <div class="chat-container">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <div class="section-title" style="margin-bottom:0;">💬 Claude 채팅</div>
+        <button class="btn" onclick="resetChat()" style="font-size:11px;">새 대화</button>
+      </div>
+      <div class="chat-messages" id="chat-messages"></div>
+      <div id="chat-status" class="chat-status" style="display:none;">
+        <span class="spinner"></span> <span id="chat-status-text">응답 생성 중...</span>
+      </div>
+      <div class="chat-input-area">
+        <textarea id="chat-input" placeholder="메시지를 입력하세요... (Shift+Enter: 줄바꿈)" rows="1"></textarea>
+        <button class="btn success" id="chat-send-btn" onclick="sendChat()">전송</button>
+        <button class="btn danger" id="chat-stop-btn" onclick="stopChat()" style="display:none;">중단</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -582,6 +696,92 @@ async function runCronNow(id) {
 }
 
 // 크론은 PM2 cron-worker에서 실행 (대시보드는 조회/관리만)
+
+// ── 채팅 ──
+let chatSessionId = null;
+let chatRunning = false;
+
+const chatInput = document.getElementById('chat-input');
+chatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendChat();
+  }
+});
+// textarea 자동 높이
+chatInput.addEventListener('input', () => {
+  chatInput.style.height = 'auto';
+  chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
+});
+
+function addChatBubble(role, text) {
+  const container = document.getElementById('chat-messages');
+  const bubble = document.createElement('div');
+  bubble.className = `chat-bubble ${role}`;
+  if (role === 'assistant') {
+    bubble.innerHTML = renderMarkdown(text);
+  } else {
+    bubble.textContent = text;
+  }
+  container.appendChild(bubble);
+  container.scrollTop = container.scrollHeight;
+}
+
+function renderMarkdown(text) {
+  // 간단한 마크다운 렌더링 (코드 블록, 인라인 코드, 볼드, 이탤릭)
+  let html = escapeHtml(text);
+  // 코드 블록
+  html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => `<pre><code>${code.trim()}</code></pre>`);
+  // 인라인 코드
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+  // 볼드
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  // 이탤릭
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  return html;
+}
+
+function setChatUI(running) {
+  chatRunning = running;
+  document.getElementById('chat-send-btn').style.display = running ? 'none' : '';
+  document.getElementById('chat-stop-btn').style.display = running ? '' : 'none';
+  document.getElementById('chat-status').style.display = running ? 'flex' : 'none';
+  chatInput.disabled = running;
+}
+
+async function sendChat() {
+  const text = chatInput.value.trim();
+  if (!text || chatRunning) return;
+
+  addChatBubble('user', text);
+  chatInput.value = '';
+  chatInput.style.height = 'auto';
+  setChatUI(true);
+
+  try {
+    const result = await bridge.runClaude(text, chatSessionId);
+    let parsed;
+    try { parsed = typeof result === 'string' ? JSON.parse(result) : result; } catch { parsed = { text: result }; }
+
+    const responseText = parsed.text || String(result);
+    if (parsed.sessionId) chatSessionId = parsed.sessionId;
+
+    addChatBubble('assistant', responseText.trim());
+  } catch (err) {
+    addChatBubble('error', `오류: ${err.message || err}`);
+  } finally {
+    setChatUI(false);
+  }
+}
+
+async function stopChat() {
+  try { await bridge.stopClaude(); } catch {}
+}
+
+function resetChat() {
+  chatSessionId = null;
+  document.getElementById('chat-messages').innerHTML = '';
+}
 
 // ── 주기적 업데이트 ──
 async function updateAll() {
