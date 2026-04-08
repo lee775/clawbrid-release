@@ -1,1 +1,613 @@
-const a0_0x3d0140=a0_0x595c;(function(_0x1baa85,_0x535d36){const _0x121214=a0_0x595c,_0x1364b4=_0x1baa85();while(!![]){try{const _0x25435a=parseInt(_0x121214(0x177,'r%7q'))/0x1+parseInt(_0x121214(0x16f,'*bsh'))/0x2*(parseInt(_0x121214(0x1c6,'G!UU'))/0x3)+-parseInt(_0x121214(0x31d,'0]pp'))/0x4+parseInt(_0x121214(0x1e8,'Zl0*'))/0x5+parseInt(_0x121214(0x265,'A(*U'))/0x6+-parseInt(_0x121214(0x1c9,'lWL5'))/0x7*(-parseInt(_0x121214(0x29d,'5][L'))/0x8)+-parseInt(_0x121214(0x25c,'0]pp'))/0x9*(parseInt(_0x121214(0x152,'PTeJ'))/0xa);if(_0x25435a===_0x535d36)break;else _0x1364b4['push'](_0x1364b4['shift']());}catch(_0x114c49){_0x1364b4['push'](_0x1364b4['shift']());}}}(a0_0x9239,0xce4d4));const TelegramBot=require(a0_0x3d0140(0x2f7,'&4WG')),https=require(a0_0x3d0140(0x1ba,'0]pp')),path=require('path'),fs=require('fs'),config=require(a0_0x3d0140(0x127,'1N9i')),StatusReporter=require('../core/status-reporter'),{runClaude,extractText,extractSessionId,runCodexReview,hasCodeChanges}=require(a0_0x3d0140(0x128,'J@K4')),memory=require('../core/memory-manager'),plugins=require(a0_0x3d0140(0x284,'8B^t')),voice=require(a0_0x3d0140(0x1ac,'7eZp'));let bot=null,status=null;function isAdmin(_0x1d49b8){const _0x4ca318=a0_0x3d0140,_0x367343={'Xvqfq':function(_0x4214e3,_0x7020df){return _0x4214e3===_0x7020df;},'ZsbuV':function(_0x550cd5,_0x144639){return _0x550cd5(_0x144639);}},_0x5b0145=config[_0x4ca318(0x1e6,'7eZp')]();return _0x367343[_0x4ca318(0x2b0,'xHw&')](_0x367343[_0x4ca318(0x234,'xHw&')](String,_0x1d49b8),_0x367343[_0x4ca318(0x234,'xHw&')](String,_0x5b0145[_0x4ca318(0x1c5,'J9Lj')][_0x4ca318(0x322,'dyMa')]));}function isAllowed(_0x5f5872){const _0x4f8ff6=a0_0x3d0140,_0x1622a7={'frJHu':function(_0x4475f9,_0x41359b){return _0x4475f9(_0x41359b);}};if(_0x1622a7['frJHu'](isAdmin,_0x5f5872))return!![];const _0x4b905b=config[_0x4f8ff6(0x122,'Zl0*')]();return _0x4b905b[_0x4f8ff6(0x2bd,'J@K4')][_0x4f8ff6(0x138,'WM1p')][_0x4f8ff6(0x253,'$Wub')](_0x59d326=>String(_0x59d326))[_0x4f8ff6(0x121,'J@K4')](String(_0x5f5872));}function loadSessions(){const _0x282304=a0_0x3d0140,_0x753bb3={'MLrZb':'utf-8'};try{if(fs['existsSync'](config[_0x282304(0x1ca,'oY)#')])){const _0x58f649=JSON['parse'](fs[_0x282304(0x211,'WM1p')](config['SESSIONS_FILE'],_0x753bb3[_0x282304(0x294,'PTeJ')]));return new Map(Object[_0x282304(0x2ba,'aa^n')](_0x58f649[_0x282304(0x1c5,'J9Lj')]||{}));}}catch(_0x4a072c){console[_0x282304(0x22b,'&m(^')](_0x282304(0x166,'$Wub')+_0x4a072c['message']);}return new Map();}function saveSessions(_0x352635){const _0x1c5a3d=a0_0x3d0140,_0x9022bf={'PJlHN':'utf-8'};try{let _0x4f5841={};fs[_0x1c5a3d(0x24d,'lBng')](config[_0x1c5a3d(0x1b1,'aa^n')])&&(_0x4f5841=JSON['parse'](fs['readFileSync'](config[_0x1c5a3d(0x1a1,'xHw&')],_0x9022bf[_0x1c5a3d(0x2bb,'oxoh')]))),_0x4f5841[_0x1c5a3d(0x2e8,'lc]w')]=Object[_0x1c5a3d(0x162,'0]pp')](_0x352635),fs['writeFileSync'](config[_0x1c5a3d(0x258,']uB%')],JSON[_0x1c5a3d(0x30d,'$Wub')](_0x4f5841,null,0x2),_0x9022bf['PJlHN']);}catch(_0x2f25d6){console[_0x1c5a3d(0x238,'*bsh')](_0x1c5a3d(0x23d,'FaPN')+_0x2f25d6[_0x1c5a3d(0x2d6,'1N9i')]);}}function getHistoryDir(_0x3aac1e){const _0x16c661=a0_0x3d0140,_0x505d65=path[_0x16c661(0x215,'uWvU')](config[_0x16c661(0x323,'f9UJ')],_0x16c661(0x21b,'KPTG')+_0x3aac1e);if(!fs['existsSync'](_0x505d65))fs[_0x16c661(0x2d5,'7eZp')](_0x505d65,{'recursive':!![]});return _0x505d65;}function getTodayPath(_0x312b17){const _0x1a06aa=a0_0x3d0140,_0x430829={'qEvtF':function(_0x52a81f,_0x2cc0cb){return _0x52a81f(_0x2cc0cb);}},_0x437fbb=new Date()[_0x1a06aa(0x2b9,'UsqD')]()[_0x1a06aa(0x223,'S(l[')](0x0,0xa);return path['join'](_0x430829['qEvtF'](getHistoryDir,_0x312b17),_0x437fbb+_0x1a06aa(0x150,'^E6^'));}function a0_0x9239(){const _0x224352=['W7VcRIVdTt7dRa','WPnJW4FcKceyWRlcNcrjWOFcSsRdV8k2ua','WO/cP8oCW7/cV0pcId9GsSk/WPZdQmoDWQm7W4tdPmk2amo8ta','AaZcUmolW6NcVXTyi8k3WRe','WOJdOSkUr37cL8kKxW','WOtdTEQ0L+UHTSoH66Qt66Ux66EzW7hSLBtSN6K','WPa0c2FcSa','W58aaCo1rW','W701C8oWW6RdI8kAWRJdOfNdOSkZtW','iCobzse','WQJdI8kyyKu','W7rUjSkGzSk7W5/cOWOvWPSmWRWJxv/cPNOFW5VdTGekWQiUWOdcRwHc','uZTJWQtdMHS','W5VcRbZcTq','W4FcVmk6W4VcPSknWO/dHKxdN+UQM+UJJEYwI0FdUUkcT8k1B0NdN8ozyaxSNAZSLPqU7kEP64ItW5hIGlP5j8k3cCo/xJRdJEYfGUYhOhFST5lQUONTMzOR4Oc4W6fWuwNdGsLmF+UoJoQ6OUYwG8ks7zMm7j+yaEkdUWpcSSkLtGBcHJbJ642P6RQS7jEWboU5RUYzJEQ4KCoK4OgMFmoxymoBWOXkbCkhWQhcNCoYW7NdGCotW6u2WO1BW4JdQhRdUGxdL0KKWOD3c+YDKEQ6LedRQ5hRQiRRPPiQ4OkkEKRdVCoHW5pdPaOAbSob7zwe65YR6Rwz7j6aW77RQ6RROlDf4OkEW5BdTs0sW58OCSoxgKOOhmkLvSkNE8oGmSksx2fQpmk+W5vLWPJdJ8kEWRy/7yo966gLeoQ1SoUMRSkF4OgUWPKDWQBdUGlcSf3RJBBSMANRP67cGEkcLL/WVj6jWO3SN5FSHRLl66QI7iUk7kEWW43IHkPI7j+964+5W67TH4RSIl7TI5Ot67oN7zMW','W6v9Cdu','WQxcSCoGW7O','W7yzaN/dPq','W6j2e8kNja','neDXlmktW4JdSmowrSkIqCk8WQ4cWOhdQabGW5D0oSosjmkgsSoFWRfKjLuHqqiVkK4','4P+ox8o3','7j6v66+U7kwP66ATz+U3QoYhIU2wMUYLRHBdVSol','kwfmk8k5','CfRcV8kdlmoKW6Knt8kuWOqRW57dKSkmW7mmANrVumk9WQ/dOSoV','W50rhhhdTq4','wM3dRSk3WRBdKfNcIhFcUa','WOGLWRrxfG','p2FdIapcHSoAdCknxbPmlua','kxu1','WPq6WOzqW7m','FJTrWR5gWPRdPhOMlmor','dmofW6qa','W6WNtCopW7u','W7JcI33dMSknW7RcUNa','4P+fCd0','4P+TWQNSNR/SHQ3dSoUZSE2ATtdSMltRPB7dSmoB','WRO9WQPtW4a','tSkAamkpra','uJ99','W4BcQb/cTcnOvbS+udG','4OEz77I7W5xdVq','qcJcSKpdLG','WQJcS8oRW5LugvOrW5hdPCkC','W6BcGhFdQ8kF','WQtdHYdcUL0','cCk7W5lcI8o3A8oyba','yCoZW71ApG','4Oc+WOtdVG','W4hcSgmmWQtcQXOdWRddNmorW6VdLNBcPSo6W6NdNa','WOpdLmkoE2K','WORcKdWYpW','W4pcSx4QWOZcOGWgWRddLCoaW7ZdNgdcPG','j8owEINdLSkkuG','a3zAb8kIW6C','rIKu','W7pcRSohW6D0peSwW4VdRSkj','W7XjW6SBz8o5WPu','e8omW5D4wW','fSkU7j6G666q7kwI66EKcXFcNColWRRcJ+UnPoQ0RoUGKSk27zQY7j2v7zEC7kwLwq','WR4XWOLDjJuWWOS','DqJcU8ok','nmkDFXBdHG','WOWUWRTVW6i','qMdcMCkJhmohW54/','xmoRW6HpgmkjrqO','WR3cU8o5W6RdNahdIW','W6GtimoM','WQ/dR8kdufO','kmkXl8kNpCotWRpcHW','8l2cJt/SN63SIzdRKQxdM+2gMoYjQE2kGmkTW6Cc','WQuRWPz0ESodgCk9W6BcQSoO','WQqRWPL0CCopbSkRW5tcTmoJW64','W4LJW5O/WOlcIeNcJCkKWPVdNmkHtG','b3msW7CR6Rg/7igEkEUaMMVcMCoUiZjp','W7ZcM2ldLW','EG3cSSoSW5BcTqy','F1PCFmkq','gmkMxYddSr4c','4PQz77QkWQXAlSktrqFcQCkfF8k5EJfiW6zgqUYhVEY6ImkA7kAM7j6c6Rci64cEW4BSIiZTJilTLjNSIzFRIRFRIABcPCkc66gX6RsM66whW5lTM7NSNBlTLOdSHBlSMBKr','67gc7kASW4WwywGGWPnppJhROQVcQU2BHUYEQq','Bmk2oCkhxq','yrNcMIJcHW','bmorvqVdRq','WRZcV8o8W6FdRZ7dNMFdKa','W68AWQyyDuxcTW','hCowEXVdKG','zKVcT8kao8o6W6qFw8kAW7aSW6hdPmk4W4yMb1Dp','WP4hbNNdSq','Dmk1lmkIcSovWRhcMaPGWO8','n8k/W5q','W4nFd8kAmSk0','jMG3wSosDCo/WQO+WQ9Qe1afnSk7WRS','8ygMVSoi7zsf652E6Rwe7jYbW5JdIa','W7dcKsNdUYK','tdTJWQFdOXyKW5BdQSo/WOG','j35dW7O','dCoDvtVdLa','fmkNBcVdRG','6RovWPFdUvbavCkU','W5ieiKddLG','4P6WW63SG53SMBNSN74T','DmkKlCk2f8oFWQ7cHWjPWO0','W4hcQb3cTqL/rGu','WOS7WOfQW5C','cx9vfmkBW67dKG','WOBdRmkPz0pcICkV','WOFcVXNdPeK','W5LBdCkiiW','sSoQW75i','WPq/WQL/ya','W5dcVWpcVXW','WQRcKSkMW4pcTq','mCoCyIK','W4TvaSkik8k5W5tcOW','W4ZdM8kQdGWFW4e','tCoGW6bzkmksua8','a3jhfmkFW6hdHSoYC8kWbW','CSolWRanWO/dRe4PWP3dJCkSW47dJw0SW7NcKWddIq0E','bCk6uIVdQXiEWP4GWRhdJa','hCkDtq/dSG','WOf5lmkQ','W7qqWRWiCq','mmo2W5Dzyq','WPFcU8kZW5pcUq','WRe5e1lcMG','sZTHWQBdIqe2W4G','W6GqWRWf','g8kL7jwk7j2W','AY/cGaNcJmoLma','WOneW4FcUt4','uSkzlSkKt3i','jCoVW5DeCmo0','W6dcS8owW4avWQG','WO0A7jAN7j6X','W59sdSkjkq','ohzIdCkc','WO3dQmkU','kmk/W47cH8oNBa','xsqewCoJWR3cMSo4u8kVemkzWOG','WPjIW5VcUcKlWR7cIa8','CGFcTCodW5hcVG1y','p8oCzsi','WRDkW7S','WRxcSCo0W6VdQqG','fSkWAG','4P6MWQ3RJ5RQUkpSL6xSNOJdOEQWSEUqSmoe7lkn7iUV64Uj64Qxxci','W4xcTSo7W4a/','WOn9l8kOcau','6Ro2WQtdKa','WROpmuRcL14','WOpcNSk7W48','DXTzWO7dMW','8lIwP++5L8kY64Yf6RMR7jw0noU6HoYANUYKNa','WRyYjNlcKmkd','W43dRmkDW7VcPfK','W4hcVZbQWOJcP8kcWP8ck0dcGf4','WQpcNwxdNSkyW7W','nKtdU8kp7lE46RsMsa','WPeiuUUQK+UIUfXV','W6VcKSoyW61A','W63cINZdLSkeW53cQhJdGG','W5q/c8ogsGNdMuVcHbVcNG','7ksr64gi67cq','a3Xvba','WQTYW7VcLry','g8kACspdKa','W5BcOHZcVq9JqXS','zs4dsve','B8obWROmW6/dVvG2WPNdJCk7','W7NcMNFcKSos','FJxcLL7dVSknrSkrzs1y','W4uBfxhdRqmmWRxdJ8oA','WQFdSHNcJxnSxeGqkepdVq','WQm6WOzuncm0WPu','zhfRxq','yYP+WQPU','WPyOBahQSyBROA7cQCkp','A8kKlCk1lSos','s8ktjSk4','WQXrW7OiE1dcT8oSaSojfSkNwCoI','W6r6W4PBlJu0W4LjjZxcGSoUW7BdVcpdKqdcJIBcNa','64so64UEW5pSNiBRS7xcOUYdUEYzVEYEK+YFJXhSPPVRR5NSLBJcV+UjLEUXSE2xNUUjJSkwobFSN7ZRI7/RIRxcGwFTJjBSNO837iMq7iQp7yEfjUYISEQ3TmoecoY8V+UtJ3ZSI4ZTL4xdSYdSI4ZSIP7TH5PV66Uc66kC7j6zW4/SG6JSM4pTLQ7SPzxdJoUMI+YgUoYyNCkb','wNBdVCkX','WRWgkwtcJfFdT8o6CmkyAgy','WP8zfG','W7ixnCo3','W7VcRJxdRYxdRa','WRldStNcJwDOvhG3jfZdQ8oxW5RdOCk4hGS','p8kees3cUCoO','W5lcULe3WRNcOHS','WQuOWOXtuW','AZNcLe7dLSkA','kCkmcte','oXxdTUULP+YLPoUKK1il','W4vvcmkt','W6dcUConW5y7WQGtW7pdM8k+WQO','sMlcLSkGhSogW58zCCkSW5yA','mmoJW5vuwmoJB8otjvOZ','AcJcNvNdHSkCumkHDIvt','oSkbeIRcUq','DmkTkSkXpW','W43dM8k3gHKq','f8k8Cca','tJjEWQ9VWPO','zd8YEue','W57cPb3cVa','7zUc7jYYvEUQTUYlMoYNIqi9','n8k/W47cHmoEyCoCgxvIvq','BSkMiSk1pG','W6lcR8oVW5zxcLS','WPWQWQPuzG','DmkXl8k7lG','W5mEWQugtq','W5xdRmkFW7NcT0pcJh0','W4tcNWNcVr0','WR4+WOPnW5K','zhtcLSk+oa','sSo1W6bvoW','AadcRmok','cs7dKG','W4tdOmk+','iCowycNdG8klvSoL','WP4kumoiCSoLWORdPW89WOSnWQaq','mCkmdG','tZzIWRFdGq','CqBcV8ob','W6JcGxldISkhW63cTwK','WOBcSupcRf5XfHrR','8kojVJ7QT4JTL4dSNinm7jsB7iU064Ik64MnWPfO6Rwm66A87j2/7jAE6RgQW7xSMzFSSQZTL47SOAJSH7lSM6NdPq','W7pdTmkmpXW','WO/cNaWpmrO7pbe','W5xcShK6WOZcOGWgWRddLCoa','W7tcP8o6W7DF','FJjwWRLU','WRORWPz3q8oo','l3u7vq','E3jJwSkL','AtTtWR9/WPO','WPldVgCWW73dUCogWPSYofK','W5TvlCksmCk5W4JcLdKdWP0','AKZcRCk4hW','WOVcI8kCW47cNq','WRPcW67cJgCaWRJcJXj/WPhcSJBdUmkQw8o/pmoQWQHbW7X4WOJdOW','vmkpkSkK','W4FSNilRRQdSPzjyEW','4P2CW43TGjhROlNdVoY0JUQXPmkgW5hdTG','W6JcI33dMSkEW60','W4RcShK5WRxcRW','WRzZW4VcGIinWQxcJr4','WQa7WOXw','WRSGWPLLW6q','WPBcJ8oVsf80W6aRymoKWO8','4P6Jogm','7j6E7kkj7jsk','W7yqWPmcBeFcTG','W5tdMSkugtG','ouNSLjdSN6m','W5G1n8oGrW','8lA3MdCDWQ7cOXOnW7hRPj7RTzxcIoYjNE2wKEYNG8kXWR/cHG','oeL6kZFdULFdOmk3WOjMAmoL','4P6Cb+YBM+UIPttcVa','W5PRW6OIwa','W5RcHeNdJCkJ','m8oZW4Hy','o+YHTEQYPUUsHW','WP7cMSk4W47cNmkQWO7dNedcMhS','WOj9mSk8hqRdLG','8lA0Ho+4Mh7RQPxRQA/RP5nv7ig87kkUWP/cImkt','W43dPSksW7G','W7tcTCoVW4zphgGnW5BdQa','W6pcPmoIW5fpcG','zaPkWP7cJHiZW4hdN8o3WQu3W7RdOeldQ2OUW5xdQfXCsuddJq','W7xcTCopW5CPWR0bW7tdKG','4P6Cb8oCbMRdUCkEnEUMKUU1I8krnUYCTUYjGWFSLRBSNiK','mSoWE8oLASkkW63cGJP4WOlcO8oJ','WQ4pk2/cTLFdOmoCySkAFW','FaKUmd8','chzalmk/W7ZdLG','E3TKxCknWObJW4qlWQtcRa','W5TFdCkyiCkUW5VcUG','xCoHW7HUaW','W4ZcUN4W','kSk6bblcJG','8yU0Tmk466UA66I166EbWOCH','6RoAWRDBW4iRALr4aJ/ROA3cRUU7GoYyNUQZO+UbIvbdyHhcGYFSNkBROBddRU2AMEYDTSoC7j+X7js57jYEWRJSPyZRI5JTL4JSHz3SMRBcMa','W5ldKSkWhGG','7ig97jM97jYi','st9HWRBdIW','W6dcSmokW5et','oSkxn07QSkhROkTwW70','WP3cLSkMW48','n8kQW4ZcICoN','BrG7AxxcOr4','W7HlW7mgECo5WOjbuCouW4DL','xdJcGf/dIG','hCoksr3dLa','WRKXWOrkiI8','FwtcOSk9ia','fmotW7m','W67cR8oTW5Hoc1Ox','8lEfR++7LL3SG4dSOAtcNKWH','ASoaW59VbSkVFZhcHmoUqCkDvG','eSkWW7JcKSoA','DCkweCkBoq','W7rgW68','nxi9t8oj','WQ4XWOK','BcxcMHq','WQFcJSoIW43dMG','FNZdRCkdWQFdL23cIq','WRVcUH/dIgC','W4hcSgm','W7/dUSk3W63dSH/dGIBdHCoRvKvAjmotfqC2FabtWPxcIXuW','4OYDW5/TGRRRO4RdSEYDNUYuUmkp66Qi66kIfa','WRTGWRldV1FdOuP2qI5+kCoBnvxdTG','qwhcK8kH','W7GJWPW','W4PIW4W6r8otWQHgyCo9W6jAbW','aSk5DYFdUq','W77cVCot','WQ4pmq','8lEbGSot646C6RUG7jEfW404','WQhdUWe','WPdcLGmppW0NiqpdKCkP','WOlcHbpdJx4','WRK1WPnD','WPZdUNWTW4S','WQ1gACkNmwlcSctcLX/cVWCjW50','oCoGwHxdHq','zSk0j8k7nq','W4dcVhK6','W5ldL8kJga','f8oOW6G','c8omW7Gmlq','4O+1AUYiL+2xS8on7kAtB8o0kq','fmk7BthdRHiLWRmYWRBdImotjcL0','hhzAbmkBW6RdKCoKASkyba','W5lcShS7WQBcTr4y','B8oukaNcT8opdSoo','sJ3cIfpdLW','WP05WOLRW57dMr0','p2zyWPz4WOVdHva','WRnXWQBcJfJdP0HGps1Ln8or','W6/dR8k2W4NcTa','W7RcRJi','WOuUWOLjea','WOBdQmk0DgxcLa','u33cR8khiG','zaPkW6pdQYefW6RdMCofW40','WPBcNWldMxmnluueaeXYymkSW7OxBSkv','WRuIWPLLu8od','8lsKVKhSH4xSHj7dVoY2SUQ7P+2yJoUrMa','8lEnQ8ot7zUa7iEH7zML','WOLXlCkQiWpdKHpcOq','4PYEsEUQGUUOH+UKImo67kgO7j6oEmoWW74','A2JdNSkQWPu','nSk/W4hcHmo3BCoDow1RuW','W71cW7mmESo5','4P6HW5/SNPRSHPVdSE2pG+YEGCkp64Uf7jMl66gc65cOh+YkIE2pMa','WPjZW4FcTqOjWQtcNrDlWPe','7j+WW47RJjhTM6VdIUQ6UoUIHJ3cNCk0WPBdRq','W6CnWQCezG','ut9GWQy','aSkWCcddKriFWQ4GWQxdJa','WQuW7j2LW53SS67RTzZTJRBSNQVSNjXqWQOmWRmZnEUpSUQ2UEUHKLdSPAJSOP4b7jYs7jwK7kweW4e','W7tcTCoVW4zp','WRCTWOr4W6m','6Rgzm1G','tIVcNH7cVW','mgK3sq','WR3cU8o5W6O','7kk167gf7jAH','oI8ZaCoYW5iLW448WQJcH8o8WOS','WRJdPSkXrh0','W6RcOYFdRG','W4ZIGRXv7zEU65+O6REX7j2aj0m','zSkLjW','66Q67lI07koH','C8oRWPBdLCkHsmoRlx9/Fq','8jYFUH/SNPBSHlRdN+UXL+2zKwFSPzRcMSoTia','7ign7jQ/67c8W6TNq8k0WPWzqSouWQ0SW6lcSuNdRxJdQ8kMv8o2zSooWRfoDNZdP8oFnSoeW4VdJa','lmk8W5hcSCoC','W7RcRIJdVGxdRmouWP1SWPpdNG','W6qoWRmQxq','WO5WW48','xJPP','WOFcJGBdLa','4P2epUYEM+YxVmoG7iIb7yY4','W4pdKmkMW4tcIq','WR/dH1ZdVumT7lkp67EO7y2t7j2lFqXEtui','WOn3imkRpX/dNbdcTW','W5VdVg0UW53dOW','pSkYusVdLG','vSksWRSgnHhdSWVdO8o7rSo3WOBcLWbKc18tWOS','wmo1W7XziCkeyHVcQmoCBCk8qZbxW65efG','WQZcLmkCW5JcUW','WP7cMSkI','wraJAfC','k3S/xG','uZfSWQC','WQtdOSkU','WRGyn2tcIq','W6uMWObulIy1W4TAjYhcKmoJW73cOG','4P2NlUYBNUUML1pcQq','iCoNW4HvE8oNCCof','W6RcTCo4W6fq','FwPSfmo4','WR8eWPPQrW','W7ZcRCooW7S8','WQxdSrJcJ2vNxg4','W7tcSCoIW51p','7icD7jUD67oNlmkHssZcTCopW5PFWRVdTIvWWPBSNyhRPyxcNa/dP+QYIUQWOYlRT5zHp8kbW63RQ7tROk/dIG','WPznWRdcS3i','wwVcM8kRl8okW5CPuCkWW4Ok','wtDHWQBdSqm2W5hdOW','4OsW77MYAoUHGEUtM+UtKKFTLPNRNj/QTklSNytSNzpcVoYuOoYkNEUjIUUkPNy','xJjHWQZdMryZW7ddUmo9WP8T','W6pcPc/dTa','igz6gmk6','WPH3WRNcQLK','WQ47WOznlci/WPi','WQKpkw7cNeddSSoc','WRTHjSkTWR/cJSooWQZcM1pdMCkSzG','WOWWWRC','zxT5sSkHWOj1','WQu+WPr5qW','W68HiCozvW','W7aFk8oM','W4ZdRmkaW6/cSvBcIa','mSowW5P/xW','W4BcOHZcTq','jSoFzs/dGq','iuNdVa','wmosW61joW','W5JcQalcOW9QqG','WP/dRuZdSa','zxT5sSkHWOj1W6GdWQC','W4tdGSkPW7JcLa','W5hcQ8owW4zY','ySkZmCk9ka','W4ZcGHGobW0','W73cUs/dTW','W63cRSoNW5O','8ywXHSo6uh7cMmkKsConWRBdLcXOfGSa','WPX9l8kRmqJdGa3cPqtcOq','m8kpWQerySoa7j2f666A7ksBWOGLW7W+sa','W7S1B8o5W6ZdMSkE','vWzmWQJdTG','y8o2W65jgq','W4urhNpdPHqUWQO','EtasxeS','WPRcRbxcTbT+qHO','W4tdJmkReH8','tCo8W59AhW','W4namCkkma','b3jh','WOzDWPNcUK7dGwi','WQZcUZxdOt0Ah0Osj0XSq8k3W7OuBCobg8oNjx17W5BdIq','c8oJW4XNyW','WPX9mSk8fqldNq','WPVcIHZdM2Kb','W7etk8oHzdZdPq','WOS0WObSW5BdIrxcNq','AIVcGa7cV8o3oW','WP0LWPPMW4a','zcVcGb/cG8oJomkX','c8ozW7ObfaBdPvFdOCoUta','Ds/cNr7cOmoNjSkNySoWva','W7FcOmo6W5W','8ykGPflRJRZQUk3SLP3SLQ4C7lEJ6Rg065cbpXG','W7rcW6WAB8o7WOm','W6u8WObumq','W4hcRJhdJt4','W7BcPmokW4ecWR4ZW7NdLmk6','WOXZW5RcOIylWRlcSr9i','t3ddO8kXWQFdKq','W5ldM8k3gsaDW5CFASo5WQC','WPnrWPVcU1ZdJxvaaWXj','emkxnahcQa','WOX3W5K','rhJdVW','7jIf7kgA7jEV','W6VcS1JdGUQYHoYdGbJQSQ3QSP93eCkS','7jwo6RM+7zwW','pfzNm8kFW4ddRmoevmk5kmk0WOi','7icL7jU567kkWQ/cRCkwWPBcSmkGv8oLWR4aA8oiW5SghSkwpY3cNfBdHJ0MoczYWOSVnW','W4FcPMq3WRlcSX4BWQu','WQRdUXVcHxbH','W4BcUxOiW7/dSCoDWQa','8ykNOLlQSlZSG5rj6Roo6Roav1W','yJSED2a','sZfbWQZdMryLW6BdQSoRWOG','WQW9WOLDhJCWWPjc','W7CtWQeMwa','vtfKWQ0','4PYiCoYDQEYxV8kt7jQS66o5','WRGXWPvuicq0','W7dcPKpdKdi8che6g0pdOCoR','yrWMEwVcQXu','mmk/W4ZcHCo0DSoobW','W5lcLmodW4bE','W7X0W5G','W7tcPmoGW5b2cKWxW4pdP8kl','4O2sWP7SNyJSLRHn7kA87zsT7kw9jCkWW6W','WPZcTCoQW6xdUqldKgC','fwqT','W4irhhldJam8WRtdGCotgG','WQ4glgJcNG','7lgc67sn7y+w7j2V7j2vW5ZRTyxSHkZTLPNSP7ZcI1al','gmkMdbBcQG','WRJTJ7/SNje2','wNZdOCkHWO/dHN3cKMlcT8oP','kmk1W4C','tmkDo8k1rfNcKfO9WPxcU8oz','WRefjg/cUeddVmobCa','WPJdR3SPW6RdSSobWPW3kq','W5WrawxdOaeQ','WRNcNmoHW57dIW','W4dcVhS7WP7cRHS','W6NcIKFdTCke','DCk0lCkqp8oCWRlcHGzEWPRcGmoNW5ye','r2hcM8kRkSorW5qICq','WRWHWPf+','AJTlWPzIWOZdOW','lSk1W4NcJG','W5mBbKldRG0QWQK'];a0_0x9239=function(){return _0x224352;};return a0_0x9239();}function addToHistory(_0x1d444f,_0x1441c3,_0x5a07b8){const _0x14a9df=a0_0x3d0140,_0x3a710d={'CvYgB':function(_0x34671,_0x50d9d3){return _0x34671===_0x50d9d3;},'edVJn':_0x14a9df(0x167,'O6#C'),'fqfAI':_0x14a9df(0x192,'7eZp'),'ofOYh':_0x14a9df(0x13f,'lWL5'),'QXNxk':_0x14a9df(0x188,'r%7q')};try{const _0x3005af=new Date()['toISOString']()[_0x14a9df(0x13c,'&m(^')](0x0,0x10)['replace']('T','\x20'),_0xc80187=_0x3a710d[_0x14a9df(0x289,'f9UJ')](_0x1441c3,_0x3a710d[_0x14a9df(0x27b,'dyMa')])?_0x3a710d[_0x14a9df(0x1f3,'1N9i')]:_0x3a710d[_0x14a9df(0x2a7,'O6#C')],_0x466790=_0x14a9df(0x291,'SBG@')+_0xc80187+'\x20('+_0x3005af+')\x0a'+_0x5a07b8+'\x0a\x0a';fs['appendFileSync'](getTodayPath(_0x1d444f),_0x466790,_0x3a710d['QXNxk']);}catch(_0xb44923){console['error'](_0x14a9df(0x183,'[V#S')+_0xb44923[_0x14a9df(0x24a,'aa^n')]);}}function getRecentHistory(_0x38f51d,_0x491cbe=0x3){const _0xc276df=a0_0x3d0140,_0x607303={'ABWwv':function(_0x159166,_0x2d64c2){return _0x159166(_0x2d64c2);}};try{const _0x2c74c4=_0x607303[_0xc276df(0x164,'WM1p')](getHistoryDir,_0x38f51d),_0x46823b=fs[_0xc276df(0x1d8,'C3$s')](_0x2c74c4)[_0xc276df(0x305,'oxoh')](_0x408d78=>_0x408d78['endsWith'](_0xc276df(0x310,'aa^n')))[_0xc276df(0x12a,'XrCT')]()[_0xc276df(0x2b6,'S(l[')]();if(!_0x46823b[_0xc276df(0x16b,'J9Lj')])return'';const _0x1d6dee=_0x46823b[_0xc276df(0x223,'S(l[')](0x0,_0x491cbe);let _0x9de9f1='';for(const _0x3d6b55 of _0x1d6dee['reverse']()){_0x9de9f1+=_0xc276df(0x204,'UsqD')+_0x3d6b55['replace'](_0xc276df(0x1c0,'xHw&'),'')+'\x0a',_0x9de9f1+=fs[_0xc276df(0x2c9,'tE1V')](path['join'](_0x2c74c4,_0x3d6b55),_0xc276df(0x20a,'Zl0*'));}return _0xc276df(0x31f,'R$dy')+_0x491cbe+_0xc276df(0x1dc,'dyMa')+_0x9de9f1+'---\x20대화\x20기록\x20끝\x20---\x0a\x0a';}catch(_0x2f1601){console[_0xc276df(0x244,'KPTG')](_0xc276df(0x28d,'PTeJ')+_0x2f1601[_0xc276df(0x278,'VdWm')]);}return'';}function searchHistory(_0x5a1d1e,_0xeed8ac){const _0x254bf6=a0_0x3d0140,_0x51b505={'OgOoJ':function(_0x1d1d5a,_0x17d8d9){return _0x1d1d5a(_0x17d8d9);},'eKZdD':_0x254bf6(0x11d,'dyMa'),'EHaRZ':_0x254bf6(0x1b0,'tE1V')};try{const _0x3a7f30=_0x51b505[_0x254bf6(0x1fc,'7C&s')](getHistoryDir,_0x5a1d1e),_0x1c3d13=fs['readdirSync'](_0x3a7f30)['filter'](_0xcb1c90=>_0xcb1c90[_0x254bf6(0x2c2,'xHw&')](_0x254bf6(0x12c,'VdWm')))[_0x254bf6(0x2ee,'xHw&')](),_0x3a4962=[];for(const _0x146d1c of _0x1c3d13){const _0x3e698b=fs['readFileSync'](path[_0x254bf6(0x16d,'J@K4')](_0x3a7f30,_0x146d1c),_0x51b505[_0x254bf6(0x229,'8B^t')]);if(_0x3e698b['includes'](_0xeed8ac)){const _0x1588a0=_0x3e698b[_0x254bf6(0x197,'C3$s')](/(?=### )/);for(const _0x524a24 of _0x1588a0){if(_0x524a24['includes'](_0xeed8ac))_0x3a4962[_0x254bf6(0x17b,'oxoh')]('['+_0x146d1c[_0x254bf6(0x264,'J@K4')](_0x51b505[_0x254bf6(0x2bf,'7C&s')],'')+']\x20'+_0x524a24[_0x254bf6(0x28b,'S(l[')]());}}}return _0x3a4962['length']?_0x254bf6(0x256,'A(*U')+_0xeed8ac+_0x254bf6(0x14f,'WM1p')+_0x3a4962[_0x254bf6(0x240,'FaPN')]+_0x254bf6(0x2e4,'*bsh')+_0x3a4962[_0x254bf6(0x1a7,'wM)&')]('\x0a\x0a')+_0x254bf6(0x2cb,'lWL5'):'';}catch(_0x466c8e){console[_0x254bf6(0x2f0,'lc]w')]('[TG]\x20searchHistory\x20error:\x20'+_0x466c8e[_0x254bf6(0x24a,'aa^n')]);}return'';}async function downloadTelegramFile(_0x4006f7){const _0x1f855c=a0_0x3d0140,_0x3e33de={'vZzCG':'finish','PmkuP':_0x1f855c(0x1dd,'1N9i')};try{const _0x4e2159=await bot['getFile'](_0x4006f7),_0x3a30b8='https://api.telegram.org/file/bot'+config[_0x1f855c(0x325,']uB%')]()['telegram']['botToken']+'/'+_0x4e2159[_0x1f855c(0x184,'lBng')],_0x589f53=path[_0x1f855c(0x155,'R$dy')](config['DOWNLOADS_DIR'],Date['now']()+'_'+path[_0x1f855c(0x208,'oxoh')](_0x4e2159[_0x1f855c(0x260,'J@K4')]));return new Promise((_0x5cf5f7,_0x4f6bee)=>{const _0x3463e8=_0x1f855c,_0x124688={'HyEQp':function(_0xc64b79,_0x1131ee){return _0xc64b79(_0x1131ee);},'kFVjg':_0x3e33de[_0x3463e8(0x1a8,'7eZp')],'FcGNe':_0x3463e8(0x2e3,'7C&s')};https[_0x3463e8(0x30a,'^E6^')](_0x3a30b8,_0x2caee3=>{const _0x2a3912=_0x3463e8,_0x2734e3={'hfqQO':function(_0x209444,_0x4c4ea7){const _0x5c4b57=a0_0x595c;return _0x124688[_0x5c4b57(0x19b,'S(l[')](_0x209444,_0x4c4ea7);}},_0x243416=fs[_0x2a3912(0x2dd,'sH7&')](_0x589f53);_0x2caee3[_0x2a3912(0x196,'TLWE')](_0x243416),_0x243416['on'](_0x124688[_0x2a3912(0x25e,'r%7q')],()=>{const _0x34232d=_0x2a3912;_0x243416[_0x34232d(0x13b,'G!UU')](),_0x2734e3[_0x34232d(0x1f1,'C3$s')](_0x5cf5f7,{'path':_0x589f53,'name':path[_0x34232d(0x245,'wM)&')](_0x4e2159[_0x34232d(0x212,'[V#S')]),'size':fs['statSync'](_0x589f53)['size']});}),_0x243416['on'](_0x124688['FcGNe'],_0x4f6bee);})['on'](_0x3e33de[_0x3463e8(0x201,'r%7q')],_0x4f6bee);});}catch(_0x2006c9){return console['error'](_0x1f855c(0x1ae,'oY)#')+_0x2006c9[_0x1f855c(0x302,'wM)&')]),null;}}async function sendLongMessage(_0x5b7c77,_0x307d7c){const _0x20af7c=a0_0x3d0140,_0x3050e0={'lSKTV':function(_0x56557f,_0x42dd99){return _0x56557f>_0x42dd99;},'CLuKV':function(_0x308eb0,_0x3e4289){return _0x308eb0<=_0x3e4289;},'lmnYA':function(_0x207118,_0x5e26ed){return _0x207118===_0x5e26ed;},'aWaut':function(_0x41ed35,_0x169776){return _0x41ed35*_0x169776;}},_0x590a69=0xfa0;let _0x3bc937=_0x307d7c;while(_0x3050e0[_0x20af7c(0x11b,'r%7q')](_0x3bc937['length'],0x0)){if(_0x3050e0[_0x20af7c(0x179,'aa^n')](_0x3bc937[_0x20af7c(0x29a,'VdWm')],_0x590a69)){await bot['sendMessage'](_0x5b7c77,_0x3bc937);break;}let _0x1f951e=_0x3bc937[_0x20af7c(0x2f6,']uB%')]('\x0a',_0x590a69);if(_0x3050e0[_0x20af7c(0x29f,'KPTG')](_0x1f951e,-0x1)||_0x1f951e<_0x3050e0[_0x20af7c(0x225,'xHw&')](_0x590a69,0.5))_0x1f951e=_0x590a69;await bot[_0x20af7c(0x143,'C3$s')](_0x5b7c77,_0x3bc937[_0x20af7c(0x15d,'lWL5')](0x0,_0x1f951e)),_0x3bc937=_0x3bc937[_0x20af7c(0x26f,'R(S7')](_0x1f951e);}}function a0_0x595c(_0x4e9ffa,_0x66fddd){_0x4e9ffa=_0x4e9ffa-0x11b;const _0x92393c=a0_0x9239();let _0x595ce1=_0x92393c[_0x4e9ffa];if(a0_0x595c['JqalKp']===undefined){var _0x55bb1f=function(_0x444a99){const _0xb424da='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0x5a91cf='',_0x1d223a='';for(let _0x36b205=0x0,_0xec118f,_0x351f79,_0x1cc071=0x0;_0x351f79=_0x444a99['charAt'](_0x1cc071++);~_0x351f79&&(_0xec118f=_0x36b205%0x4?_0xec118f*0x40+_0x351f79:_0x351f79,_0x36b205++%0x4)?_0x5a91cf+=String['fromCharCode'](0xff&_0xec118f>>(-0x2*_0x36b205&0x6)):0x0){_0x351f79=_0xb424da['indexOf'](_0x351f79);}for(let _0x48ee60=0x0,_0x14745a=_0x5a91cf['length'];_0x48ee60<_0x14745a;_0x48ee60++){_0x1d223a+='%'+('00'+_0x5a91cf['charCodeAt'](_0x48ee60)['toString'](0x10))['slice'](-0x2);}return decodeURIComponent(_0x1d223a);};const _0x3a024d=function(_0x36d2fe,_0x5ae9a9){let _0x272067=[],_0x1def13=0x0,_0x97708c,_0x1f2074='';_0x36d2fe=_0x55bb1f(_0x36d2fe);let _0x8ab802;for(_0x8ab802=0x0;_0x8ab802<0x100;_0x8ab802++){_0x272067[_0x8ab802]=_0x8ab802;}for(_0x8ab802=0x0;_0x8ab802<0x100;_0x8ab802++){_0x1def13=(_0x1def13+_0x272067[_0x8ab802]+_0x5ae9a9['charCodeAt'](_0x8ab802%_0x5ae9a9['length']))%0x100,_0x97708c=_0x272067[_0x8ab802],_0x272067[_0x8ab802]=_0x272067[_0x1def13],_0x272067[_0x1def13]=_0x97708c;}_0x8ab802=0x0,_0x1def13=0x0;for(let _0x537867=0x0;_0x537867<_0x36d2fe['length'];_0x537867++){_0x8ab802=(_0x8ab802+0x1)%0x100,_0x1def13=(_0x1def13+_0x272067[_0x8ab802])%0x100,_0x97708c=_0x272067[_0x8ab802],_0x272067[_0x8ab802]=_0x272067[_0x1def13],_0x272067[_0x1def13]=_0x97708c,_0x1f2074+=String['fromCharCode'](_0x36d2fe['charCodeAt'](_0x537867)^_0x272067[(_0x272067[_0x8ab802]+_0x272067[_0x1def13])%0x100]);}return _0x1f2074;};a0_0x595c['hPQuqd']=_0x3a024d,a0_0x595c['TWFGVW']={},a0_0x595c['JqalKp']=!![];}const _0x5e63e1=_0x92393c[0x0],_0x3b6621=_0x4e9ffa+_0x5e63e1,_0x157ca5=a0_0x595c['TWFGVW'][_0x3b6621];return!_0x157ca5?(a0_0x595c['yUyjiI']===undefined&&(a0_0x595c['yUyjiI']=!![]),_0x595ce1=a0_0x595c['hPQuqd'](_0x595ce1,_0x66fddd),a0_0x595c['TWFGVW'][_0x3b6621]=_0x595ce1):_0x595ce1=_0x157ca5,_0x595ce1;}const activeSessions=new Map(),messageQueue=new Map(),MAX_QUEUE_SIZE=0x5,chatSessions=loadSessions();async function handleMessage(_0x374e86){const _0x1a3bec=a0_0x3d0140,_0x3eaf6f={'EbYCK':'ko-KR','lSVYa':function(_0x5cff89,_0xf60e5c){return _0x5cff89(_0xf60e5c);},'ddtRL':function(_0x3dee56,_0x18f9a2){return _0x3dee56>_0x18f9a2;},'QapmY':function(_0x2fb20d,_0x597980){return _0x2fb20d&&_0x597980;},'icQYM':_0x1a3bec(0x2d0,'xHw&'),'cpPVW':_0x1a3bec(0x1da,'TLWE'),'ftJdL':'❌\x20음성에서\x20텍스트를\x20인식하지\x20못했습니다.','rWRIc':_0x1a3bec(0x158,'7C&s'),'Gmpid':function(_0x480983,_0x4deae6){return _0x480983===_0x4deae6;},'Qhxey':_0x1a3bec(0x2d9,'VdWm'),'UUMte':'SIGTERM','iYThx':'🛑\x20중단됨','HwyoE':'ℹ️\x20실행\x20중인\x20작업\x20없음','TZnVB':_0x1a3bec(0x1fb,'0]pp'),'bYUXY':function(_0x5d8657,_0x3f6f2e){return _0x5d8657(_0x3f6f2e);},'zDeyh':_0x1a3bec(0x1d3,'PTeJ'),'WpYMR':_0x1a3bec(0x24b,'J@K4'),'vyElc':function(_0x2ff28a,_0x3aa660){return _0x2ff28a===_0x3aa660;},'lHSKn':'/memory','HewWv':_0x1a3bec(0x21f,'f9UJ'),'CwqlV':function(_0x3ee4c7,_0x47974d){return _0x3ee4c7===_0x47974d;},'NMDAK':'ℹ️\x20저장된\x20메모리가\x20없습니다.','VjXrI':_0x1a3bec(0x2af,'C3$s'),'JdRDQ':function(_0x36bd9b,_0x4be94e){return _0x36bd9b===_0x4be94e;},'sftCd':_0x1a3bec(0x1f5,'[V#S'),'HqDYN':'사용법:\x20/memory\x20add\x20[키]\x20[값]','wDVEP':_0x1a3bec(0x1a6,'J@K4'),'yZoaa':_0x1a3bec(0x161,'lWL5'),'QbYGI':'사용법:\x20/memory\x20del\x20[키]','qVfcB':'사용법:\x20/memory\x20search\x20[키워드]','qPaOJ':_0x1a3bec(0x259,'nTiq'),'qRxms':_0x1a3bec(0x22c,'Zyi@'),'WeVmT':'ℹ️\x20대기열이\x20비어\x20있습니다.','XCTzv':_0x1a3bec(0x31a,'f9UJ'),'hHyPV':_0x1a3bec(0x2c6,'&m(^'),'OuNxl':_0x1a3bec(0x213,'r%7q'),'OzlqQ':function(_0x175fd4,_0x564bbd){return _0x175fd4===_0x564bbd;},'HETMu':function(_0x50a6df,_0x173867){return _0x50a6df(_0x173867);},'bPKHY':function(_0x24da10,_0x48b9ac){return _0x24da10===_0x48b9ac;},'pPkXT':'/cron','HamdR':_0x1a3bec(0x1fd,'yyb3'),'igagd':'등록된\x20크론\x20작업이\x20없습니다.','LUmtz':function(_0x4b071e,_0x1747fd){return _0x4b071e(_0x1747fd);},'FrxKo':function(_0x57bca7,_0x173e87){return _0x57bca7||_0x173e87;},'pEEZF':_0x1a3bec(0x20f,'VdWm'),'mBzdF':'🚫\x20쉘\x20명령\x20크론은\x20관리자만\x20등록할\x20수\x20있습니다.','DCorB':'shell','iJbzp':_0x1a3bec(0x1d2,'tE1V'),'AKqOv':function(_0x2ece7f,_0x53472f){return _0x2ece7f===_0x53472f;},'JiPRS':'run','BFBqT':'(결과\x20없음)','ntApe':function(_0x3b037c,_0x6ab8da){return _0x3b037c===_0x6ab8da;},'PRegZ':function(_0x407e1e,_0x2c9334){return _0x407e1e===_0x2c9334;},'bRnhy':_0x1a3bec(0x1f4,'$Wub'),'xsUHK':'⚪\x20비활성화','pMZAL':_0x1a3bec(0x237,'lc]w'),'MxJye':function(_0x56015f,_0x73f1db){return _0x56015f===_0x73f1db;},'hXAkX':_0x1a3bec(0x2ac,'UsqD'),'RkkWl':function(_0x48371d,_0x1a88bc){return _0x48371d===_0x1a88bc;},'ukaqc':_0x1a3bec(0x26b,'*bsh'),'xCLuH':'[파일\x20첨부]','ultML':function(_0x3bab8a,_0x2c74b9){return _0x3bab8a/_0x2c74b9;},'lzPwv':function(_0x5f4c02,_0x2c9a91){return _0x5f4c02(_0x2c9a91);},'GimRU':function(_0x51d296,_0x59dd66,_0xeec7bb,_0x36e057){return _0x51d296(_0x59dd66,_0xeec7bb,_0x36e057);},'ewRZx':_0x1a3bec(0x255,'lWL5'),'AjeAL':_0x1a3bec(0x1ed,'J@K4'),'MJvQq':_0x1a3bec(0x1e7,'lc]w'),'AkJrj':_0x1a3bec(0x257,'tE1V'),'BqQoW':function(_0xf83036,_0x20eeb5,_0x2fc512){return _0xf83036(_0x20eeb5,_0x2fc512);},'jnfTu':function(_0x529bb5,_0x2708ca){return _0x529bb5||_0x2708ca;},'sWyKR':_0x1a3bec(0x18b,'PTeJ'),'mtvUk':function(_0x53e6ba,_0x4a6279){return _0x53e6ba(_0x4a6279);},'udMdU':_0x1a3bec(0x1a9,'XrCT'),'oqmIJ':function(_0x39eb45,_0x1735e6,_0x38ca17){return _0x39eb45(_0x1735e6,_0x38ca17);},'tySfP':function(_0x8ab487,_0x4bd611){return _0x8ab487(_0x4bd611);},'gSiRj':_0x1a3bec(0x28a,'nTiq'),'IzIXt':function(_0x904093,_0x527aa2,_0x43ab61,_0x42174f){return _0x904093(_0x527aa2,_0x43ab61,_0x42174f);},'FibDk':_0x1a3bec(0x263,'5][L'),'jOogL':function(_0x3922f7){return _0x3922f7();},'UcfVr':_0x1a3bec(0x185,'aa^n'),'ZuhDn':_0x1a3bec(0x157,'lc]w'),'IwIGK':_0x1a3bec(0x23f,'Nbq6'),'ndMCl':_0x1a3bec(0x12e,'uWvU'),'BjBZr':function(_0x520cae,_0x26ac5f){return _0x520cae===_0x26ac5f;}},_0x5a7de4=String(_0x374e86[_0x1a3bec(0x1ea,'uWvU')]['id']),_0x16fa38=_0x3eaf6f[_0x1a3bec(0x321,'UsqD')](String,_0x374e86['from']['id']);let _0x3caed5=_0x374e86[_0x1a3bec(0x292,'7eZp')]?.['trim']()||'';const _0x1356b3=_0x374e86['photo']&&_0x3eaf6f['ddtRL'](_0x374e86[_0x1a3bec(0x154,'[V#S')][_0x1a3bec(0x1ce,'^E6^')],0x0),_0x5cf584=!!_0x374e86[_0x1a3bec(0x156,'dyMa')],_0x1b80b6=!!(_0x374e86['voice']||_0x374e86[_0x1a3bec(0x1bd,'&m(^')]);if(_0x3eaf6f[_0x1a3bec(0x148,'1N9i')](_0x1b80b6,!_0x3caed5)){if(!voice['isAvailable']()){await bot['sendMessage'](_0x5a7de4,_0x3eaf6f[_0x1a3bec(0x2b4,'Zyi@')]);return;}try{const _0x5a05e5=(_0x374e86[_0x1a3bec(0x2fb,'1N9i')]||_0x374e86['audio'])['file_id'],_0x4819da=await downloadTelegramFile(_0x5a05e5);if(!_0x4819da){await bot[_0x1a3bec(0x11e,'5][L')](_0x5a7de4,_0x3eaf6f[_0x1a3bec(0x2e5,'VdWm')]);return;}await bot[_0x1a3bec(0x187,'R(S7')](_0x5a7de4,_0x1a3bec(0x1ef,'lWL5')),_0x3caed5=await voice['transcribe'](_0x4819da[_0x1a3bec(0x248,'UsqD')]);if(!_0x3caed5){await bot[_0x1a3bec(0x143,'C3$s')](_0x5a7de4,_0x3eaf6f[_0x1a3bec(0x165,'TLWE')]);return;}await bot[_0x1a3bec(0x2e0,'[V#S')](_0x5a7de4,_0x1a3bec(0x2c7,'nTiq')+_0x3caed5+'\x22');}catch(_0x388fc0){await bot['sendMessage'](_0x5a7de4,_0x1a3bec(0x2a5,'8B^t')+_0x388fc0[_0x1a3bec(0x241,'f9UJ')]);return;}}if(!_0x3caed5&&!_0x1356b3&&!_0x5cf584)return;if(!_0x3eaf6f[_0x1a3bec(0x1bc,'S(l[')](isAllowed,_0x16fa38)){await bot['sendMessage'](_0x5a7de4,_0x3eaf6f[_0x1a3bec(0x1a3,'&m(^')]);return;}if(_0x3caed5['startsWith']('/')){const _0x12ade9=_0x3caed5[_0x1a3bec(0x1c1,'yyb3')]('\x20')[0x0][_0x1a3bec(0x163,'PTeJ')]();if(_0x3eaf6f['Gmpid'](_0x12ade9,_0x3eaf6f[_0x1a3bec(0x19a,'5][L')])){if(activeSessions[_0x1a3bec(0x153,'G!UU')](_0x5a7de4)){const _0x418462=activeSessions[_0x1a3bec(0x1b6,'A(*U')](_0x5a7de4);_0x418462[_0x1a3bec(0x141,'lc]w')](_0x3eaf6f[_0x1a3bec(0x268,'UsqD')]),activeSessions['delete'](_0x5a7de4),await bot[_0x1a3bec(0x247,'wM)&')](_0x5a7de4,_0x3eaf6f[_0x1a3bec(0x2b3,'^E6^')]);}else await bot[_0x1a3bec(0x1f2,'uWvU')](_0x5a7de4,_0x3eaf6f['HwyoE']);return;}if(_0x12ade9===_0x3eaf6f['TZnVB']){chatSessions[_0x1a3bec(0x1d9,'aa^n')](_0x5a7de4),_0x3eaf6f[_0x1a3bec(0x2ae,'A(*U')](saveSessions,chatSessions),await bot[_0x1a3bec(0x247,'wM)&')](_0x5a7de4,_0x3eaf6f[_0x1a3bec(0x2fd,'TLWE')]);return;}if(_0x3eaf6f[_0x1a3bec(0x1c7,'5][L')](_0x12ade9,_0x3eaf6f['WpYMR'])){const _0x5de380=plugins['getList']()[_0x1a3bec(0x2ea,']uB%')](_0x5d0d7b=>_0x5d0d7b[_0x1a3bec(0x20d,'A(*U')])[_0x1a3bec(0x24f,'XrCT')](_0x477d22=>_0x477d22[_0x1a3bec(0x181,'UsqD')]('/')),_0x5b3303=_0x5de380[_0x1a3bec(0x29a,'VdWm')]?_0x1a3bec(0x1eb,'A(*U')+_0x5de380[_0x1a3bec(0x262,'[V#S')](',\x20'):'';await bot[_0x1a3bec(0x18a,'Zl0*')](_0x5a7de4,_0x1a3bec(0x290,'TLWE')+_0x5b3303);return;}if(_0x3eaf6f[_0x1a3bec(0x210,'oY)#')](_0x12ade9,_0x3eaf6f[_0x1a3bec(0x2f9,'7C&s')])){const _0x4a48d4=_0x3caed5[_0x1a3bec(0x21d,'tE1V')](/\s+/)[_0x1a3bec(0x2e9,'KPTG')](0x1),_0x272406=(_0x4a48d4[0x0]||_0x3eaf6f[_0x1a3bec(0x23e,'oxoh')])[_0x1a3bec(0x25f,'[V#S')]();if(_0x3eaf6f[_0x1a3bec(0x16e,'KPTG')](_0x272406,_0x3eaf6f[_0x1a3bec(0x2d7,'S(l[')])){const _0x525dcd=memory[_0x1a3bec(0x317,'R(S7')]();if(!_0x525dcd[_0x1a3bec(0x315,'Nbq6')]){await bot[_0x1a3bec(0x246,'yyb3')](_0x5a7de4,_0x3eaf6f['NMDAK']);return;}const _0x572930=_0x525dcd[_0x1a3bec(0x1b3,'lBng')](_0x467d73=>'•\x20*'+_0x467d73['key']+_0x1a3bec(0x269,'tE1V')+_0x467d73[_0x1a3bec(0x193,'[V#S')]+'\x20_('+_0x467d73[_0x1a3bec(0x306,'lBng')]+')_')[_0x1a3bec(0x18d,'J9Lj')]('\x0a');await bot[_0x1a3bec(0x2e7,'&m(^')](_0x5a7de4,_0x1a3bec(0x18f,'7eZp')+_0x525dcd[_0x1a3bec(0x2dc,'PTeJ')]+_0x1a3bec(0x1e3,'sH7&')+_0x572930,{'parse_mode':_0x3eaf6f[_0x1a3bec(0x19d,'WM1p')]});return;}if(_0x3eaf6f[_0x1a3bec(0x326,'$Wub')](_0x272406,_0x3eaf6f[_0x1a3bec(0x15c,'UsqD')])){const _0x5031f3=_0x4a48d4[0x1],_0x542966=_0x4a48d4['slice'](0x2)[_0x1a3bec(0x15f,'sH7&')]('\x20');if(!_0x5031f3||!_0x542966){await bot[_0x1a3bec(0x1b7,'Zyi@')](_0x5a7de4,_0x3eaf6f['HqDYN']);return;}memory[_0x1a3bec(0x1ec,'&m(^')](_0x5031f3,_0x542966,_0x1a3bec(0x219,'R(S7')),await bot['sendMessage'](_0x5a7de4,_0x1a3bec(0x1d6,'R$dy')+_0x5031f3+_0x1a3bec(0x227,'lc]w')+_0x542966,{'parse_mode':_0x3eaf6f[_0x1a3bec(0x288,'SBG@')]});return;}if(_0x3eaf6f['CwqlV'](_0x272406,_0x3eaf6f['wDVEP'])||_0x3eaf6f[_0x1a3bec(0x146,'tE1V')](_0x272406,_0x3eaf6f[_0x1a3bec(0x2df,'uWvU')])){const _0x2683d6=_0x4a48d4[_0x1a3bec(0x191,'*bsh')](0x1)[_0x1a3bec(0x16d,'J@K4')]('\x20');if(!_0x2683d6){await bot[_0x1a3bec(0x26a,'UsqD')](_0x5a7de4,_0x3eaf6f[_0x1a3bec(0x2d4,'S(l[')]);return;}if(memory[_0x1a3bec(0x282,'uWvU')](_0x2683d6))await bot[_0x1a3bec(0x1df,'7C&s')](_0x5a7de4,_0x1a3bec(0x17f,'J9Lj')+_0x2683d6+'*',{'parse_mode':'Markdown'});else await bot[_0x1a3bec(0x1c4,']uB%')](_0x5a7de4,_0x1a3bec(0x296,'1N9i')+_0x2683d6+'\x22\x20메모리를\x20찾을\x20수\x20없습니다.');return;}if(_0x272406===_0x1a3bec(0x304,'O6#C')){const _0x4713b8=_0x4a48d4[_0x1a3bec(0x2e9,'KPTG')](0x1)[_0x1a3bec(0x300,'1N9i')]('\x20');if(!_0x4713b8){await bot[_0x1a3bec(0x17d,'TLWE')](_0x5a7de4,_0x3eaf6f['qVfcB']);return;}const _0x30f3e7=memory[_0x1a3bec(0x19c,'J@K4')](_0x4713b8);if(!_0x30f3e7[_0x1a3bec(0x125,'&m(^')]){await bot[_0x1a3bec(0x139,'oxoh')](_0x5a7de4,_0x1a3bec(0x2aa,'oY)#')+_0x4713b8+_0x1a3bec(0x287,'J9Lj'));return;}const _0x39a550=_0x30f3e7[_0x1a3bec(0x254,'XrCT')](_0x9f8e26=>_0x1a3bec(0x2b1,'&4WG')+_0x9f8e26['key']+_0x1a3bec(0x26d,'[V#S')+_0x9f8e26[_0x1a3bec(0x2ed,'PTeJ')])[_0x1a3bec(0x30f,'S(l[')]('\x0a');await bot[_0x1a3bec(0x230,'Nbq6')](_0x5a7de4,_0x1a3bec(0x25d,'FaPN')+_0x30f3e7[_0x1a3bec(0x30b,'C3$s')]+'건)\x0a'+_0x39a550,{'parse_mode':_0x3eaf6f[_0x1a3bec(0x1a2,'C3$s')]});return;}await bot[_0x1a3bec(0x187,'R(S7')](_0x5a7de4,_0x3eaf6f[_0x1a3bec(0x221,'oxoh')]);return;}if(_0x3eaf6f[_0x1a3bec(0x2f1,'TLWE')](_0x12ade9,_0x3eaf6f[_0x1a3bec(0x14a,'lc]w')])){const _0x2284a0=messageQueue['get'](_0x5a7de4)||[];if(!_0x2284a0['length']){await bot[_0x1a3bec(0x143,'C3$s')](_0x5a7de4,_0x3eaf6f[_0x1a3bec(0x309,']uB%')]);return;}const _0x5e15ed=_0x2284a0[_0x1a3bec(0x1a4,'aa^n')]((_0x568674,_0x834d5d)=>_0x834d5d+0x1+'.\x20'+(_0x568674[_0x1a3bec(0x2c4,'f9UJ')]||_0x1a3bec(0x272,'Zyi@'))[_0x1a3bec(0x160,'Zl0*')](0x0,0x32))['join']('\x0a');await bot['sendMessage'](_0x5a7de4,_0x1a3bec(0x1b5,'8B^t')+_0x2284a0[_0x1a3bec(0x2b7,']uB%')]+'/'+MAX_QUEUE_SIZE+')\x0a'+_0x5e15ed);return;}if(_0x3eaf6f[_0x1a3bec(0x1c7,'5][L')](_0x12ade9,'/clear')){messageQueue['delete'](_0x5a7de4),await bot[_0x1a3bec(0x26e,'VdWm')](_0x5a7de4,_0x3eaf6f['XCTzv']);return;}if(_0x12ade9===_0x3eaf6f[_0x1a3bec(0x279,'7eZp')]){const _0x27af27=plugins[_0x1a3bec(0x189,']uB%')]();if(!_0x27af27[_0x1a3bec(0x31c,'8B^t')]){await bot[_0x1a3bec(0x251,'oY)#')](_0x5a7de4,_0x3eaf6f[_0x1a3bec(0x216,']uB%')]);return;}const _0x57ad41=_0x27af27['map'](_0x5b622d=>'•\x20*'+_0x5b622d[_0x1a3bec(0x12d,'f9UJ')]+'*:\x20'+(_0x5b622d['description']||'-')+_0x1a3bec(0x320,'VdWm')+(_0x5b622d[_0x1a3bec(0x328,'lc]w')][_0x1a3bec(0x136,'PTeJ')](',\x20')||'없음'))['join']('\x0a');await bot[_0x1a3bec(0x1c4,']uB%')](_0x5a7de4,_0x1a3bec(0x2de,'KPTG')+_0x27af27['length']+_0x1a3bec(0x316,'^E6^')+_0x57ad41,{'parse_mode':_0x3eaf6f[_0x1a3bec(0x314,'lBng')]});return;}if(_0x3eaf6f[_0x1a3bec(0x14c,'WM1p')](_0x12ade9,_0x1a3bec(0x206,'J@K4'))){plugins['reload']();const _0x3c99c6=plugins[_0x1a3bec(0x27f,'lWL5')]();await bot[_0x1a3bec(0x15b,'J9Lj')](_0x5a7de4,'🔄\x20플러그인\x20리로드\x20완료\x20('+_0x3c99c6['length']+'개)');return;}const _0x143940=plugins[_0x1a3bec(0x275,'O6#C')](_0x3caed5);if(_0x143940){try{const _0x5d52e0={'userId':_0x16fa38,'chatId':_0x5a7de4,'source':'telegram','args':_0x3caed5[_0x1a3bec(0x14d,'xHw&')](/\s+/)[_0x1a3bec(0x194,'lBng')](0x1)[_0x1a3bec(0x1af,'WM1p')]('\x20')},_0xf64fc2=await _0x143940[_0x1a3bec(0x266,'r%7q')](_0x5d52e0);if(_0xf64fc2)await bot[_0x1a3bec(0x187,'R(S7')](_0x5a7de4,_0x3eaf6f[_0x1a3bec(0x319,'[V#S')](String,_0xf64fc2));}catch(_0x2d87e0){await bot['sendMessage'](_0x5a7de4,'❌\x20플러그인\x20오류\x20('+_0x143940[_0x1a3bec(0x31b,'SBG@')][_0x1a3bec(0x28f,'lc]w')]+_0x1a3bec(0x2b8,']uB%')+_0x2d87e0['message']);}return;}if(_0x3eaf6f['bPKHY'](_0x12ade9,_0x3eaf6f[_0x1a3bec(0x2ec,'FaPN')])){const _0x534ee4=_0x3eaf6f[_0x1a3bec(0x1f8,'8B^t')](require,_0x3eaf6f[_0x1a3bec(0x1e4,'wM)&')]),_0xfddfa0=_0x3caed5[_0x1a3bec(0x147,'&m(^')](/\s+/)[_0x1a3bec(0x1b2,'7C&s')](0x1),_0xb187d0=(_0xfddfa0[0x0]||'list')[_0x1a3bec(0x2f8,'7C&s')]();if(_0x3eaf6f[_0x1a3bec(0x1e2,'KPTG')](_0xb187d0,_0x3eaf6f[_0x1a3bec(0x24c,'uWvU')])){const _0xa3bc46=_0x534ee4['loadCrons']();if(!_0xa3bc46[_0x1a3bec(0x28e,'[V#S')]){await bot[_0x1a3bec(0x1c4,']uB%')](_0x5a7de4,_0x3eaf6f[_0x1a3bec(0x144,'&m(^')]);return;}const _0x1c17a4=_0xa3bc46[_0x1a3bec(0x2a8,'[V#S')](_0xc5cdd3=>{const _0xa565c3=_0x1a3bec,_0x23cabf=_0xc5cdd3[_0xa565c3(0x1c8,'KPTG')]?'🟢':'⚪',_0x2093ec=_0xc5cdd3[_0xa565c3(0x2eb,'^E6^')]?new Date(_0xc5cdd3[_0xa565c3(0x243,'wM)&')])[_0xa565c3(0x12f,'A(*U')](_0x3eaf6f[_0xa565c3(0x2c5,'^E6^')]):'-';return _0x23cabf+'\x20*'+_0xc5cdd3[_0xa565c3(0x2fa,'Nbq6')]+_0xa565c3(0x2e1,'lWL5')+_0xc5cdd3[_0xa565c3(0x2a1,'yyb3')]+'\x20|\x20'+_0xc5cdd3[_0xa565c3(0x242,'KPTG')]+_0xa565c3(0x135,'R$dy')+_0x2093ec;})[_0x1a3bec(0x27e,'tE1V')]('\x0a');await bot[_0x1a3bec(0x2a9,'lc]w')](_0x5a7de4,_0x1a3bec(0x1ad,'TLWE')+_0x1c17a4,{'parse_mode':_0x1a3bec(0x26c,'7eZp')});return;}if(_0xb187d0===_0x3eaf6f[_0x1a3bec(0x132,'tE1V')]){const _0x276de=_0xfddfa0[0x1],_0x15ec7b=_0x3eaf6f[_0x1a3bec(0x1aa,'FaPN')](parseInt,_0xfddfa0[0x2]),_0x3259b0=_0xfddfa0['slice'](0x3)[_0x1a3bec(0x280,'C3$s')]('\x20');if(_0x3eaf6f[_0x1a3bec(0x298,']uB%')](!_0x276de,!_0x15ec7b)||!_0x3259b0){await bot[_0x1a3bec(0x2c8,'tE1V')](_0x5a7de4,_0x3eaf6f['pEEZF']);return;}const _0x493d77=_0x3259b0[_0x1a3bec(0x29b,'XrCT')]('!');if(_0x493d77&&!isAdmin(_0x16fa38)){await bot[_0x1a3bec(0x137,'lBng')](_0x5a7de4,_0x3eaf6f[_0x1a3bec(0x140,'r%7q')]);return;}const _0x1023f5=_0x534ee4[_0x1a3bec(0x2cd,'R$dy')]({'name':_0x276de,'type':_0x493d77?_0x3eaf6f[_0x1a3bec(0x175,'f9UJ')]:_0x3eaf6f[_0x1a3bec(0x20b,'tE1V')],'command':_0x493d77?_0x3259b0['slice'](0x1):_0x3259b0,'schedule':'*/'+_0x15ec7b+'\x20*\x20*\x20*\x20*','target':'telegram'});_0x534ee4['startCron'](_0x1023f5),await bot[_0x1a3bec(0x250,'*bsh')](_0x5a7de4,_0x1a3bec(0x169,'G!UU')+_0x276de+'*\x20('+_0x15ec7b+'분\x20간격)',{'parse_mode':_0x3eaf6f['VjXrI']});return;}if(_0xb187d0===_0x3eaf6f[_0x1a3bec(0x2ce,'Zl0*')]||_0x3eaf6f[_0x1a3bec(0x271,'G!UU')](_0xb187d0,'rm')){const _0x3d2d97=_0xfddfa0['slice'](0x1)[_0x1a3bec(0x27e,'tE1V')]('\x20'),_0x2816d=_0x534ee4[_0x1a3bec(0x276,'R(S7')](),_0x6a0c3e=_0x2816d[_0x1a3bec(0x13e,'7C&s')](_0x502d5c=>_0x502d5c[_0x1a3bec(0x2be,'R$dy')]===_0x3d2d97);if(!_0x6a0c3e){await bot[_0x1a3bec(0x246,'yyb3')](_0x5a7de4,_0x1a3bec(0x2a4,'nTiq')+_0x3d2d97+_0x1a3bec(0x301,'xHw&'));return;}_0x534ee4['removeCron'](_0x6a0c3e['id']),await bot[_0x1a3bec(0x246,'yyb3')](_0x5a7de4,_0x1a3bec(0x1a0,'*bsh')+_0x3d2d97+'*',{'parse_mode':_0x3eaf6f[_0x1a3bec(0x22a,'UsqD')]});return;}if(_0x3eaf6f[_0x1a3bec(0x293,'VdWm')](_0xb187d0,_0x3eaf6f['JiPRS'])){const _0x3f545f=_0xfddfa0['slice'](0x1)[_0x1a3bec(0x126,'O6#C')]('\x20'),_0x4be227=_0x534ee4[_0x1a3bec(0x27d,'WM1p')](),_0x54d27a=_0x4be227[_0x1a3bec(0x1be,'J9Lj')](_0x503233=>_0x503233['name']===_0x3f545f);if(!_0x54d27a){await bot[_0x1a3bec(0x1db,'$Wub')](_0x5a7de4,_0x1a3bec(0x170,'Nbq6')+_0x3f545f+_0x1a3bec(0x174,'R$dy'));return;}await bot[_0x1a3bec(0x26a,'UsqD')](_0x5a7de4,_0x1a3bec(0x1c2,'wM)&')+_0x3f545f+'*',{'parse_mode':_0x3eaf6f[_0x1a3bec(0x17a,'dyMa')]}),await _0x534ee4[_0x1a3bec(0x13a,'5][L')](_0x54d27a);const _0x135ecd=_0x534ee4[_0x1a3bec(0x1fa,'Nbq6')]()['find'](_0x2d69d4=>_0x2d69d4['id']===_0x54d27a['id']);await bot[_0x1a3bec(0x1f2,'uWvU')](_0x5a7de4,_0x1a3bec(0x178,'aa^n')+(_0x135ecd?.[_0x1a3bec(0x277,'0]pp')]||_0x3eaf6f[_0x1a3bec(0x28c,'^E6^')]));return;}if(_0x3eaf6f[_0x1a3bec(0x123,'lWL5')](_0xb187d0,'on')||_0x3eaf6f['PRegZ'](_0xb187d0,_0x3eaf6f[_0x1a3bec(0x303,'$Wub')])){const _0x45a44e=_0xfddfa0['slice'](0x1)[_0x1a3bec(0x22e,'UsqD')]('\x20'),_0x241b95=_0x534ee4[_0x1a3bec(0x15a,'Zyi@')](),_0x2ecec1=_0x241b95[_0x1a3bec(0x13e,'7C&s')](_0x25bb01=>_0x25bb01[_0x1a3bec(0x318,'TLWE')]===_0x45a44e);if(!_0x2ecec1){await bot['sendMessage'](_0x5a7de4,'❌\x20\x22'+_0x45a44e+_0x1a3bec(0x307,'PTeJ'));return;}_0x534ee4[_0x1a3bec(0x11f,'VdWm')](_0x2ecec1['id']),await bot['sendMessage'](_0x5a7de4,(_0x3eaf6f[_0x1a3bec(0x1cd,'J@K4')](_0xb187d0,'on')?_0x1a3bec(0x1d4,'8B^t'):_0x3eaf6f[_0x1a3bec(0x1cf,'WM1p')])+_0x1a3bec(0x224,'R$dy')+_0x45a44e+'*',{'parse_mode':_0x3eaf6f['VjXrI']});return;}await bot[_0x1a3bec(0x1f2,'uWvU')](_0x5a7de4,_0x1a3bec(0x1f0,'$Wub'));return;}if(_0x12ade9===_0x3eaf6f[_0x1a3bec(0x236,'r%7q')]&&_0x3eaf6f['HETMu'](isAdmin,_0x16fa38)){const _0xce1c41=_0x3caed5[_0x1a3bec(0x2fc,'oxoh')]('\x20')[0x1];if(_0xce1c41){const _0x4e7a47=config[_0x1a3bec(0x203,'[V#S')]();!_0x4e7a47[_0x1a3bec(0x149,'8B^t')][_0x1a3bec(0x12b,'R(S7')]['includes'](_0xce1c41)&&(_0x4e7a47[_0x1a3bec(0x2f5,'xHw&')]['allowedUsers'][_0x1a3bec(0x2cc,'dyMa')](_0xce1c41),config[_0x1a3bec(0x1b9,'J@K4')](_0x4e7a47)),await bot[_0x1a3bec(0x1c4,']uB%')](_0x5a7de4,_0x1a3bec(0x2e6,'lc]w')+_0xce1c41+'\x20추가됨');}return;}if(_0x3eaf6f[_0x1a3bec(0x2ab,'5][L')](_0x12ade9,_0x3eaf6f[_0x1a3bec(0x233,'[V#S')])&&isAdmin(_0x16fa38)){const _0x309ebf=_0x3caed5[_0x1a3bec(0x20e,'UsqD')]('\x20')[0x1];if(_0x309ebf){const _0x45133c=config['load']();_0x45133c[_0x1a3bec(0x151,'S(l[')][_0x1a3bec(0x120,'A(*U')]=_0x45133c[_0x1a3bec(0x235,'VdWm')][_0x1a3bec(0x214,'[V#S')][_0x1a3bec(0x133,'5][L')](_0x5b2502=>String(_0x5b2502)!==_0x309ebf),config['save'](_0x45133c),await bot[_0x1a3bec(0x17d,'TLWE')](_0x5a7de4,'✅\x20사용자\x20'+_0x309ebf+_0x1a3bec(0x17c,'R$dy'));}return;}if(_0x3eaf6f[_0x1a3bec(0x1e9,'^E6^')](_0x12ade9,_0x1a3bec(0x31e,'dyMa')))return;}if(activeSessions[_0x1a3bec(0x23b,']uB%')](_0x5a7de4)){const _0x3f16dc=messageQueue[_0x1a3bec(0x312,'7C&s')](_0x5a7de4)||[];if(_0x3f16dc[_0x1a3bec(0x13d,'*bsh')]>=MAX_QUEUE_SIZE){await bot[_0x1a3bec(0x273,'XrCT')](_0x5a7de4,_0x1a3bec(0x313,'^E6^')+MAX_QUEUE_SIZE+_0x1a3bec(0x190,'A(*U'));return;}_0x3f16dc['push'](_0x374e86),messageQueue[_0x1a3bec(0x2db,'C3$s')](_0x5a7de4,_0x3f16dc),await bot[_0x1a3bec(0x1c4,']uB%')](_0x5a7de4,_0x1a3bec(0x249,'FaPN')+_0x3f16dc[_0x1a3bec(0x25b,'A(*U')]+_0x1a3bec(0x2d1,'J@K4'));return;}const _0x288d68=await bot[_0x1a3bec(0x285,'R$dy')](_0x5a7de4,_0x3eaf6f[_0x1a3bec(0x1b8,'FaPN')]),_0x27a7c5=chatSessions[_0x1a3bec(0x1ab,'J9Lj')](_0x5a7de4)||null;try{if(status)status[_0x1a3bec(0x1e1,'UsqD')](_0x3caed5||_0x3eaf6f[_0x1a3bec(0x217,'oY)#')],_0x16fa38,_0x5a7de4);let _0x3da742=_0x3caed5;if(_0x5cf584){const _0x46fe26=await downloadTelegramFile(_0x374e86[_0x1a3bec(0x218,'J@K4')][_0x1a3bec(0x23c,'oY)#')]);if(_0x46fe26){const _0x40a65c='[첨부파일]\x20'+(_0x374e86[_0x1a3bec(0x2f3,'PTeJ')][_0x1a3bec(0x1d5,'Nbq6')]||_0x46fe26[_0x1a3bec(0x202,'sH7&')])+'\x20('+_0x3eaf6f[_0x1a3bec(0x261,'1N9i')](_0x46fe26[_0x1a3bec(0x14e,'R$dy')],0x400)[_0x1a3bec(0x131,'J9Lj')](0x1)+_0x1a3bec(0x124,'R(S7')+_0x46fe26[_0x1a3bec(0x1f6,'FaPN')];_0x3da742=_0x3da742?_0x3da742+_0x1a3bec(0x1f9,'lc]w')+_0x40a65c+_0x1a3bec(0x1e0,'PTeJ'):_0x1a3bec(0x270,'^E6^')+_0x40a65c;}}if(_0x1356b3){const _0x209d1f=_0x374e86[_0x1a3bec(0x1a5,'sH7&')][_0x374e86[_0x1a3bec(0x308,'PTeJ')][_0x1a3bec(0x15e,'tE1V')]-0x1],_0x5854cd=await _0x3eaf6f[_0x1a3bec(0x23a,'PTeJ')](downloadTelegramFile,_0x209d1f[_0x1a3bec(0x27a,'J9Lj')]);if(_0x5854cd){const _0x46276a=_0x1a3bec(0x168,'f9UJ')+_0x5854cd[_0x1a3bec(0x1de,'[V#S')]+'\x20('+_0x3eaf6f['ultML'](_0x5854cd[_0x1a3bec(0x1bf,'*bsh')],0x400)[_0x1a3bec(0x172,'1N9i')](0x1)+_0x1a3bec(0x195,'7C&s')+_0x5854cd[_0x1a3bec(0x134,'G!UU')];_0x3da742=_0x3da742?_0x3da742+_0x1a3bec(0x231,'xHw&')+_0x46276a+_0x1a3bec(0x2bc,'&4WG'):_0x1a3bec(0x297,'$Wub')+_0x46276a;}}_0x3eaf6f['GimRU'](addToHistory,_0x5a7de4,_0x1a3bec(0x1e5,'sH7&'),_0x3da742);let _0x3aa64c=_0x3da742;if(!_0x27a7c5){const _0x386f8e=_0x3eaf6f[_0x1a3bec(0x2fe,'R(S7')](getRecentHistory,_0x5a7de4),_0x5c9f39=[_0x1a3bec(0x171,'^E6^'),'전에',_0x1a3bec(0x324,'7eZp'),_0x3eaf6f[_0x1a3bec(0x2a2,'nTiq')],_0x3eaf6f['AjeAL'],_0x3eaf6f[_0x1a3bec(0x2d2,'O6#C')],'과거','기억',_0x3eaf6f[_0x1a3bec(0x1ff,'TLWE')]],_0x2a5838=_0x5c9f39[_0x1a3bec(0x222,'lc]w')](_0x16222f=>_0x3da742[_0x1a3bec(0x19f,'UsqD')](_0x16222f));let _0x108151='';if(_0x2a5838){const _0x344d51=_0x3da742[_0x1a3bec(0x232,'nTiq')](/이전에|전에|지난번|예전에|며칠전|저번에|과거에?|기억|얘기했\w*/g,'')[_0x1a3bec(0x22d,'uWvU')](),_0x589a51=_0x344d51['split'](/\s+/)[_0x1a3bec(0x130,'G!UU')](_0x16c972=>_0x16c972['length']>=0x2);for(const _0x47db6b of _0x589a51){const _0x50d3d4=_0x3eaf6f[_0x1a3bec(0x2ef,'tE1V')](searchHistory,_0x5a7de4,_0x47db6b);if(_0x50d3d4){_0x108151+=_0x50d3d4;break;}}if(!_0x108151)_0x108151=getRecentHistory(_0x5a7de4,0x7);}if(_0x3eaf6f[_0x1a3bec(0x2ad,'dyMa')](_0x386f8e,_0x108151))_0x3aa64c=''+_0x386f8e+_0x108151+_0x1a3bec(0x142,'A(*U')+_0x3da742;}const _0x3d9ee1=memory[_0x1a3bec(0x2b2,'J9Lj')](_0x3da742);if(_0x3d9ee1)_0x3aa64c=''+_0x3d9ee1+_0x3aa64c;_0x3aa64c=plugins[_0x1a3bec(0x27c,'&m(^')](_0x3aa64c,{'userId':_0x16fa38,'chatId':_0x5a7de4,'source':_0x3eaf6f[_0x1a3bec(0x18e,'G!UU')]});const _0xbb78f9={'resumeSessionId':_0x27a7c5};_0x3eaf6f[_0x1a3bec(0x209,'UsqD')](isAdmin,_0x16fa38)?(_0xbb78f9[_0x1a3bec(0x2cf,'7C&s')]=!![],_0xbb78f9[_0x1a3bec(0x1fe,'xHw&')]=memory[_0x1a3bec(0x2d8,'WM1p')]):(_0xbb78f9[_0x1a3bec(0x199,'aa^n')]=[_0x1a3bec(0x16c,'$Wub'),_0x3eaf6f[_0x1a3bec(0x173,'*bsh')]],_0xbb78f9[_0x1a3bec(0x1d1,'FaPN')]=_0x1a3bec(0x129,'wM)&'));const {promise:_0x1354e5,proc:_0x11703d}=_0x3eaf6f[_0x1a3bec(0x20c,'lBng')](runClaude,_0x3aa64c,_0xbb78f9);activeSessions[_0x1a3bec(0x200,'TLWE')](_0x5a7de4,_0x11703d);const _0x4e8f24=await _0x1354e5,_0xfaedcd=_0x3eaf6f[_0x1a3bec(0x239,'xHw&')](extractSessionId,_0x4e8f24);_0xfaedcd&&(chatSessions[_0x1a3bec(0x1b4,'R(S7')](_0x5a7de4,_0xfaedcd),_0x3eaf6f[_0x1a3bec(0x2c0,'KPTG')](saveSessions,chatSessions));let _0x36c5b5=extractText(_0x4e8f24);const {cleaned:_0x48263e,saved:_0x228cf5}=memory['extractAndSave'](_0x36c5b5,_0x3eaf6f[_0x1a3bec(0x2d3,'wM)&')]);if(_0x3eaf6f[_0x1a3bec(0x18c,'xHw&')](_0x228cf5[_0x1a3bec(0x13d,'*bsh')],0x0))_0x36c5b5=_0x48263e;_0x36c5b5=plugins[_0x1a3bec(0x283,'$Wub')](_0x36c5b5,{'userId':_0x16fa38,'chatId':_0x5a7de4,'source':_0x3eaf6f[_0x1a3bec(0x21e,'f9UJ')]}),_0x3eaf6f[_0x1a3bec(0x252,'G!UU')](addToHistory,_0x5a7de4,_0x1a3bec(0x25a,'J9Lj'),_0x36c5b5);if(status)status[_0x1a3bec(0x2f2,'S(l[')](_0x36c5b5);try{await bot['editMessageText'](_0x3eaf6f[_0x1a3bec(0x14b,'KPTG')],{'chat_id':_0x5a7de4,'message_id':_0x288d68[_0x1a3bec(0x228,'Zl0*')]});}catch{}await _0x3eaf6f[_0x1a3bec(0x1d7,'XrCT')](sendLongMessage,_0x5a7de4,_0x36c5b5);if(hasCodeChanges())try{await bot[_0x1a3bec(0x11c,'&4WG')](_0x5a7de4,_0x1a3bec(0x176,'J9Lj'));const _0x2a421c=await _0x3eaf6f[_0x1a3bec(0x327,'7C&s')](runCodexReview);if(_0x2a421c)await _0x3eaf6f[_0x1a3bec(0x29c,'J@K4')](sendLongMessage,_0x5a7de4,_0x1a3bec(0x22f,'^E6^')+_0x2a421c);else await bot[_0x1a3bec(0x2a0,'lWL5')](_0x5a7de4,_0x3eaf6f['UcfVr']);}catch{}}catch(_0x2819d3){const _0x593fc0=_0x3eaf6f['ZuhDn']['split']('|');let _0x309dae=0x0;while(!![]){switch(_0x593fc0[_0x309dae++]){case'0':(_0x2819d3['message'][_0x1a3bec(0x30e,'R$dy')](_0x3eaf6f['IwIGK'])||_0x2819d3[_0x1a3bec(0x2f4,'*bsh')][_0x1a3bec(0x2c1,'WM1p')](_0x3eaf6f['ndMCl']))&&(chatSessions[_0x1a3bec(0x16a,'dyMa')](_0x5a7de4),saveSessions(chatSessions));continue;case'1':try{await bot[_0x1a3bec(0x2b5,'J9Lj')](_0x1a3bec(0x1f7,'Zl0*'),{'chat_id':_0x5a7de4,'message_id':_0x288d68[_0x1a3bec(0x24e,'$Wub')]});}catch{}continue;case'2':if(status)status[_0x1a3bec(0x205,'R(S7')](_0x2819d3[_0x1a3bec(0x220,'8B^t')]);continue;case'3':console[_0x1a3bec(0x2e3,'7C&s')](_0x1a3bec(0x1d0,'[V#S')+_0x2819d3[_0x1a3bec(0x226,'lc]w')]);continue;case'4':await bot[_0x1a3bec(0x17d,'TLWE')](_0x5a7de4,_0x1a3bec(0x207,'WM1p')+_0x2819d3[_0x1a3bec(0x17e,'Nbq6')]);continue;}break;}}finally{activeSessions[_0x1a3bec(0x311,'7eZp')](_0x5a7de4);const _0x309fb7=messageQueue['get'](_0x5a7de4)||[];if(_0x309fb7['length']>0x0){const _0x4f9405=_0x309fb7['shift']();if(_0x3eaf6f[_0x1a3bec(0x2a6,'KPTG')](_0x309fb7[_0x1a3bec(0x2b7,']uB%')],0x0))messageQueue[_0x1a3bec(0x182,'UsqD')](_0x5a7de4);else messageQueue[_0x1a3bec(0x1cc,'uWvU')](_0x5a7de4,_0x309fb7);setImmediate(()=>handleMessage(_0x4f9405));}}}async function start(){const _0x4bc08f=a0_0x3d0140,_0x25c5c5={'NfEUd':_0x4bc08f(0x295,']uB%'),'RJUBq':'telegram','XnYwp':_0x4bc08f(0x299,'WM1p')},_0xb34ac7=config[_0x4bc08f(0x180,'8B^t')]();if(!_0xb34ac7[_0x4bc08f(0x2ff,'[V#S')][_0x4bc08f(0x145,'UsqD')]||!_0xb34ac7[_0x4bc08f(0x2a3,'dyMa')][_0x4bc08f(0x286,'^E6^')])return console[_0x4bc08f(0x29e,'sH7&')](_0x25c5c5[_0x4bc08f(0x1cb,'8B^t')]),![];return status=new StatusReporter(_0x25c5c5[_0x4bc08f(0x159,'*bsh')]),plugins[_0x4bc08f(0x2c3,'7eZp')](),voice[_0x4bc08f(0x1c3,'7C&s')](),bot=new TelegramBot(_0xb34ac7[_0x4bc08f(0x267,'C3$s')][_0x4bc08f(0x281,'VdWm')],{'polling':!![]}),bot['on'](_0x4bc08f(0x21c,'Zl0*'),handleMessage),console[_0x4bc08f(0x274,'C3$s')](_0x25c5c5[_0x4bc08f(0x2e2,'S(l[')]),!![];}async function stop(){const _0x1fa4a2=a0_0x3d0140;bot&&(bot[_0x1fa4a2(0x2da,'&m(^')](),bot=null),status&&(status[_0x1fa4a2(0x198,'r%7q')](),status=null),console[_0x1fa4a2(0x19e,'yyb3')]('[TELEGRAM]\x20Bridge\x20stopped');}module['exports']={'start':start,'stop':stop};
+/**
+ * ClawBrid - Telegram Bridge
+ */
+const TelegramBot = require('node-telegram-bot-api');
+const https = require('https');
+const path = require('path');
+const fs = require('fs');
+const config = require('../core/config');
+const StatusReporter = require('../core/status-reporter');
+const { runClaude, extractText, extractSessionId, runCodexReview, hasCodeChanges } = require('../core/claude-runner');
+const memory = require('../core/memory-manager');
+const plugins = require('../core/plugin-manager');
+const voice = require('../core/voice-transcriber');
+const webTools = require('../core/web-tools');
+const knowledgeGraph = require('../core/knowledge-graph');
+
+let bot = null;
+let status = null;
+
+// ── 권한 ──
+function isAdmin(userId) {
+  const cfg = config.load();
+  return String(userId) === String(cfg.telegram.adminUser);
+}
+
+function isAllowed(userId) {
+  if (isAdmin(userId)) return true;
+  const cfg = config.load();
+  return cfg.telegram.allowedUsers.map(id => String(id)).includes(String(userId));
+}
+
+// ── 세션 관리 ──
+function loadSessions() {
+  try {
+    if (fs.existsSync(config.SESSIONS_FILE)) {
+      const data = JSON.parse(fs.readFileSync(config.SESSIONS_FILE, 'utf-8'));
+      return new Map(Object.entries(data.telegram || {}));
+    }
+  } catch (err) { console.error(`[TG] loadSessions error: ${err.message}`); }
+  return new Map();
+}
+
+function saveSessions(sessions) {
+  try {
+    let data = {};
+    if (fs.existsSync(config.SESSIONS_FILE)) {
+      data = JSON.parse(fs.readFileSync(config.SESSIONS_FILE, 'utf-8'));
+    }
+    data.telegram = Object.fromEntries(sessions);
+    fs.writeFileSync(config.SESSIONS_FILE, JSON.stringify(data, null, 2), 'utf-8');
+  } catch (err) { console.error(`[TG] saveSessions error: ${err.message}`); }
+}
+
+// ── 대화 기록 (일별 MD) ──
+function getHistoryDir(chatId) {
+  const dir = path.join(config.HISTORY_DIR, `tg_${chatId}`);
+  if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+function getTodayPath(chatId) {
+  const date = new Date().toISOString().slice(0, 10);
+  return path.join(getHistoryDir(chatId), `${date}.md`);
+}
+
+function addToHistory(chatId, role, content) {
+  try {
+    const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
+    const label = role === 'user' ? '사용자' : 'Claude';
+    const line = `### ${label} (${now})\n${content}\n\n`;
+    fs.appendFileSync(getTodayPath(chatId), line, 'utf-8');
+  } catch (err) { console.error(`[TG] addToHistory error: ${err.message}`); }
+}
+
+function getRecentHistory(chatId, days = 3) {
+  try {
+    const dir = getHistoryDir(chatId);
+    const files = fs.readdirSync(dir).filter(f => f.endsWith('.md')).sort().reverse();
+    if (!files.length) return '';
+    const recent = files.slice(0, days);
+    let combined = '';
+    for (const f of recent.reverse()) {
+      combined += `## ${f.replace('.md', '')}\n`;
+      combined += fs.readFileSync(path.join(dir, f), 'utf-8');
+    }
+    return `--- 최근 ${days}일 대화 기록 ---\n${combined}--- 대화 기록 끝 ---\n\n`;
+  } catch (err) { console.error(`[TG] getRecentHistory error: ${err.message}`); }
+  return '';
+}
+
+function searchHistory(chatId, keyword) {
+  try {
+    const dir = getHistoryDir(chatId);
+    const files = fs.readdirSync(dir).filter(f => f.endsWith('.md')).sort();
+    const results = [];
+    for (const f of files) {
+      const content = fs.readFileSync(path.join(dir, f), 'utf-8');
+      if (content.includes(keyword)) {
+        const blocks = content.split(/(?=### )/);
+        for (const block of blocks) {
+          if (block.includes(keyword)) results.push(`[${f.replace('.md', '')}] ${block.trim()}`);
+        }
+      }
+    }
+    return results.length ? `--- 검색 결과: "${keyword}" (${results.length}건) ---\n${results.join('\n\n')}\n--- 검색 끝 ---\n\n` : '';
+  } catch (err) { console.error(`[TG] searchHistory error: ${err.message}`); }
+  return '';
+}
+
+// ── 파일 다운로드 ──
+async function downloadTelegramFile(fileId) {
+  try {
+    const file = await bot.getFile(fileId);
+    const url = `https://api.telegram.org/file/bot${config.load().telegram.botToken}/${file.file_path}`;
+    const destPath = path.join(config.DOWNLOADS_DIR, `${Date.now()}_${path.basename(file.file_path)}`);
+    return new Promise((resolve, reject) => {
+      https.get(url, (res) => {
+        const ws = fs.createWriteStream(destPath);
+        res.pipe(ws);
+        ws.on('finish', () => { ws.close(); resolve({ path: destPath, name: path.basename(file.file_path), size: fs.statSync(destPath).size }); });
+        ws.on('error', reject);
+      }).on('error', reject);
+    });
+  } catch (err) {
+    console.error(`[TG FILE ERROR] ${err.message}`);
+    return null;
+  }
+}
+
+// ── 메시지 분할 ──
+async function sendLongMessage(chatId, text) {
+  const MAX = 4000;
+  let remaining = text;
+  while (remaining.length > 0) {
+    if (remaining.length <= MAX) { await bot.sendMessage(chatId, remaining); break; }
+    let cut = remaining.lastIndexOf('\n', MAX);
+    if (cut === -1 || cut < MAX * 0.5) cut = MAX;
+    await bot.sendMessage(chatId, remaining.slice(0, cut));
+    remaining = remaining.slice(cut);
+  }
+}
+
+// ── 메인 핸들러 ──
+const activeSessions = new Map();
+const messageQueue = new Map(); // 채팅별 작업 큐 (최대 5개)
+const MAX_QUEUE_SIZE = 5;
+const chatSessions = loadSessions();
+
+async function handleMessage(msg) {
+  const chatId = String(msg.chat.id);
+  const userId = String(msg.from.id);
+  let text = msg.text?.trim() || '';
+  const hasPhoto = msg.photo && msg.photo.length > 0;
+  const hasDocument = !!msg.document;
+  const hasVoice = !!(msg.voice || msg.audio);
+
+  // 음성 메시지 처리
+  if (hasVoice && !text) {
+    if (!voice.isAvailable()) {
+      await bot.sendMessage(chatId, '⚠️ faster-whisper 설치 중이거나 실패했습니다. 로그를 확인하세요.');
+      return;
+    }
+    try {
+      const fileId = (msg.voice || msg.audio).file_id;
+      const dl = await downloadTelegramFile(fileId);
+      if (!dl) { await bot.sendMessage(chatId, '❌ 음성 파일 다운로드 실패'); return; }
+      await bot.sendMessage(chatId, '🎤 음성 변환 중...');
+      text = await voice.transcribe(dl.path);
+      if (!text) { await bot.sendMessage(chatId, '❌ 음성에서 텍스트를 인식하지 못했습니다.'); return; }
+      await bot.sendMessage(chatId, `📝 인식된 텍스트: "${text}"`);
+    } catch (err) {
+      await bot.sendMessage(chatId, `❌ 음성 변환 오류: ${err.message}`);
+      return;
+    }
+  }
+
+  if (!text && !hasPhoto && !hasDocument) return;
+
+  // 권한 체크
+  if (!isAllowed(userId)) {
+    await bot.sendMessage(chatId, '🚫 권한이 없습니다. 관리자에게 요청해주세요.');
+    return;
+  }
+
+  // 명령어
+  if (text.startsWith('/')) {
+    const cmd = text.split(' ')[0].toLowerCase();
+    if (cmd === '/stop') {
+      if (activeSessions.has(chatId)) { const p = activeSessions.get(chatId); p.kill('SIGTERM'); activeSessions.delete(chatId); await bot.sendMessage(chatId, '🛑 중단됨'); }
+      else await bot.sendMessage(chatId, 'ℹ️ 실행 중인 작업 없음');
+      return;
+    }
+    if (cmd === '/reset') {
+      chatSessions.delete(chatId); saveSessions(chatSessions);
+      await bot.sendMessage(chatId, '🔄 세션 초기화됨'); return;
+    }
+    if (cmd === '/help') {
+      const pluginCmds = plugins.getList().flatMap(p => p.commands).filter(c => c.startsWith('/'));
+      const pluginHelp = pluginCmds.length ? `\n• 플러그인: ${pluginCmds.join(', ')}` : '';
+      await bot.sendMessage(chatId, `*ClawBrid 명령어*\n• /stop 작업 중단\n• /reset 세션 초기화\n• /queue 대기열 확인\n• /clear 대기열 비우기\n• /search [검색어] 웹 검색\n• /browse [URL] [질문] 웹페이지 분석\n• /graph stats|add|link|find|del|list 지식 그래프\n• /memory list|add|del|search 장기 메모리\n• /plugins 플러그인 목록\n• /cron list|add|del|run|on|off 크론 관리\n• /help 도움말\n• 🎤 음성 메시지 → 자동 텍스트 변환${pluginHelp}`);
+      return;
+    }
+    if (cmd === '/memory') {
+      const parts = text.split(/\s+/).slice(1);
+      const sub = (parts[0] || 'list').toLowerCase();
+
+      if (sub === 'list') {
+        const all = memory.getAll();
+        if (!all.length) { await bot.sendMessage(chatId, 'ℹ️ 저장된 메모리가 없습니다.'); return; }
+        const list = all.map(m => `• *${m.key}*: ${m.value} _(${m.source})_`).join('\n');
+        await bot.sendMessage(chatId, `🧠 메모리 (${all.length}개)\n${list}`, { parse_mode: 'Markdown' }); return;
+      }
+      if (sub === 'add') {
+        const key = parts[1];
+        const value = parts.slice(2).join(' ');
+        if (!key || !value) { await bot.sendMessage(chatId, '사용법: /memory add [키] [값]'); return; }
+        memory.add(key, value, 'telegram');
+        await bot.sendMessage(chatId, `✅ 메모리 저장: *${key}* = ${value}`, { parse_mode: 'Markdown' }); return;
+      }
+      if (sub === 'del' || sub === 'delete') {
+        const key = parts.slice(1).join(' ');
+        if (!key) { await bot.sendMessage(chatId, '사용법: /memory del [키]'); return; }
+        if (memory.remove(key)) await bot.sendMessage(chatId, `🗑️ 메모리 삭제: *${key}*`, { parse_mode: 'Markdown' });
+        else await bot.sendMessage(chatId, `❌ "${key}" 메모리를 찾을 수 없습니다.`);
+        return;
+      }
+      if (sub === 'search') {
+        const keyword = parts.slice(1).join(' ');
+        if (!keyword) { await bot.sendMessage(chatId, '사용법: /memory search [키워드]'); return; }
+        const found = memory.search(keyword);
+        if (!found.length) { await bot.sendMessage(chatId, `ℹ️ "${keyword}" 관련 메모리 없음`); return; }
+        const list = found.map(m => `• *${m.key}*: ${m.value}`).join('\n');
+        await bot.sendMessage(chatId, `🔍 검색 결과 (${found.length}건)\n${list}`, { parse_mode: 'Markdown' }); return;
+      }
+      await bot.sendMessage(chatId, '사용법: /memory list|add|del|search'); return;
+    }
+    if (cmd === '/queue') {
+      const queue = messageQueue.get(chatId) || [];
+      if (!queue.length) { await bot.sendMessage(chatId, 'ℹ️ 대기열이 비어 있습니다.'); return; }
+      const list = queue.map((q, i) => `${i + 1}. ${(q.text || '[파일]').slice(0, 50)}`).join('\n');
+      await bot.sendMessage(chatId, `📋 대기열 (${queue.length}/${MAX_QUEUE_SIZE})\n${list}`); return;
+    }
+    if (cmd === '/clear') {
+      messageQueue.delete(chatId);
+      await bot.sendMessage(chatId, '🗑️ 대기열 비워짐'); return;
+    }
+    if (cmd === '/plugins') {
+      const list = plugins.getList();
+      if (!list.length) { await bot.sendMessage(chatId, 'ℹ️ 로드된 플러그인이 없습니다.'); return; }
+      const info = list.map(p => `• *${p.name}*: ${p.description || '-'} | 명령: ${p.commands.join(', ') || '없음'}`).join('\n');
+      await bot.sendMessage(chatId, `🧩 플러그인 (${list.length}개)\n${info}`, { parse_mode: 'Markdown' }); return;
+    }
+    if (cmd === '/reload-plugins') {
+      plugins.reload();
+      const list = plugins.getList();
+      await bot.sendMessage(chatId, `🔄 플러그인 리로드 완료 (${list.length}개)`); return;
+    }
+    // 플러그인 커스텀 명령어 매칭
+    const pluginMatch = plugins.matchCommand(text);
+    if (pluginMatch) {
+      try {
+        const ctx = { userId, chatId, source: 'telegram', args: text.split(/\s+/).slice(1).join(' ') };
+        const result = await pluginMatch.handler(ctx);
+        if (result) await bot.sendMessage(chatId, String(result));
+      } catch (err) {
+        await bot.sendMessage(chatId, `❌ 플러그인 오류 (${pluginMatch.plugin.name}): ${err.message}`);
+      }
+      return;
+    }
+    if (cmd === '/cron') {
+      const cronManager = require('../core/cron-manager');
+      const parts = text.split(/\s+/).slice(1);
+      const sub = (parts[0] || 'list').toLowerCase();
+
+      if (sub === 'list') {
+        const crons = cronManager.loadCrons();
+        if (!crons.length) { await bot.sendMessage(chatId, '등록된 크론 작업이 없습니다.'); return; }
+        const list = crons.map(c => {
+          const st = c.enabled ? '🟢' : '⚪';
+          const last = c.lastRun ? new Date(c.lastRun).toLocaleTimeString('ko-KR') : '-';
+          return `${st} *${c.name}* | ${c.type} | ${c.schedule} | 마지막: ${last}`;
+        }).join('\n');
+        await bot.sendMessage(chatId, `⏰ 크론 작업 목록\n${list}`, { parse_mode: 'Markdown' }); return;
+      }
+      if (sub === 'add') {
+        const name = parts[1]; const interval = parseInt(parts[2]); const command = parts.slice(3).join(' ');
+        if (!name || !interval || !command) { await bot.sendMessage(chatId, '사용법: /cron add [이름] [간격(분)] [명령]'); return; }
+        const isShell = command.startsWith('!');
+        if (isShell && !isAdmin(userId)) {
+          await bot.sendMessage(chatId, '🚫 쉘 명령 크론은 관리자만 등록할 수 있습니다.'); return;
+        }
+        const cron = cronManager.addCron({ name, type: isShell ? 'shell' : 'claude', command: isShell ? command.slice(1) : command, schedule: `*/${interval} * * * *`, target: 'telegram' });
+        cronManager.startCron(cron);
+        await bot.sendMessage(chatId, `✅ 크론 추가: *${name}* (${interval}분 간격)`, { parse_mode: 'Markdown' }); return;
+      }
+      if (sub === 'del' || sub === 'rm') {
+        const name = parts.slice(1).join(' ');
+        const crons = cronManager.loadCrons();
+        const found = crons.find(c => c.name === name);
+        if (!found) { await bot.sendMessage(chatId, `❌ "${name}" 없음`); return; }
+        cronManager.removeCron(found.id);
+        await bot.sendMessage(chatId, `🗑️ 삭제: *${name}*`, { parse_mode: 'Markdown' }); return;
+      }
+      if (sub === 'run') {
+        const name = parts.slice(1).join(' ');
+        const crons = cronManager.loadCrons();
+        const found = crons.find(c => c.name === name);
+        if (!found) { await bot.sendMessage(chatId, `❌ "${name}" 없음`); return; }
+        await bot.sendMessage(chatId, `⏳ 실행 중: *${name}*`, { parse_mode: 'Markdown' });
+        await cronManager.executeCron(found);
+        const updated = cronManager.loadCrons().find(c => c.id === found.id);
+        await bot.sendMessage(chatId, `✅ 완료: ${updated?.lastResult || '(결과 없음)'}`); return;
+      }
+      if (sub === 'on' || sub === 'off') {
+        const name = parts.slice(1).join(' ');
+        const crons = cronManager.loadCrons();
+        const found = crons.find(c => c.name === name);
+        if (!found) { await bot.sendMessage(chatId, `❌ "${name}" 없음`); return; }
+        cronManager.toggleCron(found.id);
+        await bot.sendMessage(chatId, `${sub === 'on' ? '🟢 활성화' : '⚪ 비활성화'}: *${name}*`, { parse_mode: 'Markdown' }); return;
+      }
+      await bot.sendMessage(chatId, '사용법: /cron list|add|del|run|on|off'); return;
+    }
+    // ── 웹 검색 ──
+    if (cmd === '/search') {
+      const query = text.split(/\s+/).slice(1).join(' ');
+      if (!query) { await bot.sendMessage(chatId, '사용법: /search [검색어]'); return; }
+      try {
+        await bot.sendMessage(chatId, `🔍 "${query}" 검색 중...`);
+        const results = await webTools.search(query);
+        await sendLongMessage(chatId, webTools.formatSearchResults(results, query));
+      } catch (err) {
+        await bot.sendMessage(chatId, `❌ 검색 오류: ${err.message}`);
+      }
+      return;
+    }
+    // ── 브라우저 자동화 ──
+    if (cmd === '/browse') {
+      const parts = text.split(/\s+/).slice(1);
+      const url = parts[0];
+      if (!url) { await bot.sendMessage(chatId, '사용법: /browse [URL] [질문(선택)]'); return; }
+      const question = parts.slice(1).join(' ');
+      try {
+        await bot.sendMessage(chatId, `🌐 ${url} 불러오는 중...`);
+        const result = await webTools.browse(url);
+        if (question) {
+          // 질문이 있으면 페이지 내용 + 질문을 Claude에게 전달
+          const browsePrompt = `다음 웹페이지 내용을 기반으로 질문에 답해줘.\n\n--- 웹페이지: ${result.title} (${result.url}) ---\n${result.text}\n--- 페이지 끝 ---\n\n질문: ${question}`;
+          // 큐잉/Claude 호출은 일반 메시지로 위임
+          msg.text = browsePrompt;
+          // 명령어 접두사 제거를 위해 재귀 호출하지 않고 플래그 설정
+          text = browsePrompt;
+          // 아래 Claude 호출 로직으로 계속 진행 (return 하지 않음)
+        } else {
+          await sendLongMessage(chatId, webTools.formatBrowseResult(result));
+          return;
+        }
+      } catch (err) {
+        await bot.sendMessage(chatId, `❌ 브라우즈 오류: ${err.message}`);
+        return;
+      }
+    }
+    // ── Knowledge Graph ──
+    if (cmd === '/graph') {
+      const parts = text.split(/\s+/).slice(1);
+      const sub = (parts[0] || 'stats').toLowerCase();
+
+      if (sub === 'stats') {
+        const stats = knowledgeGraph.getStats();
+        const typeStr = Object.entries(stats.types).map(([t, c]) => `${t}: ${c}`).join(', ');
+        await bot.sendMessage(chatId, `📊 Knowledge Graph\n• 노드: ${stats.nodeCount}개\n• 엣지: ${stats.edgeCount}개\n• 타입: ${typeStr || '없음'}`);
+        return;
+      }
+      if (sub === 'add') {
+        const label = parts[1];
+        const type = parts[2] || 'concept';
+        const context = parts.slice(3).join(' ');
+        if (!label) { await bot.sendMessage(chatId, '사용법: /graph add [이름] [타입] [설명]'); return; }
+        knowledgeGraph.addNode(label, type, context);
+        await bot.sendMessage(chatId, `✅ 노드 추가: ${label} (${type})`);
+        return;
+      }
+      if (sub === 'link') {
+        const from = parts[1];
+        const relation = parts[2];
+        const to = parts[3];
+        if (!from || !relation || !to) { await bot.sendMessage(chatId, '사용법: /graph link [노드1] [관계] [노드2]'); return; }
+        knowledgeGraph.addNode(from); knowledgeGraph.addNode(to);
+        knowledgeGraph.addEdge(from, to, relation);
+        await bot.sendMessage(chatId, `✅ 관계 추가: ${from} -[${relation}]-> ${to}`);
+        return;
+      }
+      if (sub === 'find') {
+        const keyword = parts.slice(1).join(' ');
+        if (!keyword) { await bot.sendMessage(chatId, '사용법: /graph find [키워드]'); return; }
+        const info = knowledgeGraph.getNeighbors(keyword);
+        if (!info) { await bot.sendMessage(chatId, `ℹ️ "${keyword}" 노드를 찾을 수 없습니다.`); return; }
+        let msg2 = `🔗 ${info.node.label} (${info.node.type})\n언급: ${info.node.mentions}회`;
+        if (info.neighbors.length) {
+          msg2 += '\n\n연결된 노드:\n' + info.neighbors.map(n =>
+            `• ${n.direction === 'out' ? '→' : '←'} [${n.relation}] ${n.node.label} (${n.node.type})`
+          ).join('\n');
+        }
+        await bot.sendMessage(chatId, msg2);
+        return;
+      }
+      if (sub === 'del') {
+        const label = parts.slice(1).join(' ');
+        if (!label) { await bot.sendMessage(chatId, '사용법: /graph del [노드이름]'); return; }
+        if (knowledgeGraph.removeNode(label)) await bot.sendMessage(chatId, `🗑️ 노드 삭제: ${label}`);
+        else await bot.sendMessage(chatId, `❌ "${label}" 노드를 찾을 수 없습니다.`);
+        return;
+      }
+      if (sub === 'list') {
+        const nodes = knowledgeGraph.getAllNodes();
+        if (!nodes.length) { await bot.sendMessage(chatId, 'ℹ️ 그래프가 비어 있습니다.'); return; }
+        const list = nodes.slice(0, 20).map(n => `• [${n.type}] ${n.label} (${n.mentions}회)`).join('\n');
+        const more = nodes.length > 20 ? `\n... 외 ${nodes.length - 20}개` : '';
+        await bot.sendMessage(chatId, `📊 노드 목록 (${nodes.length}개)\n${list}${more}`);
+        return;
+      }
+      await bot.sendMessage(chatId, '사용법: /graph stats|add|link|find|del|list');
+      return;
+    }
+    if (cmd === '/adduser' && isAdmin(userId)) {
+      const targetId = text.split(' ')[1];
+      if (targetId) {
+        const cfg = config.load();
+        if (!cfg.telegram.allowedUsers.includes(targetId)) {
+          cfg.telegram.allowedUsers.push(targetId);
+          config.save(cfg);
+        }
+        await bot.sendMessage(chatId, `✅ 사용자 ${targetId} 추가됨`);
+      }
+      return;
+    }
+    if (cmd === '/removeuser' && isAdmin(userId)) {
+      const targetId = text.split(' ')[1];
+      if (targetId) {
+        const cfg = config.load();
+        cfg.telegram.allowedUsers = cfg.telegram.allowedUsers.filter(id => String(id) !== targetId);
+        config.save(cfg);
+        await bot.sendMessage(chatId, `✅ 사용자 ${targetId} 제거됨`);
+      }
+      return;
+    }
+    if (cmd === '/start') return; // Telegram 기본 명령
+  }
+
+  if (activeSessions.has(chatId)) {
+    // 큐에 추가
+    const queue = messageQueue.get(chatId) || [];
+    if (queue.length >= MAX_QUEUE_SIZE) {
+      await bot.sendMessage(chatId, `❌ 대기열이 가득 찼습니다 (${MAX_QUEUE_SIZE}개). /clear로 비우거나 /stop으로 현재 작업을 중단하세요.`);
+      return;
+    }
+    queue.push(msg);
+    messageQueue.set(chatId, queue);
+    await bot.sendMessage(chatId, `📋 대기열에 추가됨 (${queue.length}번째). /queue로 확인`);
+    return;
+  }
+
+  const startMsg = await bot.sendMessage(chatId, '⏳ 작업 진행중...');
+  const resumeSessionId = chatSessions.get(chatId) || null;
+
+  try {
+    if (status) status.start(text || '[파일 첨부]', userId, chatId);
+
+    let prompt = text;
+
+    if (hasDocument) {
+      const dl = await downloadTelegramFile(msg.document.file_id);
+      if (dl) {
+        const info = `[첨부파일] ${msg.document.file_name || dl.name} (${(dl.size/1024).toFixed(1)}KB)\n경로: ${dl.path}`;
+        prompt = prompt ? `${prompt}\n\n--- 첨부파일 ---\n${info}\n\n위 첨부파일을 Read 도구로 직접 읽어줘.` : `첨부파일을 분석해줘:\n\n${info}`;
+      }
+    }
+    if (hasPhoto) {
+      const photo = msg.photo[msg.photo.length - 1];
+      const dl = await downloadTelegramFile(photo.file_id);
+      if (dl) {
+        const info = `[이미지] ${dl.name} (${(dl.size/1024).toFixed(1)}KB)\n경로: ${dl.path}`;
+        prompt = prompt ? `${prompt}\n\n--- 이미지 ---\n${info}\n\n이미지를 Read 도구로 확인해줘.` : `이미지를 분석해줘:\n\n${info}`;
+      }
+    }
+
+    addToHistory(chatId, 'user', prompt);
+
+    let finalPrompt = prompt;
+    if (!resumeSessionId) {
+      const ctx = getRecentHistory(chatId);
+      const pastKeywords = ['이전에', '전에', '지난번', '예전에', '며칠전', '저번에', '과거', '기억', '얘기했'];
+      const needsSearch = pastKeywords.some(k => prompt.includes(k));
+      let searchCtx = '';
+      if (needsSearch) {
+        const cleaned = prompt.replace(/이전에|전에|지난번|예전에|며칠전|저번에|과거에?|기억|얘기했\w*/g, '').trim();
+        const words = cleaned.split(/\s+/).filter(w => w.length >= 2);
+        for (const w of words) {
+          const found = searchHistory(chatId, w);
+          if (found) { searchCtx += found; break; }
+        }
+        if (!searchCtx) searchCtx = getRecentHistory(chatId, 7);
+      }
+      if (ctx || searchCtx) finalPrompt = `${ctx}${searchCtx}현재 메시지: ${prompt}`;
+    }
+
+    // 메모리 + 지식 그래프 컨텍스트 주입
+    const memoryCtx = memory.getRelevantContext(prompt);
+    if (memoryCtx) finalPrompt = `${memoryCtx}${finalPrompt}`;
+    const graphCtx = knowledgeGraph.getRelevantContext(prompt);
+    if (graphCtx) finalPrompt = `${graphCtx}${finalPrompt}`;
+
+    // 플러그인 전처리 훅
+    finalPrompt = plugins.runBeforePrompt(finalPrompt, { userId, chatId, source: 'telegram' });
+
+    // 관리자/비관리자 권한 분리
+    const claudeOptions = { resumeSessionId };
+    if (isAdmin(userId)) {
+      claudeOptions.isAdmin = true;
+      claudeOptions.appendSystemPrompt = `${memory.MEMORY_SYSTEM_PROMPT}\n${knowledgeGraph.GRAPH_SYSTEM_PROMPT}`;
+    } else {
+      claudeOptions.allowedTools = ['WebSearch', 'WebFetch'];
+      claudeOptions.appendSystemPrompt = '너는 일반 사용자의 질문에 답변하는 AI입니다. 파일 시스템 접근, 코드 실행, 시스템 명령은 사용하지 마세요.';
+    }
+
+    const { promise, proc } = runClaude(finalPrompt, claudeOptions);
+    activeSessions.set(chatId, proc);
+    const result = await promise;
+
+    const newSession = extractSessionId(result);
+    if (newSession) { chatSessions.set(chatId, newSession); saveSessions(chatSessions); }
+
+    let responseText = extractText(result);
+
+    // 응답에서 메모리 자동 추출
+    const { cleaned, saved } = memory.extractAndSave(responseText, 'telegram-auto');
+    if (saved.length > 0) {
+      responseText = cleaned;
+      // 메모리를 그래프에도 인덱싱
+      for (const s of saved) knowledgeGraph.indexMemory(s.key, s.value);
+    }
+
+    // 응답에서 그래프 엔티티 자동 추출
+    const graphResult = knowledgeGraph.extractAndIndex(responseText);
+    if (graphResult.indexed.length > 0) responseText = graphResult.cleaned;
+
+    // 플러그인 후처리 훅
+    responseText = plugins.runAfterResponse(responseText, { userId, chatId, source: 'telegram' });
+
+    addToHistory(chatId, 'assistant', responseText);
+    if (status) status.done(responseText);
+
+    try { await bot.editMessageText('✅ 작업 완료', { chat_id: chatId, message_id: startMsg.message_id }); } catch {}
+    await sendLongMessage(chatId, responseText);
+
+    // 코드 변경이 있으면 자동 Codex 리뷰
+    if (hasCodeChanges()) {
+      try {
+        await bot.sendMessage(chatId, '🔍 Codex 리뷰 실행중...');
+        const review = await runCodexReview();
+        if (review) await sendLongMessage(chatId, `📋 Codex Review\n${review}`);
+        else await bot.sendMessage(chatId, '✅ Codex 리뷰: 이슈 없음');
+      } catch {}
+    }
+
+  } catch (err) {
+    console.error(`[TG ERROR] ${err.message}`);
+    if (status) status.error(err.message);
+    if (err.message.includes('session') || err.message.includes('resume')) {
+      chatSessions.delete(chatId); saveSessions(chatSessions);
+    }
+    try { await bot.editMessageText('❌ 작업 실패', { chat_id: chatId, message_id: startMsg.message_id }); } catch {}
+    await bot.sendMessage(chatId, `❌ 오류:\n${err.message}`);
+  } finally {
+    activeSessions.delete(chatId);
+
+    // 큐에 다음 작업이 있으면 자동 실행
+    const queue = messageQueue.get(chatId) || [];
+    if (queue.length > 0) {
+      const next = queue.shift();
+      if (queue.length === 0) messageQueue.delete(chatId);
+      else messageQueue.set(chatId, queue);
+      setImmediate(() => handleMessage(next));
+    }
+  }
+}
+
+// ── 시작/중지 ──
+async function start() {
+  const cfg = config.load();
+  if (!cfg.telegram.enabled || !cfg.telegram.botToken) {
+    console.log('[TELEGRAM] Disabled or token not set');
+    return false;
+  }
+
+  status = new StatusReporter('telegram');
+  plugins.loadAll();
+  voice.ensureInstalled();
+
+  bot = new TelegramBot(cfg.telegram.botToken, { polling: true });
+  bot.on('message', handleMessage);
+
+  console.log('[TELEGRAM] Bridge started');
+  return true;
+}
+
+async function stop() {
+  if (bot) { bot.stopPolling(); bot = null; }
+  if (status) { status.destroy(); status = null; }
+  console.log('[TELEGRAM] Bridge stopped');
+}
+
+module.exports = { start, stop };
