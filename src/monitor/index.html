@@ -604,8 +604,12 @@ async function safeUpdateAll() {
   _updating = false;
 }
 
-safeUpdateAll();
-setInterval(safeUpdateAll, 1000);
+// Tauri: initBridge 완료 대기 후 시작
+(async () => {
+  if (window.bridgeReady) await window.bridgeReady;
+  safeUpdateAll();
+  setInterval(safeUpdateAll, 1000);
+})();
 
 // 탭 전환 시 즉시 업데이트
 document.querySelectorAll('.tab').forEach(tab => {
