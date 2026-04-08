@@ -9,8 +9,13 @@ const http = require('http');
 /**
  * HTTP(S) GET 요청
  */
-function httpGet(url, options = {}) {
+const MAX_REDIRECTS = 5;
+
+function httpGet(url, options = {}, _redirectCount = 0) {
   return new Promise((resolve, reject) => {
+    if (_redirectCount >= MAX_REDIRECTS) {
+      return reject(new Error(`최대 리다이렉트 횟수 초과 (${MAX_REDIRECTS}회)`));
+    }
     const client = url.startsWith('https') ? https : http;
     const req = client.get(url, {
       headers: {
@@ -25,7 +30,7 @@ function httpGet(url, options = {}) {
       if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
         let redirectUrl = res.headers.location;
         if (redirectUrl.startsWith('//')) redirectUrl = 'https:' + redirectUrl;
-        return httpGet(redirectUrl, options).then(resolve).catch(reject);
+        return httpGet(redirectUrl, options, _redirectCount + 1).then(resolve).catch(reject);
       }
       let data = '';
       res.on('data', chunk => { data += chunk; });

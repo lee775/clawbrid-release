@@ -133,17 +133,67 @@ function removeNode(label) {
 /**
  * 메모리 항목에서 그래프 노드/엣지 자동 생성
  * memory-manager의 add()와 연동
+ * 1회 load/save로 I/O 최소화
  */
 function indexMemory(key, value) {
+  const graph = loadGraph();
   const keyType = detectType(key);
   const valueType = detectType(value);
 
-  const keyId = addNode(key, keyType, value);
-  const valueId = addNode(value, valueType, key);
+  const keyId = _addNodeToGraph(graph, key, keyType, value);
+  const valueId = _addNodeToGraph(graph, value, valueType, key);
 
-  if (keyId && valueId) {
-    addEdge(key, value, 'is');
+  if (keyId && valueId && keyId !== valueId) {
+    _addEdgeToGraph(graph, keyId, valueId, 'is');
   }
+
+  saveGraph(graph);
+}
+
+/**
+ * 내부용: graph 객체에 직접 노드 추가 (I/O 없음)
+ */
+function _addNodeToGraph(graph, label, type = 'concept', context = '') {
+  const id = toNodeId(label);
+  if (!id) return null;
+
+  if (graph.nodes[id]) {
+    graph.nodes[id].mentions++;
+    graph.nodes[id].lastSeen = new Date().toISOString();
+    if (context && !graph.nodes[id].contexts.includes(context)) {
+      graph.nodes[id].contexts.push(context);
+      if (graph.nodes[id].contexts.length > 10) graph.nodes[id].contexts.shift();
+    }
+  } else {
+    graph.nodes[id] = {
+      label,
+      type: ENTITY_TYPES.includes(type) ? type : 'concept',
+      mentions: 1,
+      lastSeen: new Date().toISOString(),
+      contexts: context ? [context] : [],
+    };
+  }
+  return id;
+}
+
+/**
+ * 내부용: graph 객체에 직접 엣지 추가 (I/O 없음)
+ */
+function _addEdgeToGraph(graph, fromId, toId, relation = 'related') {
+  if (!graph.nodes[fromId] || !graph.nodes[toId]) return false;
+  if (fromId === toId) return false;
+
+  const existing = graph.edges.find(e =>
+    (e.from === fromId && e.to === toId) || (e.from === toId && e.to === fromId)
+  );
+
+  if (existing) {
+    existing.weight++;
+    existing.lastSeen = new Date().toISOString();
+  } else {
+    graph.edges.push({ from: fromId, to: toId, relation, weight: 1, lastSeen: new Date().toISOString() });
+  }
+  return true;
 }
 
 /**
@@ -179,31 +229,30 @@ function getRelevantContext(prompt, maxItems = 7) {
   for (const id of nodeIds) {
     const node = graph.nodes[id];
     const searchText = `${node.label} ${node.contexts.join(' ')}`.toLowerCase();
-    let score = 0;
+    let keywordScore = 0;
 
     for (const w of words) {
-      if (searchText.includes(w)) score += 2;
-      if (node.label.toLowerCase() === w) score += 5; // 정확한 매칭 보너스
+      if (searchText.includes(w)) keywordScore += 2;
+      if (node.label.toLowerCase() === w) keywordScore += 5; // 정확한 매칭 보너스
     }
 
-    // 언급 빈도 보너스
-    score += Math.min(node.mentions * 0.3, 3);
-
-    // 최근 접근 보너스 (7일 이내)
-    const daysSince = (Date.now() - new Date(node.lastSeen).getTime()) / 86400000;
-    if (daysSince < 7) score += 1;
-
-    if (score > 0) scores[id] = score;
+    // 키워드 매칭이 있을 때만 보너스 적용
+    if (keywordScore > 0) {
+      let bonus = Math.min(node.mentions * 0.3, 3);
+      const daysSince = (Date.now() - new Date(node.lastSeen).getTime()) / 86400000;
+      if (daysSince < 7) bonus += 1;
+      scores[id] = keywordScore + bonus;
+    }
   }
 
-  // 2단계: 1-hop 이웃 탐색 (시드에서 연결된 노드에 점수 전파)
-  const seedIds = Object.keys(scores);
+  // 2단계: 1-hop 이웃 탐색 (시드 점수 스냅샷으로 전파, 증폭 방지)
+  const seedScores = { ...scores };
   for (const edge of graph.edges) {
-    if (scores[edge.from] && graph.nodes[edge.to]) {
-      scores[edge.to] = (scores[edge.to] || 0) + scores[edge.from] * 0.4 * Math.min(edge.weight, 3);
+    if (seedScores[edge.from] && graph.nodes[edge.to]) {
+      scores[edge.to] = (scores[edge.to] || 0) + seedScores[edge.from] * 0.4 * Math.min(edge.weight, 3);
     }
-    if (scores[edge.to] && graph.nodes[edge.from]) {
-      scores[edge.from] = (scores[edge.from] || 0) + scores[edge.to] * 0.4 * Math.min(edge.weight, 3);
+    if (seedScores[edge.to] && graph.nodes[edge.from]) {
+      scores[edge.from] = (scores[edge.from] || 0) + seedScores[edge.to] * 0.4 * Math.min(edge.weight, 3);
     }
   }
 
@@ -246,6 +295,7 @@ function extractAndIndex(responseText) {
   const pattern = /\[GRAPH:([^\]]+)\]/g;
   let match;
   const indexed = [];
+  const graph = loadGraph();
 
   while ((match = pattern.exec(responseText)) !== null) {
     const content = match[1].trim();
@@ -253,17 +303,17 @@ function extractAndIndex(responseText) {
 
     if (arrowMatch) {
       const [, entity1, relation, entity2] = arrowMatch;
-      addNode(entity1.trim(), detectType(entity1.trim()));
-      addNode(entity2.trim(), detectType(entity2.trim()));
-      addEdge(entity1.trim(), entity2.trim(), relation.trim());
+      const id1 = _addNodeToGraph(graph, entity1.trim(), detectType(entity1.trim()));
+      const id2 = _addNodeToGraph(graph, entity2.trim(), detectType(entity2.trim()));
+      if (id1 && id2) _addEdgeToGraph(graph, id1, id2, relation.trim());
       indexed.push({ entity1: entity1.trim(), relation: relation.trim(), entity2: entity2.trim() });
     } else {
-      // 단일 엔티티 추가
-      addNode(content, detectType(content));
+      _addNodeToGraph(graph, content, detectType(content));
       indexed.push({ entity1: content });
     }
   }
 
+  if (indexed.length > 0) saveGraph(graph);
   const cleaned = responseText.replace(pattern, '').trim();
   return { cleaned, indexed };
 }

@@ -182,9 +182,10 @@ async function handleMessage(msg) {
     return;
   }
 
-  // 명령어
+  // 명령어 처리 (handled=true면 return, null이면 Claude로 진행)
   if (text.startsWith('/')) {
     const cmd = text.split(' ')[0].toLowerCase();
+    let browsePassthrough = null; // /browse+질문 시 Claude에 넘길 텍스트
     if (cmd === '/stop') {
       if (activeSessions.has(chatId)) { const p = activeSessions.get(chatId); p.kill('SIGTERM'); activeSessions.delete(chatId); await bot.sendMessage(chatId, '🛑 중단됨'); }
       else await bot.sendMessage(chatId, 'ℹ️ 실행 중인 작업 없음');
@@ -337,20 +338,15 @@ async function handleMessage(msg) {
     // ── 브라우저 자동화 ──
     if (cmd === '/browse') {
       const parts = text.split(/\s+/).slice(1);
-      const url = parts[0];
-      if (!url) { await bot.sendMessage(chatId, '사용법: /browse [URL] [질문(선택)]'); return; }
+      const browseUrl = parts[0];
+      if (!browseUrl) { await bot.sendMessage(chatId, '사용법: /browse [URL] [질문(선택)]'); return; }
       const question = parts.slice(1).join(' ');
       try {
-        await bot.sendMessage(chatId, `🌐 ${url} 불러오는 중...`);
-        const result = await webTools.browse(url);
+        await bot.sendMessage(chatId, `🌐 ${browseUrl} 불러오는 중...`);
+        const result = await webTools.browse(browseUrl);
         if (question) {
           // 질문이 있으면 페이지 내용 + 질문을 Claude에게 전달
-          const browsePrompt = `다음 웹페이지 내용을 기반으로 질문에 답해줘.\n\n--- 웹페이지: ${result.title} (${result.url}) ---\n${result.text}\n--- 페이지 끝 ---\n\n질문: ${question}`;
-          // 큐잉/Claude 호출은 일반 메시지로 위임
-          msg.text = browsePrompt;
-          // 명령어 접두사 제거를 위해 재귀 호출하지 않고 플래그 설정
-          text = browsePrompt;
-          // 아래 Claude 호출 로직으로 계속 진행 (return 하지 않음)
+          browsePassthrough = `다음 웹페이지 내용을 기반으로 질문에 답해줘.\n\n--- 웹페이지: ${result.title} (${result.url}) ---\n${result.text}\n--- 페이지 끝 ---\n\n질문: ${question}`;
         } else {
           await sendLongMessage(chatId, webTools.formatBrowseResult(result));
           return;
@@ -361,7 +357,7 @@ async function handleMessage(msg) {
       }
     }
     // ── Knowledge Graph ──
-    if (cmd === '/graph') {
+    if (!browsePassthrough && cmd === '/graph') {
       const parts = text.split(/\s+/).slice(1);
       const sub = (parts[0] || 'stats').toLowerCase();
 
@@ -422,7 +418,7 @@ async function handleMessage(msg) {
       await bot.sendMessage(chatId, '사용법: /graph stats|add|link|find|del|list');
       return;
     }
-    if (cmd === '/adduser' && isAdmin(userId)) {
+    if (!browsePassthrough && cmd === '/adduser' && isAdmin(userId)) {
       const targetId = text.split(' ')[1];
       if (targetId) {
         const cfg = config.load();
@@ -434,7 +430,7 @@ async function handleMessage(msg) {
       }
       return;
     }
-    if (cmd === '/removeuser' && isAdmin(userId)) {
+    if (!browsePassthrough && cmd === '/removeuser' && isAdmin(userId)) {
       const targetId = text.split(' ')[1];
       if (targetId) {
         const cfg = config.load();
@@ -445,6 +441,11 @@ async function handleMessage(msg) {
       return;
     }
     if (cmd === '/start') return; // Telegram 기본 명령
+
+    // /browse+질문 → text 교체 후 Claude 호출로 진행
+    if (browsePassthrough) {
+      text = browsePassthrough;
+    }
   }
 
   if (activeSessions.has(chatId)) {

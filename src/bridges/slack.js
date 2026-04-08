@@ -160,7 +160,7 @@ async function handleMessage({ event, say, client }) {
   const userId = event.user;
   const channelId = event.channel;
   const threadTs = event.thread_ts || event.ts;
-  const text = event.text?.trim() || '';
+  let text = event.text?.trim() || '';
   const hasFiles = event.files && event.files.length > 0;
 
   if (!text && !hasFiles) return;
@@ -277,15 +277,16 @@ async function handleMessage({ event, say, client }) {
   // ── 브라우저 자동화 ──
   if (text.toLowerCase().startsWith('!browse')) {
     const parts = text.slice(7).trim().split(/\s+/);
-    const url = parts[0];
-    if (!url) { await say('사용법: `!browse [URL] [질문(선택)]`'); return; }
+    const browseUrl = parts[0];
+    if (!browseUrl) { await say('사용법: `!browse [URL] [질문(선택)]`'); return; }
     const question = parts.slice(1).join(' ');
     try {
-      await say(`🌐 ${url} 불러오는 중...`);
-      const result = await webTools.browse(url);
+      await say(`🌐 ${browseUrl} 불러오는 중...`);
+      const result = await webTools.browse(browseUrl);
       if (question) {
-        // 질문이 있으면 페이지 내용을 Claude에게 전달
-        event.text = `다음 웹페이지 내용을 기반으로 질문에 답해줘.\n\n--- 웹페이지: ${result.title} (${result.url}) ---\n${result.text}\n--- 페이지 끝 ---\n\n질문: ${question}`;
+        // 질문이 있으면 text를 교체하여 Claude에게 전달
+        text = `다음 웹페이지 내용을 기반으로 질문에 답해줘.\n\n--- 웹페이지: ${result.title} (${result.url}) ---\n${result.text}\n--- 페이지 끝 ---\n\n질문: ${question}`;
+        // return하지 않음 → 아래 Claude 호출로 진행
       } else {
         await sendLongMessage(say, webTools.formatBrowseResult(result));
         return;
