@@ -605,7 +605,7 @@ async function safeUpdateAll() {
 }
 
 safeUpdateAll();
-setInterval(safeUpdateAll, IS_TAURI ? 3000 : 1000);
+setInterval(safeUpdateAll, 1000);
 
 // 탭 전환 시 즉시 업데이트
 document.querySelectorAll('.tab').forEach(tab => {
