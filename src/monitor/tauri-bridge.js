@@ -232,6 +232,20 @@ const bridge = {
     // Electron: 프로세스 kill은 UI에서 직접 불가 (PM2 관리)
   },
 
+  // ── 메모리 ──
+  async loadMemories() {
+    const memFile = joinPath(CLAWBRID_DIR, 'memory.json');
+    try {
+      const content = await this.readFile(memFile);
+      return JSON.parse(content);
+    } catch { return []; }
+  },
+
+  async saveMemories(memories) {
+    const memFile = joinPath(CLAWBRID_DIR, 'memory.json');
+    await this.writeFile(memFile, JSON.stringify(memories, null, 2));
+  },
+
   // ── 상태 (비동기 캐시) ──
   _statusCache: {},
 

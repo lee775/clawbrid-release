@@ -354,6 +354,7 @@
   <div class="tab" data-tab="logs-telegram">로그: Telegram</div>
   <div class="tab" data-tab="cron">크론 작업</div>
   <div class="tab" data-tab="chat">채팅</div>
+  <div class="tab" data-tab="memory">메모리</div>
 </div>
 
 <div class="content">
@@ -436,6 +437,29 @@
       <tbody id="cron-table"></tbody>
     </table>
     <div id="cron-empty" style="color:#8b949e; text-align:center; padding:40px; display:none;">등록된 크론 작업이 없습니다.</div>
+  </div>
+
+  <!-- 메모리 -->
+  <div class="tab-panel" id="panel-memory">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+      <div class="section-title" style="margin-bottom:0;">🧠 장기 메모리</div>
+      <div style="display:flex; gap:8px;">
+        <input id="memory-search" placeholder="검색..." style="padding:6px 10px; background:#0d1117; border:1px solid #30363d; border-radius:4px; color:#c9d1d9; font-size:12px; width:150px;">
+        <button class="btn success" onclick="showMemoryAdd()" style="font-size:11px;">+ 추가</button>
+      </div>
+    </div>
+    <div id="memory-add-form" style="display:none; margin-bottom:12px; padding:12px; background:#161b22; border:1px solid #30363d; border-radius:6px;">
+      <div style="display:flex; gap:8px; margin-bottom:8px;">
+        <input id="memory-key" placeholder="키 (예: 주언어)" style="flex:1; padding:8px; background:#0d1117; border:1px solid #30363d; border-radius:4px; color:#c9d1d9; font-size:12px;">
+        <input id="memory-value" placeholder="값 (예: TypeScript)" style="flex:2; padding:8px; background:#0d1117; border:1px solid #30363d; border-radius:4px; color:#c9d1d9; font-size:12px;">
+      </div>
+      <div style="display:flex; gap:8px; justify-content:flex-end;">
+        <button class="btn" onclick="hideMemoryAdd()">취소</button>
+        <button class="btn success" onclick="addMemory()">저장</button>
+      </div>
+    </div>
+    <div id="memory-list"></div>
+    <div id="memory-empty" style="color:#8b949e; text-align:center; padding:40px; display:none;">저장된 메모리가 없습니다. Claude와 대화하면 자동으로 쌓입니다.</div>
   </div>
 
   <!-- 채팅 -->
@@ -697,6 +721,70 @@ async function runCronNow(id) {
 
 // 크론은 PM2 cron-worker에서 실행 (대시보드는 조회/관리만)
 
+// ── 메모리 관리 ──
+async function renderMemories() {
+  const memories = await bridge.loadMemories();
+  const container = document.getElementById('memory-list');
+  const empty = document.getElementById('memory-empty');
+  const searchTerm = (document.getElementById('memory-search')?.value || '').toLowerCase();
+
+  const filtered = searchTerm
+    ? memories.filter(m => m.key.toLowerCase().includes(searchTerm) || m.value.toLowerCase().includes(searchTerm))
+    : memories;
+
+  if (!filtered.length) {
+    container.innerHTML = '';
+    empty.style.display = 'block';
+    empty.textContent = searchTerm ? `"${searchTerm}" 관련 메모리 없음` : '저장된 메모리가 없습니다. Claude와 대화하면 자동으로 쌓입니다.';
+    return;
+  }
+  empty.style.display = 'none';
+  container.innerHTML = filtered.map(m => `
+    <div class="history-item" style="display:flex; justify-content:space-between; align-items:flex-start;">
+      <div style="flex:1;">
+        <div style="font-weight:600; color:#58a6ff; margin-bottom:4px;">${escapeHtml(m.key)}</div>
+        <div style="color:#c9d1d9;">${escapeHtml(m.value)}</div>
+        <div style="color:#484f58; font-size:11px; margin-top:4px;">${m.source} | ${formatTime(m.createdAt)}</div>
+      </div>
+      <button class="btn danger" onclick="deleteMemory('${escapeHtml(m.key)}')" style="padding:3px 8px; font-size:11px; margin-left:8px;">삭제</button>
+    </div>
+  `).join('');
+}
+
+function showMemoryAdd() { document.getElementById('memory-add-form').style.display = 'block'; }
+function hideMemoryAdd() {
+  document.getElementById('memory-add-form').style.display = 'none';
+  document.getElementById('memory-key').value = '';
+  document.getElementById('memory-value').value = '';
+}
+
+async function addMemory() {
+  const key = document.getElementById('memory-key').value.trim();
+  const value = document.getElementById('memory-value').value.trim();
+  if (!key || !value) return;
+
+  const memories = await bridge.loadMemories();
+  const existing = memories.findIndex(m => m.key === key);
+  const entry = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+    key, value, source: 'dashboard', createdAt: new Date().toISOString(),
+  };
+  if (existing !== -1) { entry.id = memories[existing].id; memories[existing] = entry; }
+  else memories.push(entry);
+  await bridge.saveMemories(memories);
+  hideMemoryAdd();
+  renderMemories();
+}
+
+async function deleteMemory(key) {
+  const memories = await bridge.loadMemories();
+  const filtered = memories.filter(m => m.key !== key);
+  await bridge.saveMemories(filtered);
+  renderMemories();
+}
+
+document.getElementById('memory-search')?.addEventListener('input', () => renderMemories());
+
 // ── 채팅 ──
 let chatSessionId = null;
 let chatRunning = false;
@@ -793,6 +881,7 @@ async function updateAll() {
   if (activeTab === 'logs-slack') renderLog('slack');
   if (activeTab === 'logs-telegram') renderLog('telegram');
   if (activeTab === 'cron') renderCrons();
+  if (activeTab === 'memory') renderMemories();
 }
 
 // 동시 호출 방지
