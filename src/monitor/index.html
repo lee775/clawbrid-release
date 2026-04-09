@@ -2,499 +2,920 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <title>Claude Monitor</title>
+  <title>ClawBrid Monitor</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    :root {
+      --bg-primary: #0A0A0A;
+      --bg-card: #1A1A1A;
+      --bg-input: #0D1117;
+      --border: #30363D;
+      --border-subtle: #71717A33;
+      --text-primary: #FFFFFF;
+      --text-secondary: #A1A1AA;
+      --text-muted: #71717A;
+      --accent: #A855F7;
+      --accent-bg: #A855F71A;
+      --green: #22C55E;
+      --green-bg: #22C55E1A;
+      --red: #F85149;
+      --red-bg: #F851491A;
+      --blue: #3B82F6;
+      --yellow: #F59E0B;
+      --sidebar-w: 260px;
+      --radius-sm: 6px;
+      --radius: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --radius-full: 9999px;
+    }
+
     body {
-      font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
-      background: #0f1117;
-      color: #e1e4e8;
+      font-family: 'Inter', 'Segoe UI', 'Malgun Gothic', sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
       overflow: hidden;
       height: 100vh;
       display: flex;
-      flex-direction: column;
     }
 
-    /* ── 헤더 ── */
-    .header {
+    /* ── Sidebar ── */
+    .sidebar {
+      width: var(--sidebar-w);
+      min-width: var(--sidebar-w);
+      background: var(--bg-card);
+      display: flex;
+      flex-direction: column;
+      padding: 24px 20px;
+      gap: 24px;
+      -webkit-app-region: drag;
+      height: 100vh;
+      overflow-y: auto;
+    }
+
+    .logo {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 16px 24px;
-      background: #161b22;
-      border-bottom: 1px solid #30363d;
-      -webkit-app-region: drag;
+      gap: 10px;
     }
-    .header h1 {
-      font-size: 18px;
-      font-weight: 600;
-      color: #c9d1d9;
-    }
-    .header h1 span { color: #58a6ff; }
-    .header-right {
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: var(--accent);
+      border-radius: var(--radius-full);
       display: flex;
-      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: #fff;
+    }
+    .logo-text {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .sidebar-divider {
+      height: 1px;
+      background: var(--border-subtle);
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
       -webkit-app-region: no-drag;
     }
-    .btn {
-      padding: 6px 14px;
-      border: 1px solid #30363d;
-      border-radius: 6px;
-      background: #21262d;
-      color: #c9d1d9;
-      cursor: pointer;
-      font-size: 12px;
-      transition: background 0.15s;
-    }
-    .btn:hover { background: #30363d; }
-    .btn.danger { border-color: #f85149; color: #f85149; }
-    .btn.danger:hover { background: #f8514922; }
-    .btn.success { border-color: #3fb950; color: #3fb950; }
-    .btn.success:hover { background: #3fb95022; }
-
-    /* ── 탭 ── */
-    .tabs {
+    .nav-item {
       display: flex;
-      padding: 0 24px;
-      background: #161b22;
-      border-bottom: 1px solid #30363d;
-    }
-    .tab {
-      padding: 10px 20px;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: var(--radius);
       cursor: pointer;
-      font-size: 13px;
-      color: #8b949e;
-      border-bottom: 2px solid transparent;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
       transition: all 0.15s;
     }
-    .tab:hover { color: #c9d1d9; }
-    .tab.active { color: #58a6ff; border-bottom-color: #58a6ff; }
+    .nav-item:hover {
+      color: var(--text-primary);
+      background: #ffffff08;
+    }
+    .nav-item.active {
+      color: var(--accent);
+      background: var(--accent-bg);
+    }
+    .nav-icon { font-size: 18px; width: 24px; text-align: center; }
 
-    /* ── 메인 영역 ── */
-    .content {
+    /* ── Main Content ── */
+    .main-content {
       flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
       overflow-y: auto;
-      padding: 20px 24px;
+      padding: 24px 28px;
+      gap: 24px;
     }
 
-    /* ── 카드 ── */
-    .cards { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
-    .card {
-      flex: 1;
-      min-width: 280px;
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      padding: 20px;
-      position: relative;
-      overflow: hidden;
-    }
-    .card.active { border-color: #58a6ff; }
-    .card.active::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, #58a6ff, #3fb950);
-      animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-
-    .card-header {
+    /* ── Common ── */
+    .page-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      margin-bottom: 14px;
     }
-    .card-title {
-      display: flex;
+    .page-title { font-size: 24px; font-weight: 700; }
+    .page-subtitle { font-size: 13px; color: var(--text-muted); font-family: 'Geist Mono', 'Cascadia Code', 'Consolas', monospace; }
+
+    .btn {
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 12px;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.15s;
+      display: inline-flex;
       align-items: center;
-      gap: 8px;
-      font-size: 15px;
-      font-weight: 600;
+      gap: 6px;
     }
-    .card-icon { font-size: 20px; }
+    .btn:hover { background: #ffffff0a; color: var(--text-primary); }
+    .btn-accent { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn-accent:hover { background: #9333EA; }
+    .btn-green { border-color: var(--green); color: var(--green); }
+    .btn-green:hover { background: var(--green-bg); }
+    .btn-red { border-color: var(--red); color: var(--red); }
+    .btn-red:hover { background: var(--red-bg); }
+    .btn-sm { padding: 4px 10px; font-size: 11px; }
+
+    .card {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+    }
+
     .badge {
-      padding: 3px 10px;
-      border-radius: 12px;
+      padding: 4px 10px;
+      border-radius: var(--radius-full);
       font-size: 11px;
       font-weight: 600;
     }
-    .badge.idle { background: #30363d; color: #8b949e; }
-    .badge.working { background: #58a6ff33; color: #58a6ff; }
-    .badge.error { background: #f8514933; color: #f85149; }
-    .badge.offline { background: #f8514933; color: #f85149; }
+    .badge-idle { background: #30363d; color: var(--text-secondary); }
+    .badge-working { background: var(--accent-bg); color: var(--accent); }
+    .badge-online { background: var(--green-bg); color: var(--green); }
+    .badge-error, .badge-offline { background: var(--red-bg); color: var(--red); }
+    .badge-stopped { background: #30363d; color: var(--text-muted); }
 
-    .card-body { font-size: 13px; color: #8b949e; }
-    .card-row {
-      display: flex;
-      justify-content: space-between;
-      padding: 5px 0;
-      border-bottom: 1px solid #21262d;
-    }
-    .card-row:last-child { border-bottom: none; }
-    .card-label { color: #8b949e; }
-    .card-value { color: #c9d1d9; font-weight: 500; text-align: right; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .card-message {
-      margin-top: 12px;
-      padding: 10px;
-      background: #0d1117;
-      border-radius: 6px;
-      font-size: 12px;
-      color: #c9d1d9;
-      line-height: 1.5;
-      max-height: 80px;
-      overflow-y: auto;
-      word-break: break-all;
-    }
-
-    /* ── PM2 프로세스 테이블 ── */
-    .section-title {
-      font-size: 14px;
-      font-weight: 600;
-      color: #c9d1d9;
-      margin-bottom: 12px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 13px;
-    }
-    th {
-      text-align: left;
-      padding: 10px 12px;
-      background: #161b22;
-      color: #8b949e;
-      font-weight: 500;
-      border-bottom: 1px solid #30363d;
-    }
-    td {
-      padding: 10px 12px;
-      border-bottom: 1px solid #21262d;
-      color: #c9d1d9;
-    }
-    tr:hover td { background: #161b2266; }
     .status-dot {
       display: inline-block;
       width: 8px; height: 8px;
       border-radius: 50%;
       margin-right: 6px;
     }
-    .status-dot.online { background: #3fb950; }
-    .status-dot.stopped { background: #f85149; }
-    .status-dot.errored { background: #f85149; }
+    .status-dot.online { background: var(--green); box-shadow: 0 0 6px var(--green); }
+    .status-dot.stopped { background: var(--red); }
+    .status-dot.errored { background: var(--red); }
 
-    /* ── 히스토리 ── */
-    .history-item {
-      padding: 12px;
-      background: #161b22;
-      border: 1px solid #21262d;
-      border-radius: 6px;
-      margin-bottom: 8px;
-      font-size: 12px;
+    /* ── Tab panels ── */
+    .tab-panel { display: none; flex-direction: column; gap: 24px; flex: 1; }
+    .tab-panel.active { display: flex; }
+
+    /* ── Dashboard ── */
+    .stat-cards { display: flex; gap: 16px; }
+    .stat-cards .card { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .stat-label { font-size: 13px; color: var(--text-muted); }
+    .stat-value { font-size: 28px; font-weight: 700; }
+    .stat-sub { font-size: 12px; color: var(--text-secondary); }
+
+    .bridge-cards { display: flex; gap: 16px; }
+    .bridge-card {
+      flex: 1;
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
-    .history-meta {
+    .bridge-card.active-border { border: 1px solid var(--accent); }
+    .bridge-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .bridge-card-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 15px;
+      font-weight: 600;
+    }
+    .bridge-card-icon { font-size: 22px; }
+    .bridge-card-body { font-size: 13px; color: var(--text-secondary); }
+    .bridge-card-row {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 6px;
-      color: #8b949e;
+      padding: 5px 0;
+      border-bottom: 1px solid #ffffff08;
     }
-    .history-msg { color: #c9d1d9; }
-    .history-resp { color: #8b949e; margin-top: 4px; font-style: italic; }
-
-    /* ── 로그 ── */
-    .log-area {
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 6px;
-      padding: 12px;
-      font-family: 'Cascadia Code', 'Consolas', monospace;
+    .bridge-card-row:last-child { border-bottom: none; }
+    .bridge-card-label { color: var(--text-muted); }
+    .bridge-card-value { color: var(--text-primary); font-weight: 500; text-align: right; max-width: 60%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bridge-card-msg {
+      margin-top: 4px;
+      padding: 10px;
+      background: var(--bg-input);
+      border-radius: var(--radius-sm);
       font-size: 12px;
-      line-height: 1.6;
-      height: calc(100vh - 200px);
+      color: var(--text-primary);
+      line-height: 1.5;
+      max-height: 60px;
       overflow-y: auto;
-      white-space: pre-wrap;
       word-break: break-all;
-      color: #8b949e;
     }
-    .log-line-info { color: #58a6ff; }
-    .log-line-warn { color: #d29922; }
-    .log-line-error { color: #f85149; }
-    .log-line-msg { color: #c9d1d9; }
+    .bridge-card-actions {
+      display: flex;
+      gap: 6px;
+      padding-top: 8px;
+      border-top: 1px solid #ffffff08;
+    }
 
-    /* 스크롤바 */
-    ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 3px; }
-    ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+    .bottom-section { display: flex; gap: 16px; flex: 1; min-height: 0; }
+    .bottom-section > .card { overflow: hidden; display: flex; flex-direction: column; }
+    .bottom-section .activity-card { flex: 1; }
+    .bottom-section .cron-card { width: 320px; min-width: 320px; }
 
-    /* 탭 패널 */
-    .tab-panel { display: none !important; }
-    .tab-panel.active { display: block !important; }
+    .section-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-    /* 크론 폼 숨김 */
-    .cron-form-hidden { display: none !important; }
+    .activity-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+    .activity-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 8px 0;
+      border-bottom: 1px solid #ffffff08;
+      font-size: 13px;
+    }
+    .activity-item:last-child { border-bottom: none; }
+    .activity-icon { font-size: 16px; margin-top: 2px; }
+    .activity-text { color: var(--text-primary); }
+    .activity-time { color: var(--text-muted); font-size: 11px; font-family: 'Geist Mono', monospace; }
+    .activity-sub { color: var(--text-secondary); font-size: 12px; margin-top: 2px; }
 
-    /* ── 채팅 ── */
+    .cron-mini-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+    .cron-mini-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 10px;
+      border-radius: var(--radius);
+      background: #ffffff05;
+      font-size: 12px;
+    }
+    .cron-mini-name { color: var(--text-primary); font-weight: 500; }
+    .cron-mini-schedule { color: var(--accent); font-family: 'Geist Mono', monospace; font-size: 11px; }
+
+    /* ── PM2 Tab ── */
+    .pm2-summary { display: flex; gap: 16px; }
+    .pm2-summary .card { flex: 1; display: flex; flex-direction: column; gap: 8px; }
+    .pm2-count { font-size: 32px; font-weight: 700; }
+    .pm2-label { font-size: 13px; color: var(--text-muted); }
+
+    .pm2-table-wrap {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead tr { border-bottom: 1px solid var(--border-subtle); }
+    th {
+      text-align: left;
+      padding: 10px 14px;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 12px;
+    }
+    td {
+      padding: 12px 14px;
+      color: var(--text-primary);
+    }
+    tbody tr { border-radius: var(--radius); }
+    tbody tr:nth-child(even) { background: #ffffff08; }
+    tbody tr:hover { background: #ffffff0d; }
+
+    /* ── Chat Tab ── */
     .chat-container {
       display: flex;
       flex-direction: column;
-      height: calc(100vh - 140px);
+      flex: 1;
+      min-height: 0;
     }
     .chat-messages {
       flex: 1;
       overflow-y: auto;
-      padding: 12px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: var(--bg-card);
+      border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+      padding: 20px;
+    }
+    .chat-date-sep {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 11px;
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .chat-date-sep::before, .chat-date-sep::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-subtle);
     }
     .chat-bubble {
-      max-width: 85%;
+      max-width: 80%;
       padding: 10px 14px;
-      border-radius: 12px;
-      margin-bottom: 8px;
+      border-radius: var(--radius-lg);
       font-size: 13px;
       line-height: 1.6;
       word-break: break-word;
       white-space: pre-wrap;
     }
     .chat-bubble.user {
-      background: #1f6feb;
+      background: var(--accent);
       color: #fff;
-      margin-left: auto;
+      align-self: flex-end;
       border-bottom-right-radius: 4px;
     }
     .chat-bubble.assistant {
-      background: #21262d;
-      color: #c9d1d9;
-      margin-right: auto;
+      background: #ffffff0d;
+      color: var(--text-primary);
+      align-self: flex-start;
       border-bottom-left-radius: 4px;
     }
     .chat-bubble.error {
-      background: #f8514922;
-      color: #f85149;
-      margin-right: auto;
+      background: var(--red-bg);
+      color: var(--red);
+      align-self: flex-start;
       border-bottom-left-radius: 4px;
     }
     .chat-bubble code {
-      background: #0d1117;
+      background: var(--bg-input);
       padding: 1px 5px;
       border-radius: 3px;
-      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-family: 'Geist Mono', 'Cascadia Code', monospace;
       font-size: 12px;
     }
     .chat-bubble pre {
-      background: #0d1117;
+      background: var(--bg-input);
       padding: 10px;
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
       overflow-x: auto;
       margin: 6px 0;
-      font-family: 'Cascadia Code', 'Consolas', monospace;
+      font-family: 'Geist Mono', 'Cascadia Code', monospace;
       font-size: 12px;
     }
-    .chat-input-area {
+    .chat-input-bar {
       display: flex;
-      gap: 8px;
-      padding: 12px 0 0;
-      border-top: 1px solid #30363d;
+      align-items: center;
+      gap: 10px;
+      background: var(--bg-card);
+      border-radius: 0 0 var(--radius-xl) var(--radius-xl);
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
     }
-    .chat-input-area textarea {
+    .chat-input-bar textarea {
       flex: 1;
-      padding: 10px 12px;
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      color: #c9d1d9;
+      padding: 10px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
       font-size: 13px;
-      font-family: 'Segoe UI', 'Malgun Gothic', sans-serif;
+      font-family: 'Inter', sans-serif;
       resize: none;
       min-height: 42px;
       max-height: 120px;
     }
-    .chat-input-area textarea:focus { outline: none; border-color: #58a6ff; }
-    .chat-input-area .btn { align-self: flex-end; min-width: 60px; }
+    .chat-input-bar textarea:focus { outline: none; border-color: var(--accent); }
     .chat-status {
       font-size: 11px;
-      color: #8b949e;
-      padding: 4px 0;
-      display: flex;
+      color: var(--text-secondary);
+      padding: 6px 16px;
+      background: var(--bg-card);
+      display: none;
       align-items: center;
       gap: 6px;
     }
-    .chat-status .spinner {
+    .chat-status.visible { display: flex; }
+    .spinner {
       display: inline-block;
       width: 12px; height: 12px;
-      border: 2px solid #30363d;
-      border-top-color: #58a6ff;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Cron Tab ── */
+    .cron-table-wrap {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      flex: 1;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cron-form {
+      display: none;
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      padding: 20px;
+      border: 1px solid var(--border);
+    }
+    .cron-form.visible { display: block; }
+
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 4px; }
+    .form-label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    .form-input {
+      padding: 8px 12px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+    }
+    .form-input:focus { outline: none; border-color: var(--accent); }
+    .form-input.mono { font-family: 'Geist Mono', monospace; }
+    .form-hint { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+
+    /* ── Logs Tab ── */
+    .log-tabs {
+      display: flex;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 4px;
+    }
+    .log-tab {
+      flex: 1;
+      text-align: center;
+      padding: 8px 20px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.15s;
+    }
+    .log-tab:hover { color: var(--text-primary); }
+    .log-tab.active { background: var(--accent-bg); color: var(--accent); }
+
+    .log-box {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      font-family: 'Geist Mono', 'Cascadia Code', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      flex: 1;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: var(--text-secondary);
+    }
+    .log-info { color: var(--green); }
+    .log-warn { color: var(--yellow); }
+    .log-error { color: var(--red); }
+    .log-msg { color: var(--text-primary); }
+    .log-claude { color: var(--accent); }
+    .log-cron { color: var(--blue); }
+    .log-web { color: var(--yellow); }
+
+    /* ── Settings Tab ── */
+    .settings-section {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .settings-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .settings-title {
+      font-size: 16px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      cursor: pointer;
+    }
+    .toggle-switch input { display: none; }
+    .toggle-slider {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: var(--border);
+      border-radius: var(--radius-full);
+      transition: 0.2s;
+    }
+    .toggle-slider::before {
+      content: '';
+      position: absolute;
+      width: 18px; height: 18px;
+      left: 3px; bottom: 3px;
+      background: #fff;
+      border-radius: 50%;
+      transition: 0.2s;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--accent); }
+    .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+    .settings-fields { display: flex; flex-direction: column; gap: 14px; }
+    .settings-field { display: flex; flex-direction: column; gap: 4px; }
+    .settings-field label { font-size: 12px; color: var(--text-muted); font-weight: 500; }
+    .settings-field input {
+      padding: 10px 14px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text-primary);
+      font-size: 13px;
+      font-family: 'Geist Mono', monospace;
+    }
+    .settings-field input:focus { outline: none; border-color: var(--accent); }
+
+    /* ── Memory ── */
+    .memory-item {
+      padding: 12px;
+      background: #ffffff05;
+      border-radius: var(--radius);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      font-size: 13px;
+    }
+    .memory-key { font-weight: 600; color: var(--accent); margin-bottom: 4px; }
+    .memory-value { color: var(--text-primary); }
+    .memory-meta { color: var(--text-muted); font-size: 11px; margin-top: 4px; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+
+    /* Pulse animation */
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    .pulse { animation: pulse 1.5s infinite; }
+
+    .empty-state {
+      color: var(--text-muted);
+      text-align: center;
+      padding: 40px;
+      font-size: 13px;
+    }
   </style>
 </head>
 <body>
 
-<div class="header">
-  <h1><span>⚡</span> ClawBrid</h1>
-  <div class="header-right">
-    <button class="btn" onclick="openSettings()">⚙ 설정</button>
-    <button class="btn success" onclick="restartAll()">↻ 전체 재시작</button>
+<!-- Sidebar -->
+<div class="sidebar">
+  <div class="logo">
+    <div class="logo-icon">C</div>
+    <span class="logo-text">ClawBrid</span>
   </div>
-</div>
-
-<div class="tabs">
-  <div class="tab active" data-tab="dashboard">대시보드</div>
-  <div class="tab" data-tab="history">작업 히스토리</div>
-  <div class="tab" data-tab="logs-slack">로그: Slack</div>
-  <div class="tab" data-tab="logs-telegram">로그: Telegram</div>
-  <div class="tab" data-tab="cron">크론 작업</div>
-  <div class="tab" data-tab="chat">채팅</div>
-  <div class="tab" data-tab="memory">메모리</div>
-</div>
-
-<div class="content">
-  <!-- 대시보드 -->
-  <div class="tab-panel active" id="panel-dashboard">
-    <div class="cards" id="bridge-cards"></div>
-    <div class="section-title">📦 PM2 프로세스</div>
-    <table>
-      <thead>
-        <tr><th>이름</th><th>상태</th><th>PID</th><th>CPU</th><th>메모리</th><th>업타임</th><th>재시작</th><th>액션</th></tr>
-      </thead>
-      <tbody id="pm2-table"></tbody>
-    </table>
-  </div>
-
-  <!-- 히스토리 -->
-  <div class="tab-panel" id="panel-history">
-    <div class="section-title">📋 최근 작업 히스토리</div>
-    <div id="history-list"></div>
-  </div>
-
-  <!-- 로그 -->
-  <div class="tab-panel" id="panel-logs-slack">
-    <div class="section-title">📝 Slack Bridge 로그 (최근 200줄)</div>
-    <div class="log-area" id="log-slack"></div>
-  </div>
-  <div class="tab-panel" id="panel-logs-telegram">
-    <div class="section-title">📝 Telegram Bridge 로그 (최근 200줄)</div>
-    <div class="log-area" id="log-telegram"></div>
-  </div>
-
-  <!-- 크론 작업 -->
-  <div class="tab-panel" id="panel-cron">
-    <div class="section-title" style="justify-content:space-between;">
-      <span>⏰ 크론 작업</span>
-      <button class="btn success" onclick="showCronForm()" style="font-size:12px;">+ 추가</button>
+  <div class="sidebar-divider"></div>
+  <div class="nav">
+    <div class="nav-item active" data-tab="dashboard">
+      <span class="nav-icon">📊</span> 대시보드
     </div>
-    <div id="cron-form" class="cron-form-hidden" style="margin-bottom:16px; padding:16px; background:#161b22; border:1px solid #30363d; border-radius:8px;">
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-        <div>
-          <label style="font-size:12px; color:#8b949e;">이름</label>
-          <input id="cron-name" placeholder="작업 이름" style="width:100%; padding:8px; background:#0d1117; border:1px solid #30363d; border-radius:4px; color:#c9d1d9; font-size:12px;">
+    <div class="nav-item" data-tab="chat">
+      <span class="nav-icon">💬</span> 채팅
+    </div>
+    <div class="nav-item" data-tab="pm2">
+      <span class="nav-icon">📦</span> PM2 프로세스
+    </div>
+    <div class="nav-item" data-tab="cron">
+      <span class="nav-icon">⏰</span> 크론 스케줄
+    </div>
+    <div class="nav-item" data-tab="logs">
+      <span class="nav-icon">📝</span> 로그
+    </div>
+    <div class="nav-item" data-tab="settings">
+      <span class="nav-icon">⚙</span> 설정
+    </div>
+  </div>
+</div>
+
+<!-- Main Content -->
+<div class="main-content">
+
+  <!-- ════ Dashboard ════ -->
+  <div class="tab-panel active" id="panel-dashboard">
+    <div class="page-header">
+      <div>
+        <div class="page-title">대시보드</div>
+        <div class="page-subtitle">ClawBrid 브릿지 상태 모니터링</div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-green" onclick="restartAll()">↻ 전체 재시작</button>
+      </div>
+    </div>
+
+    <!-- Bridge Cards -->
+    <div class="bridge-cards" id="bridge-cards"></div>
+
+    <!-- Stat Cards -->
+    <div class="stat-cards" id="stat-cards"></div>
+
+    <!-- Bottom: Recent Activity + Cron Mini -->
+    <div class="bottom-section">
+      <div class="card activity-card">
+        <div class="section-title">최근 활동</div>
+        <div class="activity-list" id="activity-list"></div>
+      </div>
+      <div class="card cron-card">
+        <div class="section-title">크론 스케줄</div>
+        <div class="cron-mini-list" id="cron-mini-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ Chat ════ -->
+  <div class="tab-panel" id="panel-chat">
+    <div class="page-header" style="padding-bottom:0;">
+      <div class="page-title">💬 Claude 채팅</div>
+      <button class="btn" onclick="resetChat()">새 대화</button>
+    </div>
+    <div class="chat-container">
+      <div class="chat-messages" id="chat-messages"></div>
+      <div class="chat-status" id="chat-status">
+        <span class="spinner"></span> <span id="chat-status-text">응답 생성 중...</span>
+      </div>
+      <div class="chat-input-bar">
+        <textarea id="chat-input" placeholder="메시지를 입력하세요... (Shift+Enter: 줄바꿈)" rows="1"></textarea>
+        <button class="btn btn-accent" id="chat-send-btn" onclick="sendChat()">전송</button>
+        <button class="btn btn-red" id="chat-stop-btn" onclick="stopChat()" style="display:none;">중단</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ PM2 ════ -->
+  <div class="tab-panel" id="panel-pm2">
+    <div class="page-header">
+      <div>
+        <div class="page-title">PM2 프로세스</div>
+        <div class="page-subtitle">프로세스 관리 및 모니터링</div>
+      </div>
+      <button class="btn btn-green" onclick="pm2Action('restart','all')">↻ 전체 재시작</button>
+    </div>
+
+    <div class="pm2-summary" id="pm2-summary"></div>
+
+    <div class="pm2-table-wrap">
+      <div class="section-title" style="margin-bottom:12px;">프로세스 목록</div>
+      <div style="flex:1;overflow-y:auto;">
+        <table>
+          <thead>
+            <tr><th>이름</th><th>상태</th><th>PID</th><th>CPU</th><th>메모리</th><th>업타임</th><th>재시작</th><th>액션</th></tr>
+          </thead>
+          <tbody id="pm2-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════ Cron ════ -->
+  <div class="tab-panel" id="panel-cron">
+    <div class="page-header">
+      <div>
+        <div class="page-title">크론 스케줄</div>
+        <div class="page-subtitle">자동 작업 스케줄링</div>
+      </div>
+      <button class="btn btn-accent" onclick="showCronForm()">+ 추가</button>
+    </div>
+
+    <!-- Cron Form -->
+    <div id="cron-form" class="cron-form">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">이름</label>
+          <input id="cron-name" class="form-input" placeholder="작업 이름">
         </div>
-        <div>
-          <label style="font-size:12px; color:#8b949e;">스케줄 (cron)</label>
-          <input id="cron-schedule" placeholder="*/30 * * * *" value="*/30 * * * *" style="width:100%; padding:8px; background:#0d1117; border:1px solid #30363d; border-radius:4px; color:#c9d1d9; font-size:12px; font-family:monospace;">
-          <div style="font-size:10px; color:#484f58; margin-top:4px;">분 시 일 월 요일 | 예: */30 * * * * (30분), 0 9 * * * (매일9시), 50 18 * * 1-5 (평일18:50)</div>
+        <div class="form-group">
+          <label class="form-label">스케줄 (cron)</label>
+          <input id="cron-schedule" class="form-input mono" placeholder="*/30 * * * *" value="*/30 * * * *">
+          <span class="form-hint">분 시 일 월 요일 | 예: */30 * * * * (30분), 0 9 * * * (매일9시)</span>
         </div>
       </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:10px;">
-        <div>
-          <label style="font-size:12px; color:#8b949e;">타입</label>
-          <select id="cron-type" style="width:100%; padding:8px; background:#0d1117; border:1px solid #30363d; border-radius:4px; color:#c9d1d9; font-size:12px;">
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">타입</label>
+          <select id="cron-type" class="form-input">
             <option value="claude">Claude 프롬프트</option>
             <option value="shell">쉘 명령</option>
           </select>
         </div>
-        <div>
-          <label style="font-size:12px; color:#8b949e;">결과 전송</label>
-          <select id="cron-target" style="width:100%; padding:8px; background:#0d1117; border:1px solid #30363d; border-radius:4px; color:#c9d1d9; font-size:12px;">
+        <div class="form-group">
+          <label class="form-label">결과 전송</label>
+          <select id="cron-target" class="form-input">
             <option value="none">없음</option>
             <option value="slack">Slack</option>
             <option value="telegram">Telegram</option>
           </select>
         </div>
       </div>
-      <div style="margin-bottom:10px;">
-        <label style="font-size:12px; color:#8b949e;">명령 / 프롬프트</label>
-        <textarea id="cron-command" rows="3" placeholder="실행할 명령 또는 Claude 프롬프트" style="width:100%; padding:8px; background:#0d1117; border:1px solid #30363d; border-radius:4px; color:#c9d1d9; font-size:12px; resize:vertical;"></textarea>
+      <div class="form-group" style="margin-bottom:14px;">
+        <label class="form-label">명령 / 프롬프트</label>
+        <textarea id="cron-command" class="form-input" rows="3" placeholder="실행할 명령 또는 Claude 프롬프트" style="resize:vertical;"></textarea>
       </div>
-      <div style="display:flex; gap:8px; justify-content:flex-end;">
+      <div style="display:flex;gap:8px;justify-content:flex-end;">
         <button class="btn" onclick="hideCronForm()">취소</button>
-        <button class="btn success" onclick="saveCron()">저장</button>
+        <button class="btn btn-accent" onclick="saveCron()">저장</button>
       </div>
     </div>
-    <table>
-      <thead>
-        <tr><th>이름</th><th>타입</th><th>스케줄</th><th>전송</th><th>마지막 실행</th><th>상태</th><th>액션</th></tr>
-      </thead>
-      <tbody id="cron-table"></tbody>
-    </table>
-    <div id="cron-empty" style="color:#8b949e; text-align:center; padding:40px; display:none;">등록된 크론 작업이 없습니다.</div>
+
+    <!-- Cron Table -->
+    <div class="cron-table-wrap">
+      <table>
+        <thead>
+          <tr><th>이름</th><th>타입</th><th>스케줄</th><th>전송</th><th>마지막 실행</th><th>상태</th><th>액션</th></tr>
+        </thead>
+        <tbody id="cron-table"></tbody>
+      </table>
+      <div id="cron-empty" class="empty-state" style="display:none;">등록된 크론 작업이 없습니다.</div>
+    </div>
   </div>
 
-  <!-- 메모리 -->
-  <div class="tab-panel" id="panel-memory">
-    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-      <div class="section-title" style="margin-bottom:0;">🧠 장기 메모리</div>
-      <div style="display:flex; gap:8px;">
-        <input id="memory-search" placeholder="검색..." style="padding:6px 10px; background:#0d1117; border:1px solid #30363d; border-radius:4px; color:#c9d1d9; font-size:12px; width:150px;">
-        <button class="btn success" onclick="showMemoryAdd()" style="font-size:11px;">+ 추가</button>
-      </div>
+  <!-- ════ Logs ════ -->
+  <div class="tab-panel" id="panel-logs">
+    <div class="page-header">
+      <div class="page-title">로그</div>
     </div>
-    <div id="memory-add-form" style="display:none; margin-bottom:12px; padding:12px; background:#161b22; border:1px solid #30363d; border-radius:6px;">
-      <div style="display:flex; gap:8px; margin-bottom:8px;">
-        <input id="memory-key" placeholder="키 (예: 주언어)" style="flex:1; padding:8px; background:#0d1117; border:1px solid #30363d; border-radius:4px; color:#c9d1d9; font-size:12px;">
-        <input id="memory-value" placeholder="값 (예: TypeScript)" style="flex:2; padding:8px; background:#0d1117; border:1px solid #30363d; border-radius:4px; color:#c9d1d9; font-size:12px;">
-      </div>
-      <div style="display:flex; gap:8px; justify-content:flex-end;">
-        <button class="btn" onclick="hideMemoryAdd()">취소</button>
-        <button class="btn success" onclick="addMemory()">저장</button>
-      </div>
+
+    <div class="log-tabs">
+      <div class="log-tab active" data-log="slack">Slack</div>
+      <div class="log-tab" data-log="telegram">Telegram</div>
     </div>
-    <div id="memory-list"></div>
-    <div id="memory-empty" style="color:#8b949e; text-align:center; padding:40px; display:none;">저장된 메모리가 없습니다. Claude와 대화하면 자동으로 쌓입니다.</div>
+
+    <div class="log-box" id="log-content"></div>
   </div>
 
-  <!-- 채팅 -->
-  <div class="tab-panel" id="panel-chat">
-    <div class="chat-container">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <div class="section-title" style="margin-bottom:0;">💬 Claude 채팅</div>
-        <button class="btn" onclick="resetChat()" style="font-size:11px;">새 대화</button>
-      </div>
-      <div class="chat-messages" id="chat-messages"></div>
-      <div id="chat-status" class="chat-status" style="display:none;">
-        <span class="spinner"></span> <span id="chat-status-text">응답 생성 중...</span>
-      </div>
-      <div class="chat-input-area">
-        <textarea id="chat-input" placeholder="메시지를 입력하세요... (Shift+Enter: 줄바꿈)" rows="1"></textarea>
-        <button class="btn success" id="chat-send-btn" onclick="sendChat()">전송</button>
-        <button class="btn danger" id="chat-stop-btn" onclick="stopChat()" style="display:none;">중단</button>
+  <!-- ════ Settings ════ -->
+  <div class="tab-panel" id="panel-settings">
+    <div class="page-header">
+      <div>
+        <div class="page-title">설정</div>
+        <div class="page-subtitle">ClawBrid 연결 설정 관리</div>
       </div>
     </div>
+
+    <!-- Slack Section -->
+    <div class="settings-section">
+      <div class="settings-header">
+        <div class="settings-title">💬 Slack 설정</div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="settings-slack-enabled">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="settings-fields">
+        <div class="settings-field">
+          <label>Bot Token (xoxb-...)</label>
+          <input type="password" id="settings-slack-token" placeholder="xoxb-your-token">
+        </div>
+        <div class="settings-field">
+          <label>App Token (xapp-...)</label>
+          <input type="password" id="settings-slack-app-token" placeholder="xapp-your-token">
+        </div>
+        <div class="settings-field">
+          <label>허용된 사용자 (쉼표 구분)</label>
+          <input type="text" id="settings-slack-users" placeholder="U12345,U67890">
+        </div>
+      </div>
+    </div>
+
+    <!-- Telegram Section -->
+    <div class="settings-section">
+      <div class="settings-header">
+        <div class="settings-title">📱 Telegram 설정</div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="settings-tg-enabled">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="settings-fields">
+        <div class="settings-field">
+          <label>Bot Token</label>
+          <input type="password" id="settings-tg-token" placeholder="123456:ABC-DEF...">
+        </div>
+        <div class="settings-field">
+          <label>허용된 사용자 ID (쉼표 구분)</label>
+          <input type="text" id="settings-tg-users" placeholder="123456789,987654321">
+        </div>
+      </div>
+    </div>
+
+    <!-- Memory Section -->
+    <div class="settings-section">
+      <div class="settings-header">
+        <div class="settings-title">🧠 메모리</div>
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="memory-search" class="form-input" placeholder="검색..." style="width:150px;padding:6px 10px;font-size:12px;">
+          <button class="btn btn-accent btn-sm" onclick="showMemoryAdd()">+ 추가</button>
+        </div>
+      </div>
+      <div id="memory-add-form" style="display:none;">
+        <div style="display:flex;gap:8px;margin-bottom:8px;">
+          <input id="memory-key" class="form-input" placeholder="키 (예: 주언어)" style="flex:1;">
+          <input id="memory-value" class="form-input" placeholder="값 (예: TypeScript)" style="flex:2;">
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;">
+          <button class="btn" onclick="hideMemoryAdd()">취소</button>
+          <button class="btn btn-accent btn-sm" onclick="addMemory()">저장</button>
+        </div>
+      </div>
+      <div id="memory-list" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <div id="memory-empty" class="empty-state" style="display:none;">저장된 메모리가 없습니다.</div>
+    </div>
+
+    <!-- Save -->
+    <div style="display:flex;justify-content:flex-end;">
+      <button class="btn btn-accent" onclick="saveSettings()" style="padding:10px 24px;">설정 저장</button>
+    </div>
   </div>
+
 </div>
 
 <script src="tauri-bridge.js"></script>
 <script>
-// ── 탭 전환 ──
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+// ── 탭 전환 (Sidebar Navigation) ──
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById(`panel-${tab.dataset.tab}`).classList.add('active');
+    item.classList.add('active');
+    document.getElementById(`panel-${item.dataset.tab}`).classList.add('active');
+    setTimeout(safeUpdateAll, 50);
   });
 });
 
-// ── 시간 포맷 ──
+// ── 로그 서브탭 ──
+let activeLogTab = 'slack';
+document.querySelectorAll('.log-tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.log-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    activeLogTab = tab.dataset.log;
+    renderLog(activeLogTab);
+  });
+});
+
+// ── 유틸 ──
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
 function formatElapsed(sec) {
   if (!sec) return '-';
   const m = Math.floor(sec / 60);
@@ -518,7 +939,55 @@ function formatTime(iso) {
   return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}`;
 }
 
-// ── Bridge 카드 렌더링 ──
+function cronToHuman(expr) {
+  if (!expr || expr === '-') return '-';
+  const p = expr.trim().split(/\s+/);
+  if (p.length !== 5) return expr;
+  const [min, hour, day, mon, dow] = p;
+  const dowNames = {'0':'일','1':'월','2':'화','3':'수','4':'목','5':'금','6':'토','7':'일'};
+  const monNames = {'1':'1월','2':'2월','3':'3월','4':'4월','5':'5월','6':'6월','7':'7월','8':'8월','9':'9월','10':'10월','11':'11월','12':'12월'};
+  if (min === '*' && hour === '*' && day === '*' && mon === '*' && dow === '*') return '매분';
+  if (min.startsWith('*/') && hour === '*' && day === '*' && mon === '*' && dow === '*') return `${min.slice(2)}분마다`;
+  if (/^\d+$/.test(min) && hour === '*' && day === '*' && mon === '*' && dow === '*') return `매시 ${min}분`;
+
+  function parseDow(d) {
+    if (d === '*') return '';
+    if (d === '1-5') return '평일 ';
+    if (d === '0,6' || d === '6,0') return '주말 ';
+    return d.split(',').map(v => {
+      if (v.includes('-')) { const [a,b] = v.split('-'); return (dowNames[a]||a)+'~'+(dowNames[b]||b); }
+      return dowNames[v] || v;
+    }).join(',') + ' ';
+  }
+  function parseMon(m) {
+    if (m === '*') return '';
+    return m.split(',').map(v => monNames[v] || v+'월').join(',') + ' ';
+  }
+  function parseDay(d) {
+    if (d === '*') return '';
+    return d + '일 ';
+  }
+  function parseTime(h, m) {
+    if (h === '*') return `매시 ${m}분`;
+    const hh = parseInt(h, 10);
+    const period = hh < 12 ? '오전' : '오후';
+    const h12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
+    return `${period} ${h12}:${m.padStart(2,'0')}`;
+  }
+
+  if (hour.startsWith('*/') && day === '*' && mon === '*' && dow === '*') {
+    return `${hour.slice(2)}시간마다` + (min !== '0' ? ` ${min}분` : '');
+  }
+
+  const dowStr = parseDow(dow);
+  const monStr = parseMon(mon);
+  const dayStr = parseDay(day);
+  const timeStr = parseTime(hour, min);
+  if (day === '*' && mon === '*' && dow === '*') return `매일 ${timeStr}`;
+  return `${monStr}${dayStr}${dowStr}${timeStr}`.trim();
+}
+
+// ── Dashboard: Bridge Cards ──
 function renderCards() {
   const container = document.getElementById('bridge-cards');
   const bridges = [
@@ -530,135 +999,72 @@ function renderCards() {
     const s = bridge.readStatusSync(b.name);
     const isActive = s && s.active;
     const isOnline = s !== null;
-    let badgeClass = 'offline';
-    let badgeText = '오프라인';
-    if (isOnline && isActive) { badgeClass = 'working'; badgeText = '작업 중'; }
-    else if (isOnline) { badgeClass = 'idle'; badgeText = '대기 중'; }
+    let badgeClass = 'badge-offline', badgeText = '오프라인';
+    if (isOnline && isActive) { badgeClass = 'badge-working'; badgeText = '작업 중'; }
+    else if (isOnline) { badgeClass = 'badge-online'; badgeText = '대기 중'; }
 
     return `
-      <div class="card ${isActive ? 'active' : ''}">
-        <div class="card-header">
-          <div class="card-title">
-            <span class="card-icon">${b.icon}</span>
+      <div class="bridge-card ${isActive ? 'active-border' : ''}">
+        <div class="bridge-card-header">
+          <div class="bridge-card-title">
+            <span class="bridge-card-icon">${b.icon}</span>
             ${b.label}
           </div>
           <span class="badge ${badgeClass}">${badgeText}</span>
         </div>
-        <div class="card-body">
-          <div class="card-row"><span class="card-label">PID</span><span class="card-value">${s?.pid || '-'}</span></div>
-          <div class="card-row"><span class="card-label">소요 시간</span><span class="card-value">${isActive ? formatElapsed(s.elapsedSec) : '-'}</span></div>
-          <div class="card-row"><span class="card-label">사용자</span><span class="card-value">${isActive ? (s.user || '-') : '-'}</span></div>
-          <div class="card-row"><span class="card-label">마지막 업데이트</span><span class="card-value">${s ? formatTime(s.lastUpdate) : '-'}</span></div>
-          ${isActive && s.currentMessage ? `<div class="card-message">${escapeHtml(s.currentMessage)}</div>` : ''}
+        <div class="bridge-card-body">
+          <div class="bridge-card-row"><span class="bridge-card-label">PID</span><span class="bridge-card-value">${s?.pid || '-'}</span></div>
+          <div class="bridge-card-row"><span class="bridge-card-label">소요 시간</span><span class="bridge-card-value">${isActive ? formatElapsed(s.elapsedSec) : '-'}</span></div>
+          <div class="bridge-card-row"><span class="bridge-card-label">사용자</span><span class="bridge-card-value">${isActive ? (s.user || '-') : '-'}</span></div>
+          <div class="bridge-card-row"><span class="bridge-card-label">마지막 업데이트</span><span class="bridge-card-value">${s ? formatTime(s.lastUpdate) : '-'}</span></div>
+          ${isActive && s.currentMessage ? `<div class="bridge-card-msg">${escapeHtml(s.currentMessage)}</div>` : ''}
+        </div>
+        <div class="bridge-card-actions">
+          <button class="btn btn-sm btn-green" onclick="pm2Action('restart','clawbrid-${b.name}')">↻ 재시작</button>
+          <button class="btn btn-sm btn-red" onclick="pm2Action('stop','clawbrid-${b.name}')">중지</button>
         </div>
       </div>
     `;
   }).join('');
 }
 
-function escapeHtml(str) {
-  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function cronToHuman(expr) {
-  if (!expr || expr === '-') return '-';
-  const p = expr.trim().split(/\s+/);
-  if (p.length !== 5) return expr;
-  const [min, hour, day, mon, dow] = p;
-  const dowNames = {'0':'일','1':'월','2':'화','3':'수','4':'목','5':'금','6':'토','7':'일'};
-  const monNames = {'1':'1월','2':'2월','3':'3월','4':'4월','5':'5월','6':'6월','7':'7월','8':'8월','9':'9월','10':'10월','11':'11월','12':'12월'};
-
-  // 매분
-  if (min === '*' && hour === '*' && day === '*' && mon === '*' && dow === '*') return '매분';
-
-  // */N분마다
-  if (min.startsWith('*/') && hour === '*' && day === '*' && mon === '*' && dow === '*') return `${min.slice(2)}분마다`;
-
-  // 매시 N분
-  if (/^\d+$/.test(min) && hour === '*' && day === '*' && mon === '*' && dow === '*') return `매시 ${min}분`;
-
-  // 요일 파싱
-  function parseDow(d) {
-    if (d === '*') return '';
-    if (d === '1-5') return '평일 ';
-    if (d === '0,6' || d === '6,0') return '주말 ';
-    return d.split(',').map(v => {
-      if (v.includes('-')) { const [a,b] = v.split('-'); return (dowNames[a]||a)+'~'+(dowNames[b]||b); }
-      return dowNames[v] || v;
-    }).join(',') + ' ';
-  }
-
-  // 월 파싱
-  function parseMon(m) {
-    if (m === '*') return '';
-    return m.split(',').map(v => monNames[v] || v+'월').join(',') + ' ';
-  }
-
-  // 일 파싱
-  function parseDay(d) {
-    if (d === '*') return '';
-    return d + '일 ';
-  }
-
-  // 시간 파싱
-  function parseTime(h, m) {
-    if (h === '*') return `매시 ${m}분`;
-    const hh = parseInt(h, 10);
-    const period = hh < 12 ? '오전' : '오후';
-    const h12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
-    return `${period} ${h12}:${m.padStart(2,'0')}`;
-  }
-
-  // */N시간마다
-  if (hour.startsWith('*/') && day === '*' && mon === '*' && dow === '*') {
-    const hInterval = hour.slice(2);
-    return `${hInterval}시간마다` + (min !== '0' ? ` ${min}분` : '');
-  }
-
-  const dowStr = parseDow(dow);
-  const monStr = parseMon(mon);
-  const dayStr = parseDay(day);
-  const timeStr = parseTime(hour, min);
-
-  // 매일 HH:MM
-  if (day === '*' && mon === '*' && dow === '*') return `매일 ${timeStr}`;
-
-  return `${monStr}${dayStr}${dowStr}${timeStr}`.trim();
-}
-
-// ── PM2 테이블 ──
-async function renderPM2() {
+// ── Dashboard: Stat Cards ──
+async function renderStatCards() {
+  let pm2Count = 0, onlineCount = 0;
   try {
     const list = await bridge.getPM2List();
-    const tbody = document.getElementById('pm2-table');
-    tbody.innerHTML = list.map(p => {
-      const status = p.pm2_env.status;
-      const uptime = Date.now() - p.pm2_env.pm_uptime;
-      return `
-        <tr>
-          <td><strong>${p.name}</strong></td>
-          <td><span class="status-dot ${status}"></span>${status}</td>
-          <td>${p.pid || '-'}</td>
-          <td>${p.monit?.cpu || 0}%</td>
-          <td>${((p.monit?.memory || 0) / 1024 / 1024).toFixed(1)} MB</td>
-          <td>${formatUptime(uptime)}</td>
-          <td>${p.pm2_env.restart_time || 0}</td>
-          <td>
-            <button class="btn" onclick="pm2Action('restart','${p.name}')" style="padding:3px 8px;font-size:11px;">재시작</button>
-            ${status === 'stopped' || status === 'errored'
-              ? `<button class="btn success" onclick="pm2Action('start','${p.name}')" style="padding:3px 8px;font-size:11px;">시작</button>`
-              : `<button class="btn danger" onclick="pm2Action('stop','${p.name}')" style="padding:3px 8px;font-size:11px;">중지</button>`
-            }
-          </td>
-        </tr>
-      `;
-    }).join('');
+    pm2Count = list.length;
+    onlineCount = list.filter(p => p.pm2_env.status === 'online').length;
   } catch {}
+
+  let cronCount = 0;
+  try {
+    const crons = await bridge.loadCrons();
+    cronCount = crons.filter(c => c.enabled).length;
+  } catch {}
+
+  document.getElementById('stat-cards').innerHTML = `
+    <div class="card">
+      <div class="stat-label">전체 프로세스</div>
+      <div class="stat-value">${pm2Count}</div>
+      <div class="stat-sub">${onlineCount}개 실행 중</div>
+    </div>
+    <div class="card">
+      <div class="stat-label">활성 크론</div>
+      <div class="stat-value" style="color:var(--accent);">${cronCount}</div>
+      <div class="stat-sub">스케줄 등록됨</div>
+    </div>
+    <div class="card">
+      <div class="stat-label">시스템 상태</div>
+      <div class="stat-value" style="color:var(--green);">${onlineCount > 0 ? 'ON' : 'OFF'}</div>
+      <div class="stat-sub">${onlineCount > 0 ? '정상 운영 중' : '브릿지 중지됨'}</div>
+    </div>
+  `;
 }
 
-// ── 히스토리 ──
-function renderHistory() {
-  const container = document.getElementById('history-list');
+// ── Dashboard: Recent Activity ──
+function renderActivity() {
+  const container = document.getElementById('activity-list');
   const all = [];
   ['slack', 'telegram'].forEach(name => {
     const s = bridge.readStatusSync(name);
@@ -668,40 +1074,85 @@ function renderHistory() {
   });
   all.sort((a, b) => new Date(b.completedAt) - new Date(a.completedAt));
 
-  container.innerHTML = all.length === 0
-    ? '<div style="color:#8b949e;text-align:center;padding:40px;">아직 작업 기록이 없습니다.</div>'
-    : all.slice(0, 30).map(h => `
-      <div class="history-item">
-        <div class="history-meta">
-          <span>${h.source === 'slack' ? '💬 Slack' : '📱 Telegram'} | ${h.user || '-'}</span>
-          <span>${formatTime(h.completedAt)} (${formatElapsed(h.duration)})</span>
-        </div>
-        <div class="history-msg">📤 ${escapeHtml(h.message || '')}</div>
-        <div class="history-resp">📥 ${escapeHtml(h.response || '')}</div>
+  if (!all.length) {
+    container.innerHTML = '<div class="empty-state">아직 활동 기록이 없습니다.</div>';
+    return;
+  }
+
+  container.innerHTML = all.slice(0, 15).map(h => `
+    <div class="activity-item">
+      <span class="activity-icon">${h.source === 'slack' ? '💬' : '📱'}</span>
+      <div style="flex:1;min-width:0;">
+        <div class="activity-text" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(h.message || '')}</div>
+        <div class="activity-sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(h.response || '')}</div>
       </div>
-    `).join('');
+      <span class="activity-time">${formatTime(h.completedAt)}</span>
+    </div>
+  `).join('');
 }
 
-// ── 로그 ──
-async function renderLog(name) {
-  const el = document.getElementById(`log-${name}`);
+// ── Dashboard: Cron Mini List ──
+async function renderCronMini() {
+  const crons = await bridge.loadCrons();
+  const container = document.getElementById('cron-mini-list');
+  const active = crons.filter(c => c.enabled);
+
+  if (!active.length) {
+    container.innerHTML = '<div class="empty-state" style="padding:20px;">등록된 스케줄 없음</div>';
+    return;
+  }
+
+  container.innerHTML = active.slice(0, 8).map(c => `
+    <div class="cron-mini-item">
+      <span class="cron-mini-name">${escapeHtml(c.name)}</span>
+      <span class="cron-mini-schedule">${cronToHuman(c.schedule)}</span>
+    </div>
+  `).join('');
+}
+
+// ── PM2 Tab ──
+async function renderPM2() {
   try {
-    const content = await bridge.readLogContent(name);
-    if (!content) { el.textContent = '로그 파일 없음'; return; }
-    const lines = content.split('\n').slice(-200);
-    el.innerHTML = lines.map(line => {
-      let cls = '';
-      if (line.includes('[ERROR]') || line.includes('❌')) cls = 'log-line-error';
-      else if (line.includes('[WARN]') || line.includes('⚠')) cls = 'log-line-warn';
-      else if (line.includes('[MSG]') || line.includes('Claude 실행')) cls = 'log-line-msg';
-      else if (line.includes('[FILE]') || line.includes('[SESSION]')) cls = 'log-line-info';
-      return `<span class="${cls}">${escapeHtml(line)}</span>`;
-    }).join('\n');
-    el.scrollTop = el.scrollHeight;
-  } catch { el.textContent = '로그 읽기 실패'; }
+    const list = await bridge.getPM2List();
+    const tbody = document.getElementById('pm2-table');
+
+    // Summary cards
+    const online = list.filter(p => p.pm2_env.status === 'online').length;
+    const stopped = list.filter(p => p.pm2_env.status === 'stopped').length;
+    const errored = list.filter(p => p.pm2_env.status === 'errored').length;
+    document.getElementById('pm2-summary').innerHTML = `
+      <div class="card"><div class="pm2-label">전체</div><div class="pm2-count">${list.length}</div></div>
+      <div class="card"><div class="pm2-label">실행 중</div><div class="pm2-count" style="color:var(--green);">${online}</div></div>
+      <div class="card"><div class="pm2-label">중지됨</div><div class="pm2-count" style="color:var(--text-muted);">${stopped}</div></div>
+      <div class="card"><div class="pm2-label">오류</div><div class="pm2-count" style="color:var(--red);">${errored}</div></div>
+    `;
+
+    tbody.innerHTML = list.map(p => {
+      const status = p.pm2_env.status;
+      const uptime = Date.now() - p.pm2_env.pm_uptime;
+      return `
+        <tr>
+          <td><strong>${p.name}</strong></td>
+          <td><span class="status-dot ${status}"></span>${status}</td>
+          <td style="font-family:'Geist Mono',monospace;font-size:12px;">${p.pid || '-'}</td>
+          <td>${p.monit?.cpu || 0}%</td>
+          <td>${((p.monit?.memory || 0) / 1024 / 1024).toFixed(1)} MB</td>
+          <td>${formatUptime(uptime)}</td>
+          <td>${p.pm2_env.restart_time || 0}</td>
+          <td>
+            <button class="btn btn-sm" onclick="pm2Action('restart','${p.name}')">재시작</button>
+            ${status === 'stopped' || status === 'errored'
+              ? `<button class="btn btn-sm btn-green" onclick="pm2Action('start','${p.name}')">시작</button>`
+              : `<button class="btn btn-sm btn-red" onclick="pm2Action('stop','${p.name}')">중지</button>`
+            }
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch {}
 }
 
-// ── PM2 액션 ──
+// ── PM2 Actions ──
 function pm2Action(action, name) {
   bridge.pm2Action(action, name).then(() => setTimeout(renderPM2, 1000));
 }
@@ -711,11 +1162,7 @@ function restartAll() {
   setTimeout(() => { renderPM2(); renderCards(); }, 2000);
 }
 
-function openSettings() {
-  bridge.openSettings();
-}
-
-// ── 크론 관리 ──
+// ── Cron Tab ──
 async function renderCrons() {
   const crons = await bridge.loadCrons();
   const tbody = document.getElementById('cron-table');
@@ -726,30 +1173,29 @@ async function renderCrons() {
     return;
   }
   empty.style.display = 'none';
-  tbody.innerHTML = crons.map(c => {
-    return `
+  tbody.innerHTML = crons.map(c => `
     <tr>
       <td><strong>${escapeHtml(c.name)}</strong></td>
       <td>${c.type === 'claude' ? '🤖 Claude' : '💻 Shell'}</td>
-      <td style="font-size:12px;" title="${escapeHtml(c.schedule || '')}">${cronToHuman(c.schedule)}</td>
-      <td>${c.target === 'slack' ? '💬' : c.target === 'telegram' ? '📱' : '-'}</td>
-      <td>${c.lastRun ? formatTime(c.lastRun) : '-'}</td>
+      <td style="font-size:12px;color:var(--accent);" title="${escapeHtml(c.schedule || '')}">${cronToHuman(c.schedule)}</td>
+      <td>${c.target === 'slack' ? '💬 Slack' : c.target === 'telegram' ? '📱 Telegram' : '-'}</td>
+      <td style="font-family:'Geist Mono',monospace;font-size:12px;">${c.lastRun ? formatTime(c.lastRun) : '-'}</td>
       <td>
-        <span class="badge ${c.enabled ? 'working' : 'idle'}" style="cursor:pointer;" onclick="toggleCron('${c.id}')">
+        <span class="badge ${c.enabled ? 'badge-online' : 'badge-stopped'}" style="cursor:pointer;" onclick="toggleCron('${c.id}')">
           ${c.enabled ? '활성' : '비활성'}
         </span>
       </td>
       <td>
-        <button class="btn" onclick="runCronNow('${c.id}')" style="padding:3px 8px;font-size:11px;">실행</button>
-        <button class="btn danger" onclick="deleteCron('${c.id}')" style="padding:3px 8px;font-size:11px;">삭제</button>
+        <button class="btn btn-sm" onclick="runCronNow('${c.id}')">실행</button>
+        <button class="btn btn-sm btn-red" onclick="deleteCron('${c.id}')">삭제</button>
       </td>
     </tr>
-  `}).join('');
+  `).join('');
 }
 
-function showCronForm() { document.getElementById('cron-form').classList.remove('cron-form-hidden'); }
+function showCronForm() { document.getElementById('cron-form').classList.add('visible'); }
 function hideCronForm() {
-  document.getElementById('cron-form').classList.add('cron-form-hidden');
+  document.getElementById('cron-form').classList.remove('visible');
   document.getElementById('cron-name').value = '';
   document.getElementById('cron-command').value = '';
   document.getElementById('cron-schedule').value = '*/30 * * * *';
@@ -762,22 +1208,13 @@ async function saveCron() {
   const type = document.getElementById('cron-type').value;
   const target = document.getElementById('cron-target').value;
   if (!name || !command || !schedule) return;
-
   await bridge.addCron({ name, type, command, schedule, target });
   hideCronForm();
   renderCrons();
 }
 
-async function toggleCron(id) {
-  await bridge.toggleCron(id);
-  renderCrons();
-}
-
-async function deleteCron(id) {
-  await bridge.removeCron(id);
-  renderCrons();
-}
-
+async function toggleCron(id) { await bridge.toggleCron(id); renderCrons(); }
+async function deleteCron(id) { await bridge.removeCron(id); renderCrons(); }
 async function runCronNow(id) {
   const crons = await bridge.loadCrons();
   const cron = crons.find(c => c.id === id);
@@ -785,9 +1222,68 @@ async function runCronNow(id) {
   renderCrons();
 }
 
-// 크론은 PM2 cron-worker에서 실행 (대시보드는 조회/관리만)
+// ── Logs Tab ──
+async function renderLog(name) {
+  const el = document.getElementById('log-content');
+  try {
+    const content = await bridge.readLogContent(name);
+    if (!content) { el.textContent = '로그 파일 없음'; return; }
+    const lines = content.split('\n').slice(-200);
+    el.innerHTML = lines.map(line => {
+      let cls = '';
+      if (line.includes('[ERROR]') || line.includes('❌')) cls = 'log-error';
+      else if (line.includes('[WARN]') || line.includes('⚠')) cls = 'log-warn';
+      else if (line.includes('[CLAUDE]')) cls = 'log-claude';
+      else if (line.includes('[CRON]')) cls = 'log-cron';
+      else if (line.includes('[WEB]')) cls = 'log-web';
+      else if (line.includes('[MSG]') || line.includes('Claude 실행')) cls = 'log-msg';
+      else if (line.includes('[INFO]')) cls = 'log-info';
+      return `<span class="${cls}">${escapeHtml(line)}</span>`;
+    }).join('\n');
+    el.scrollTop = el.scrollHeight;
+  } catch { el.textContent = '로그 읽기 실패'; }
+}
 
-// ── 메모리 관리 ──
+// ── Settings Tab ──
+async function loadSettings() {
+  try {
+    const cfg = await bridge.loadConfig();
+    if (cfg.slack) {
+      document.getElementById('settings-slack-enabled').checked = cfg.slack.enabled !== false;
+      document.getElementById('settings-slack-token').value = cfg.slack.botToken || '';
+      document.getElementById('settings-slack-app-token').value = cfg.slack.appToken || '';
+      document.getElementById('settings-slack-users').value = (cfg.slack.allowedUsers || []).join(',');
+    }
+    if (cfg.telegram) {
+      document.getElementById('settings-tg-enabled').checked = cfg.telegram.enabled !== false;
+      document.getElementById('settings-tg-token').value = cfg.telegram.botToken || '';
+      document.getElementById('settings-tg-users').value = (cfg.telegram.allowedUsers || []).join(',');
+    }
+  } catch {}
+}
+
+async function saveSettings() {
+  try {
+    const cfg = await bridge.loadConfig();
+    cfg.slack = cfg.slack || {};
+    cfg.slack.enabled = document.getElementById('settings-slack-enabled').checked;
+    cfg.slack.botToken = document.getElementById('settings-slack-token').value.trim();
+    cfg.slack.appToken = document.getElementById('settings-slack-app-token').value.trim();
+    cfg.slack.allowedUsers = document.getElementById('settings-slack-users').value.split(',').map(s => s.trim()).filter(Boolean);
+
+    cfg.telegram = cfg.telegram || {};
+    cfg.telegram.enabled = document.getElementById('settings-tg-enabled').checked;
+    cfg.telegram.botToken = document.getElementById('settings-tg-token').value.trim();
+    cfg.telegram.allowedUsers = document.getElementById('settings-tg-users').value.split(',').map(s => s.trim()).filter(Boolean);
+
+    await bridge.saveConfig(cfg);
+    alert('설정이 저장되었습니다.');
+  } catch (e) {
+    alert('설정 저장 실패: ' + e.message);
+  }
+}
+
+// ── Memory ──
 async function renderMemories() {
   const memories = await bridge.loadMemories();
   const container = document.getElementById('memory-list');
@@ -801,18 +1297,18 @@ async function renderMemories() {
   if (!filtered.length) {
     container.innerHTML = '';
     empty.style.display = 'block';
-    empty.textContent = searchTerm ? `"${searchTerm}" 관련 메모리 없음` : '저장된 메모리가 없습니다. Claude와 대화하면 자동으로 쌓입니다.';
+    empty.textContent = searchTerm ? `"${searchTerm}" 관련 메모리 없음` : '저장된 메모리가 없습니다.';
     return;
   }
   empty.style.display = 'none';
   container.innerHTML = filtered.map(m => `
-    <div class="history-item" style="display:flex; justify-content:space-between; align-items:flex-start;">
-      <div style="flex:1;">
-        <div style="font-weight:600; color:#58a6ff; margin-bottom:4px;">${escapeHtml(m.key)}</div>
-        <div style="color:#c9d1d9;">${escapeHtml(m.value)}</div>
-        <div style="color:#484f58; font-size:11px; margin-top:4px;">${m.source} | ${formatTime(m.createdAt)}</div>
+    <div class="memory-item">
+      <div style="flex:1;min-width:0;">
+        <div class="memory-key">${escapeHtml(m.key)}</div>
+        <div class="memory-value">${escapeHtml(m.value)}</div>
+        <div class="memory-meta">${m.source} | ${formatTime(m.createdAt)}</div>
       </div>
-      <button class="btn danger" onclick="deleteMemory('${escapeHtml(m.key)}')" style="padding:3px 8px; font-size:11px; margin-left:8px;">삭제</button>
+      <button class="btn btn-sm btn-red" onclick="deleteMemory('${escapeHtml(m.key)}')" style="margin-left:8px;">삭제</button>
     </div>
   `).join('');
 }
@@ -828,13 +1324,9 @@ async function addMemory() {
   const key = document.getElementById('memory-key').value.trim();
   const value = document.getElementById('memory-value').value.trim();
   if (!key || !value) return;
-
   const memories = await bridge.loadMemories();
   const existing = memories.findIndex(m => m.key === key);
-  const entry = {
-    id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
-    key, value, source: 'dashboard', createdAt: new Date().toISOString(),
-  };
+  const entry = { id: Date.now().toString(36) + Math.random().toString(36).slice(2,6), key, value, source: 'dashboard', createdAt: new Date().toISOString() };
   if (existing !== -1) { entry.id = memories[existing].id; memories[existing] = entry; }
   else memories.push(entry);
   await bridge.saveMemories(memories);
@@ -844,14 +1336,13 @@ async function addMemory() {
 
 async function deleteMemory(key) {
   const memories = await bridge.loadMemories();
-  const filtered = memories.filter(m => m.key !== key);
-  await bridge.saveMemories(filtered);
+  await bridge.saveMemories(memories.filter(m => m.key !== key));
   renderMemories();
 }
 
 document.getElementById('memory-search')?.addEventListener('input', () => renderMemories());
 
-// ── 채팅 ──
+// ── Chat ──
 let chatSessionId = null;
 let chatRunning = false;
 
@@ -863,9 +1354,7 @@ async function loadMonitorSession() {
   try {
     const raw = await bridge.readFile(MONITOR_SESSION_PATH());
     const data = JSON.parse(raw);
-    if (data.date === getTodayStr() && data.sessionId) {
-      chatSessionId = data.sessionId;
-    }
+    if (data.date === getTodayStr() && data.sessionId) chatSessionId = data.sessionId;
   } catch {}
 }
 
@@ -894,16 +1383,15 @@ async function loadChatHistory() {
     let msgs = [];
     try { msgs = JSON.parse(await bridge.readFile(path)); } catch { continue; }
     if (!msgs.length) continue;
-    // 날짜 구분선
     const sep = document.createElement('div');
-    sep.style.cssText = 'text-align:center; color:#484f58; font-size:11px; margin:12px 0 8px; border-bottom:1px solid #21262d; padding-bottom:6px;';
-    sep.textContent = dateStr === getTodayStr() ? `📅 오늘 (${dateStr})` : `📅 ${dateStr}`;
+    sep.className = 'chat-date-sep';
+    sep.textContent = dateStr === getTodayStr() ? `오늘 (${dateStr})` : dateStr;
     container.appendChild(sep);
     for (const m of msgs) {
       const bubble = document.createElement('div');
       bubble.className = `chat-bubble ${m.role}`;
-      if (m.role === 'assistant') { bubble.innerHTML = renderMarkdown(m.text); }
-      else { bubble.textContent = m.text; }
+      if (m.role === 'assistant') bubble.innerHTML = renderMarkdown(m.text);
+      else bubble.textContent = m.text;
       container.appendChild(bubble);
     }
   }
@@ -912,12 +1400,8 @@ async function loadChatHistory() {
 
 const chatInput = document.getElementById('chat-input');
 chatInput.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) {
-    e.preventDefault();
-    sendChat();
-  }
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendChat(); }
 });
-// textarea 자동 높이
 chatInput.addEventListener('input', () => {
   chatInput.style.height = 'auto';
   chatInput.style.height = Math.min(chatInput.scrollHeight, 120) + 'px';
@@ -927,25 +1411,17 @@ function addChatBubble(role, text) {
   const container = document.getElementById('chat-messages');
   const bubble = document.createElement('div');
   bubble.className = `chat-bubble ${role}`;
-  if (role === 'assistant') {
-    bubble.innerHTML = renderMarkdown(text);
-  } else {
-    bubble.textContent = text;
-  }
+  if (role === 'assistant') bubble.innerHTML = renderMarkdown(text);
+  else bubble.textContent = text;
   container.appendChild(bubble);
   container.scrollTop = container.scrollHeight;
 }
 
 function renderMarkdown(text) {
-  // 간단한 마크다운 렌더링 (코드 블록, 인라인 코드, 볼드, 이탤릭)
   let html = escapeHtml(text);
-  // 코드 블록
   html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_, lang, code) => `<pre><code>${code.trim()}</code></pre>`);
-  // 인라인 코드
   html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
-  // 볼드
   html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-  // 이탤릭
   html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
   return html;
 }
@@ -954,31 +1430,24 @@ function setChatUI(running) {
   chatRunning = running;
   document.getElementById('chat-send-btn').style.display = running ? 'none' : '';
   document.getElementById('chat-stop-btn').style.display = running ? '' : 'none';
-  document.getElementById('chat-status').style.display = running ? 'flex' : 'none';
+  document.getElementById('chat-status').classList.toggle('visible', running);
   chatInput.disabled = running;
 }
 
 async function sendChat() {
   const text = chatInput.value.trim();
   if (!text || chatRunning) return;
-
   addChatBubble('user', text);
   saveChatMessage('user', text);
   chatInput.value = '';
   chatInput.style.height = 'auto';
   setChatUI(true);
-
   try {
     const result = await bridge.runClaude(text, chatSessionId);
     let parsed;
     try { parsed = typeof result === 'string' ? JSON.parse(result) : result; } catch { parsed = { text: result }; }
-
     const responseText = parsed.text || String(result);
-    if (parsed.sessionId) {
-      chatSessionId = parsed.sessionId;
-      saveMonitorSession();
-    }
-
+    if (parsed.sessionId) { chatSessionId = parsed.sessionId; saveMonitorSession(); }
     addChatBubble('assistant', responseText.trim());
     saveChatMessage('assistant', responseText.trim());
   } catch (err) {
@@ -988,31 +1457,33 @@ async function sendChat() {
   }
 }
 
-async function stopChat() {
-  try { await bridge.stopClaude(); } catch {}
-}
+async function stopChat() { try { await bridge.stopClaude(); } catch {} }
 
 async function resetChat() {
   chatSessionId = null;
   document.getElementById('chat-messages').innerHTML = '';
-  // 세션 파일 초기화
   try { await bridge.writeFile(MONITOR_SESSION_PATH(), JSON.stringify({ date: getTodayStr(), sessionId: null })); } catch {}
 }
 
-// ── 주기적 업데이트 ──
+// ── Update Loop ──
 async function updateAll() {
   await bridge.refreshStatusCache();
+  const activeTab = document.querySelector('.nav-item.active')?.dataset.tab;
+
+  // Always update dashboard data
   renderCards();
   renderPM2();
-  const activeTab = document.querySelector('.tab.active')?.dataset.tab;
-  if (activeTab === 'history') renderHistory();
-  if (activeTab === 'logs-slack') renderLog('slack');
-  if (activeTab === 'logs-telegram') renderLog('telegram');
+
+  if (activeTab === 'dashboard') {
+    renderStatCards();
+    renderActivity();
+    renderCronMini();
+  }
+  if (activeTab === 'logs') renderLog(activeLogTab);
   if (activeTab === 'cron') renderCrons();
-  if (activeTab === 'memory') renderMemories();
+  if (activeTab === 'settings') renderMemories();
 }
 
-// 동시 호출 방지
 let _updating = false;
 async function safeUpdateAll() {
   if (_updating) return;
@@ -1021,22 +1492,15 @@ async function safeUpdateAll() {
   _updating = false;
 }
 
-// Tauri: initBridge 완료 대기 후 시작
+// ── Init ──
 (async () => {
   if (window.bridgeReady) await window.bridgeReady;
   safeUpdateAll();
-  setInterval(safeUpdateAll, 1000);
-  // 채팅 세션 & 히스토리 복원
+  loadSettings();
+  setInterval(safeUpdateAll, 2000);
   await loadMonitorSession();
   await loadChatHistory();
 })();
-
-// 탭 전환 시 즉시 업데이트
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    setTimeout(safeUpdateAll, 50);
-  });
-});
 </script>
 </body>
 </html>
