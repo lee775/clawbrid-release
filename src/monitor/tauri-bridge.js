@@ -291,6 +291,8 @@ const bridge = {
 // 전역 노출
 window.IS_TAURI = IS_TAURI;
 window.IS_ELECTRON = IS_ELECTRON;
+window.getHomedir = getHomedir;
+window.joinPath = joinPath;
 Object.defineProperty(window, 'HOMEDIR', { get: getHomedir });
 window.STATUS_DIR = STATUS_DIR;
 window.LOG_PATHS = LOG_PATHS;

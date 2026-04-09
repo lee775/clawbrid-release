@@ -473,6 +473,8 @@
     }
     .form-input:focus { outline: none; border-color: var(--accent); }
     .form-input.mono { font-family: 'Geist Mono', monospace; }
+    select.form-input { appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 30px; cursor: pointer; }
+    select.form-input option { background: var(--bg-card); color: var(--text-primary); }
     .form-hint { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
 
     /* ── Logs Tab ── */
@@ -747,7 +749,7 @@
         <div class="page-title">PM2 프로세스</div>
         <div class="page-subtitle">프로세스 관리 및 모니터링</div>
       </div>
-      <button class="btn btn-green" onclick="pm2Action('restart','all')">↻ 전체 재시작</button>
+      <button class="btn btn-green" onclick="restartAll()">↻ 전체 재시작</button>
     </div>
 
     <div class="pm2-summary" id="pm2-summary"></div>
@@ -950,7 +952,9 @@ document.querySelectorAll('.nav-item').forEach(item => {
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
     item.classList.add('active');
-    document.getElementById(`panel-${item.dataset.tab}`).classList.add('active');
+    const tab = item.dataset.tab;
+    document.getElementById(`panel-${tab}`).classList.add('active');
+    if (tab === 'settings') loadSettings();
     setTimeout(safeUpdateAll, 50);
   });
 });
@@ -1044,17 +1048,28 @@ function cronToHuman(expr) {
 }
 
 // ── Dashboard: Bridge Cards ──
-function renderCards() {
+async function renderCards() {
   const container = document.getElementById('bridge-cards');
   const bridges = [
     { name: 'slack', label: 'Slack Bridge', icon: '💬' },
     { name: 'telegram', label: 'Telegram Bridge', icon: '📱' },
   ];
 
+  // PM2 실제 프로세스 상태 조회
+  let pm2Map = {};
+  try {
+    const pm2List = await bridge.getPM2List();
+    pm2List.forEach(p => { pm2Map[p.name] = p.pm2_env.status; });
+  } catch {}
+
   container.innerHTML = bridges.map(b => {
     const s = bridge.readStatusSync(b.name);
-    const isActive = s && s.active;
-    const isOnline = s !== null;
+    const pm2Status = pm2Map[`clawbrid-${b.name}`];
+    const pm2Running = pm2Status === 'online';
+
+    // PM2 프로세스가 실행 중이 아니면 무조건 오프라인
+    const isActive = pm2Running && s && s.active;
+    const isOnline = pm2Running;
     let badgeClass = 'badge-offline', badgeText = '오프라인';
     if (isOnline && isActive) { badgeClass = 'badge-working'; badgeText = '작업 중'; }
     else if (isOnline) { badgeClass = 'badge-online'; badgeText = '대기 중'; }
@@ -1069,15 +1084,19 @@ function renderCards() {
           <span class="badge ${badgeClass}">${badgeText}</span>
         </div>
         <div class="bridge-card-body">
-          <div class="bridge-card-row"><span class="bridge-card-label">PID</span><span class="bridge-card-value">${s?.pid || '-'}</span></div>
+          <div class="bridge-card-row"><span class="bridge-card-label">PM2 상태</span><span class="bridge-card-value">${pm2Status || '없음'}</span></div>
+          <div class="bridge-card-row"><span class="bridge-card-label">PID</span><span class="bridge-card-value">${isOnline && s?.pid ? s.pid : '-'}</span></div>
           <div class="bridge-card-row"><span class="bridge-card-label">소요 시간</span><span class="bridge-card-value">${isActive ? formatElapsed(s.elapsedSec) : '-'}</span></div>
           <div class="bridge-card-row"><span class="bridge-card-label">사용자</span><span class="bridge-card-value">${isActive ? (s.user || '-') : '-'}</span></div>
-          <div class="bridge-card-row"><span class="bridge-card-label">마지막 업데이트</span><span class="bridge-card-value">${s ? formatTime(s.lastUpdate) : '-'}</span></div>
+          <div class="bridge-card-row"><span class="bridge-card-label">마지막 업데이트</span><span class="bridge-card-value">${isOnline && s ? formatTime(s.lastUpdate) : '-'}</span></div>
           ${isActive && s.currentMessage ? `<div class="bridge-card-msg">${escapeHtml(s.currentMessage)}</div>` : ''}
         </div>
         <div class="bridge-card-actions">
-          <button class="btn btn-sm btn-green" onclick="pm2Action('restart','clawbrid-${b.name}')">↻ 재시작</button>
-          <button class="btn btn-sm btn-red" onclick="pm2Action('stop','clawbrid-${b.name}')">중지</button>
+          ${isOnline
+            ? `<button class="btn btn-sm btn-green" onclick="pm2Action('restart','clawbrid-${b.name}')">↻ 재시작</button>
+               <button class="btn btn-sm btn-red" onclick="pm2Action('stop','clawbrid-${b.name}')">중지</button>`
+            : `<button class="btn btn-sm btn-green" onclick="pm2Action('start','clawbrid-${b.name}')">▶ 시작</button>`
+          }
         </div>
       </div>
     `;
@@ -1211,13 +1230,13 @@ async function renderPM2() {
 // ── PM2 Actions ──
 function pm2Action(action, name) {
   bridge.pm2Action(action, name)
-    .then(() => setTimeout(() => { renderPM2(); renderCards(); renderStatCards(); }, 1500))
+    .then(() => setTimeout(async () => { await renderPM2(); await renderCards(); await renderStatCards(); }, 1500))
     .catch(err => alert(`PM2 ${action} 실패: ${err}`));
 }
 
 function restartAll() {
   bridge.restartBridges();
-  setTimeout(() => { renderPM2(); renderCards(); renderStatCards(); }, 2500);
+  setTimeout(async () => { await renderPM2(); await renderCards(); await renderStatCards(); }, 2500);
 }
 
 // ── Cron Tab ──
@@ -1555,18 +1574,18 @@ async function updateAll() {
   await bridge.refreshStatusCache();
   const activeTab = document.querySelector('.nav-item.active')?.dataset.tab;
 
-  // Always update dashboard data
-  renderCards();
-  renderPM2();
+  // Always update dashboard & PM2 data
+  await renderCards();
+  await renderPM2();
 
   if (activeTab === 'dashboard') {
-    renderStatCards();
+    await renderStatCards();
     renderActivity();
-    renderCronMini();
+    await renderCronMini();
   }
-  if (activeTab === 'logs') renderLog(activeLogTab);
-  if (activeTab === 'cron') renderCrons();
-  if (activeTab === 'settings') renderMemories();
+  if (activeTab === 'logs') await renderLog(activeLogTab);
+  if (activeTab === 'cron') await renderCrons();
+  if (activeTab === 'settings') { await loadSettings(); await renderMemories(); }
 }
 
 let _updating = false;
