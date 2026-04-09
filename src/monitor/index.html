@@ -560,6 +560,72 @@ function escapeHtml(str) {
   return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
+function cronToHuman(expr) {
+  if (!expr || expr === '-') return '-';
+  const p = expr.trim().split(/\s+/);
+  if (p.length !== 5) return expr;
+  const [min, hour, day, mon, dow] = p;
+  const dowNames = {'0':'일','1':'월','2':'화','3':'수','4':'목','5':'금','6':'토','7':'일'};
+  const monNames = {'1':'1월','2':'2월','3':'3월','4':'4월','5':'5월','6':'6월','7':'7월','8':'8월','9':'9월','10':'10월','11':'11월','12':'12월'};
+
+  // 매분
+  if (min === '*' && hour === '*' && day === '*' && mon === '*' && dow === '*') return '매분';
+
+  // */N분마다
+  if (min.startsWith('*/') && hour === '*' && day === '*' && mon === '*' && dow === '*') return `${min.slice(2)}분마다`;
+
+  // 매시 N분
+  if (/^\d+$/.test(min) && hour === '*' && day === '*' && mon === '*' && dow === '*') return `매시 ${min}분`;
+
+  // 요일 파싱
+  function parseDow(d) {
+    if (d === '*') return '';
+    if (d === '1-5') return '평일 ';
+    if (d === '0,6' || d === '6,0') return '주말 ';
+    return d.split(',').map(v => {
+      if (v.includes('-')) { const [a,b] = v.split('-'); return (dowNames[a]||a)+'~'+(dowNames[b]||b); }
+      return dowNames[v] || v;
+    }).join(',') + ' ';
+  }
+
+  // 월 파싱
+  function parseMon(m) {
+    if (m === '*') return '';
+    return m.split(',').map(v => monNames[v] || v+'월').join(',') + ' ';
+  }
+
+  // 일 파싱
+  function parseDay(d) {
+    if (d === '*') return '';
+    return d + '일 ';
+  }
+
+  // 시간 파싱
+  function parseTime(h, m) {
+    if (h === '*') return `매시 ${m}분`;
+    const hh = parseInt(h, 10);
+    const period = hh < 12 ? '오전' : '오후';
+    const h12 = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
+    return `${period} ${h12}:${m.padStart(2,'0')}`;
+  }
+
+  // */N시간마다
+  if (hour.startsWith('*/') && day === '*' && mon === '*' && dow === '*') {
+    const hInterval = hour.slice(2);
+    return `${hInterval}시간마다` + (min !== '0' ? ` ${min}분` : '');
+  }
+
+  const dowStr = parseDow(dow);
+  const monStr = parseMon(mon);
+  const dayStr = parseDay(day);
+  const timeStr = parseTime(hour, min);
+
+  // 매일 HH:MM
+  if (day === '*' && mon === '*' && dow === '*') return `매일 ${timeStr}`;
+
+  return `${monStr}${dayStr}${dowStr}${timeStr}`.trim();
+}
+
 // ── PM2 테이블 ──
 async function renderPM2() {
   try {
@@ -665,7 +731,7 @@ async function renderCrons() {
     <tr>
       <td><strong>${escapeHtml(c.name)}</strong></td>
       <td>${c.type === 'claude' ? '🤖 Claude' : '💻 Shell'}</td>
-      <td style="font-family:monospace;font-size:12px;">${escapeHtml(c.schedule || '-')}</td>
+      <td style="font-size:12px;" title="${escapeHtml(c.schedule || '')}">${cronToHuman(c.schedule)}</td>
       <td>${c.target === 'slack' ? '💬' : c.target === 'telegram' ? '📱' : '-'}</td>
       <td>${c.lastRun ? formatTime(c.lastRun) : '-'}</td>
       <td>
