@@ -187,7 +187,7 @@ async function handleMessage({ event, say, client }) {
   if (text.toLowerCase() === '!help') {
     const pluginCmds = plugins.getList().flatMap(p => p.commands).filter(c => c.startsWith('!'));
     const pluginHelp = pluginCmds.length ? `\n• 플러그인: ${pluginCmds.join(', ')}` : '';
-    await say(`*ClawBrid 명령어*\n• \`!stop\` 작업 중단\n• \`!reset\` 세션 초기화\n• \`!queue\` 대기열 확인\n• \`!clear\` 대기열 비우기\n• \`!search [검색어]\` 웹 검색\n• \`!browse [URL] [질문]\` 웹페이지 분석\n• \`!graph stats|add|link|find|del|list\` 지식 그래프\n• \`!memory list|add|del|search\` 장기 메모리\n• \`!plugins\` 플러그인 목록\n• \`!cron list|add|del|run|on|off\` 크론 관리\n• \`!help\` 도움말${pluginHelp}`); return;
+    await say(`*ClawBrid 명령어*\n• \`!stop\` 작업 중단\n• \`!reset\` 세션 초기화\n• \`!queue\` 대기열 확인\n• \`!clear\` 대기열 비우기\n• \`!search [검색어]\` 웹 검색\n• \`!browse [URL] [질문]\` 웹페이지 분석\n• \`!ultraplan [주제]\` 심층 분석 + 실행 계획\n• \`!graph stats|add|link|find|del|list\` 지식 그래프\n• \`!memory list|add|del|search\` 장기 메모리\n• \`!plugins\` 플러그인 목록\n• \`!cron list|add|del|run|on|off\` 크론 관리\n• \`!help\` 도움말${pluginHelp}`); return;
   }
   if (text.toLowerCase() === '!queue') {
     const queue = messageQueue.get(channelId) || [];
@@ -198,6 +198,47 @@ async function handleMessage({ event, say, client }) {
   if (text.toLowerCase() === '!clear') {
     messageQueue.delete(channelId);
     await say('🗑️ 대기열 비워짐'); return;
+  }
+
+  // ── ultraplan 명령어 ──
+  if (text.toLowerCase().startsWith('!ultraplan')) {
+    const topic = text.slice(10).trim();
+    if (!topic) { await say('사용법: `!ultraplan [분석할 주제/작업]`\n예: `!ultraplan 서버 성능 최적화 방안`'); return; }
+    text = `[ULTRAPLAN 모드] 아래 주제에 대해 심층 분석하고 구조화된 실행 계획을 작성해줘.
+
+## 분석 주제
+${topic}
+
+## 출력 형식 (반드시 아래 구조를 따를 것)
+
+### 1. 현황 분석
+- 현재 상태와 문제점 파악
+- 관련 기술/시스템 분석
+
+### 2. 접근 방식 비교
+- 최소 2가지 이상의 방안 제시
+- 각 방안의 장단점, 난이도, 소요 시간
+
+### 3. 추천안 + 근거
+- 최적의 방안 선택 이유
+
+### 4. 실행 계획 (단계별)
+- 각 단계의 구체적 작업 내용
+- 수정할 파일/코드/설정 명시
+- 예상 소요 시간
+
+### 5. 리스크 및 대응
+- 예상 위험 요소
+- 롤백/대응 방안
+
+### 6. 검증 방법
+- 완료 확인 기준
+- 테스트 전략`;
+    // ultraplan은 새 세션으로 (깊은 분석이므로)
+    channelSessions.delete(channelId);
+    saveSessions(channelSessions);
+    await say('🧠 *UltraPlan* 심층 분석을 시작합니다...');
+    // fall through to Claude execution below
   }
 
   // ── 메모리 명령어 ──
