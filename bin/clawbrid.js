@@ -199,6 +199,9 @@ const commands = {
     const pkg = require(path.join(CLAWBRID_ROOT, 'package.json'));
     console.log(`  Current version: ${pkg.version}`);
 
+    // 개발자 모드 감지: 소스 디렉토리에서 실행 중인지 확인
+    const isDevMode = fs.existsSync(path.join(CLAWBRID_ROOT, '.git'));
+
     // 1. 프로세스 중지 + 파일 잠금 해제
     console.log('  Stopping processes...');
     try { execSync('taskkill /f /im clawbrid-monitor.exe', { stdio: 'ignore', windowsHide: true }); } catch {}
@@ -206,17 +209,37 @@ const commands = {
     try { execSync('pm2 delete clawbrid-slack clawbrid-telegram clawbrid-cron', { stdio: 'ignore', windowsHide: true }); } catch {}
     execSync('ping 127.0.0.1 -n 3 >nul', { stdio: 'ignore', windowsHide: true });
 
-    // 2. npm install --force (기존 파일 덮어쓰기)
-    console.log('  Checking for updates...\n');
-    try {
-      execSync('npm install -g lee775/clawbrid-release --force', { stdio: 'inherit', windowsHide: true });
-      const newPkg = JSON.parse(fs.readFileSync(path.join(CLAWBRID_ROOT, 'package.json'), 'utf-8'));
-      console.log(`\n  Updated to: ${newPkg.version}`);
-    } catch (err) {
-      console.error(`\n  Update failed: ${err.message}`);
+    // 2. 업데이트 (개발자 모드 vs 일반 사용자 구분)
+    if (isDevMode) {
+      // 개발자: 소스에서 git pull 후 로컬 경로로 재설치 (심링크 유지)
+      console.log('  [DEV] Source directory detected. Pulling latest...\n');
+      try {
+        execSync('git pull', { stdio: 'inherit', windowsHide: true, cwd: CLAWBRID_ROOT });
+        execSync(`npm install -g "${CLAWBRID_ROOT}" --force`, { stdio: 'inherit', windowsHide: true });
+        const newPkg = JSON.parse(fs.readFileSync(path.join(CLAWBRID_ROOT, 'package.json'), 'utf-8'));
+        console.log(`\n  Updated to: ${newPkg.version}`);
+      } catch (err) {
+        console.error(`\n  Update failed: ${err.message}`);
+      }
+    } else {
+      // 일반 사용자: GitHub release에서 설치
+      console.log('  Checking for updates...\n');
+      try {
+        execSync('npm install -g lee775/clawbrid-release --force', { stdio: 'inherit', windowsHide: true });
+        const newPkg = JSON.parse(fs.readFileSync(path.join(CLAWBRID_ROOT, 'package.json'), 'utf-8'));
+        console.log(`\n  Updated to: ${newPkg.version}`);
+      } catch (err) {
+        console.error(`\n  Update failed: ${err.message}`);
+      }
     }
 
-    // 3. PM2 다시 등록
+    // 3. 모니터 exe 갱신 (Tauri에 HTML이 번들링되므로 재다운로드 필요)
+    const cachedExe = path.join(CONFIG_DIR, MONITOR_EXE);
+    if (fs.existsSync(cachedExe)) {
+      try { fs.unlinkSync(cachedExe); console.log('  Monitor exe removed (will re-download on next dashboard).'); } catch {}
+    }
+
+    // 4. PM2 다시 등록
     try { execSync(`pm2 start "${path.join(CLAWBRID_ROOT, 'src', 'bridges', 'slack-standalone.js')}" --name clawbrid-slack`, { stdio: 'ignore', windowsHide: true }); } catch {}
     try { execSync(`pm2 start "${path.join(CLAWBRID_ROOT, 'src', 'bridges', 'telegram-standalone.js')}" --name clawbrid-telegram`, { stdio: 'ignore', windowsHide: true }); } catch {}
     try { execSync(`pm2 start "${path.join(CLAWBRID_ROOT, 'src', 'cron-worker.js')}" --name clawbrid-cron`, { stdio: 'ignore', windowsHide: true }); } catch {}
