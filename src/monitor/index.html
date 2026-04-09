@@ -1210,12 +1210,14 @@ async function renderPM2() {
 
 // ── PM2 Actions ──
 function pm2Action(action, name) {
-  bridge.pm2Action(action, name).then(() => setTimeout(renderPM2, 1000));
+  bridge.pm2Action(action, name)
+    .then(() => setTimeout(() => { renderPM2(); renderCards(); renderStatCards(); }, 1500))
+    .catch(err => alert(`PM2 ${action} 실패: ${err}`));
 }
 
 function restartAll() {
   bridge.restartBridges();
-  setTimeout(() => { renderPM2(); renderCards(); }, 2000);
+  setTimeout(() => { renderPM2(); renderCards(); renderStatCards(); }, 2500);
 }
 
 // ── Cron Tab ──
