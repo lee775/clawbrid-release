@@ -1,3 +1,341 @@
 #!/usr/bin/env node
 
-const a0_0x5a3b8f=a0_0x4f0b;(function(_0x8edfb7,_0x134fed){const _0x3a2cc5=a0_0x4f0b,_0x2c79e7=_0x8edfb7();while(!![]){try{const _0x59b2b0=parseInt(_0x3a2cc5(0x1e6,'X]jj'))/0x1*(parseInt(_0x3a2cc5(0x145,'vN7J'))/0x2)+parseInt(_0x3a2cc5(0x125,'MSke'))/0x3*(-parseInt(_0x3a2cc5(0x21a,'He7z'))/0x4)+parseInt(_0x3a2cc5(0x235,'KeDV'))/0x5*(-parseInt(_0x3a2cc5(0x1fd,'WXJc'))/0x6)+parseInt(_0x3a2cc5(0x208,'sNL*'))/0x7+-parseInt(_0x3a2cc5(0x1ba,'Pzve'))/0x8+parseInt(_0x3a2cc5(0x169,'WXJc'))/0x9*(parseInt(_0x3a2cc5(0x1c8,'iAcS'))/0xa)+parseInt(_0x3a2cc5(0x181,'MSke'))/0xb*(-parseInt(_0x3a2cc5(0x16a,')gWq'))/0xc);if(_0x59b2b0===_0x134fed)break;else _0x2c79e7['push'](_0x2c79e7['shift']());}catch(_0x3d3ebf){_0x2c79e7['push'](_0x2c79e7['shift']());}}}(a0_0x21b5,0x71456));const {spawn,execSync}=require(a0_0x5a3b8f(0x1cd,'3*Ec')),https=require('https'),path=require(a0_0x5a3b8f(0x1f1,'HXsl')),fs=require('fs'),os=require('os'),args=process['argv'][a0_0x5a3b8f(0x201,'iAcS')](0x2),isFirstRun=!fs[a0_0x5a3b8f(0x148,'7^5S')](path['join'](os[a0_0x5a3b8f(0x146,'yik]')](),'.clawbrid',a0_0x5a3b8f(0x113,'W9L)'))),command=args[0x0]||(isFirstRun?'setup':a0_0x5a3b8f(0xf6,'TLtq')),CONFIG_DIR=path[a0_0x5a3b8f(0x161,')gWq')](os[a0_0x5a3b8f(0x1bd,'2v6$')](),'.clawbrid'),CONFIG_FILE=path[a0_0x5a3b8f(0x195,'@5ln')](CONFIG_DIR,'config.json'),CLAWBRID_ROOT=path[a0_0x5a3b8f(0x13c,'((TR')](__dirname,'..'),MONITOR_EXE=a0_0x5a3b8f(0x239,'dWbw'),RELEASE_TAG=a0_0x5a3b8f(0x140,'sNL*'),RELEASE_URL=a0_0x5a3b8f(0x1a7,'X]jj')+RELEASE_TAG+'/'+MONITOR_EXE;function findMonitorExe(){const _0x3dbd0d=a0_0x5a3b8f,_0x2f24bd={'hXRVB':'dist','TBRxr':_0x3dbd0d(0x127,')zah'),'klRkx':_0x3dbd0d(0x1c5,'sffC'),'SFiwT':'debug'},_0x2e4c7d=[path[_0x3dbd0d(0x1f0,'PsMd')](CONFIG_DIR,MONITOR_EXE),path[_0x3dbd0d(0x1fa,'Pzve')](CLAWBRID_ROOT,_0x2f24bd[_0x3dbd0d(0x20b,'mrKq')],MONITOR_EXE),path[_0x3dbd0d(0x12f,'yik]')](CLAWBRID_ROOT,_0x2f24bd[_0x3dbd0d(0x20a,'fFj$')],_0x2f24bd[_0x3dbd0d(0x1d5,'sffC')],_0x3dbd0d(0x22f,'WXJc'),MONITOR_EXE),path[_0x3dbd0d(0x1a2,'sNL*')](CLAWBRID_ROOT,_0x3dbd0d(0x111,'2v6$'),_0x3dbd0d(0x136,'W9L)'),_0x2f24bd['SFiwT'],MONITOR_EXE)];for(const _0x32b234 of _0x2e4c7d){if(fs['existsSync'](_0x32b234))return _0x32b234;}return null;}function downloadMonitorExe(){const _0x530fed=a0_0x5a3b8f,_0xae8ccd={'Wicaj':function(_0x486b9e,_0x30de7f){return _0x486b9e/_0x30de7f;},'LJrEc':function(_0x1cf8ad,_0x2e9764){return _0x1cf8ad>=_0x2e9764;},'YPCTU':function(_0x1fb74d,_0xd98402){return _0x1fb74d<_0xd98402;},'Sezaz':_0x530fed(0x163,'Pzve'),'yfdrF':function(_0x476790,_0x433811){return _0x476790>_0x433811;},'rWnMg':'https','pJitp':function(_0x5815ea,_0x508348){return _0x5815ea(_0x508348);},'YsLWZ':_0x530fed(0x150,'fHs*'),'lqaba':_0x530fed(0x1e2,'@MPC')};return new Promise((_0x1e5efe,_0x3c87a8)=>{const _0x41d9fa=_0x530fed,_0xb305d9=path['join'](CONFIG_DIR,MONITOR_EXE);if(!fs[_0x41d9fa(0x144,'0WWA')](CONFIG_DIR))fs[_0x41d9fa(0x1bf,'dWbw')](CONFIG_DIR,{'recursive':!![]});console[_0x41d9fa(0x109,'TLtq')](_0xae8ccd[_0x41d9fa(0x210,'KdPp')]);function _0x23bb52(_0xbdfd5a,_0x402f10){const _0x424238=_0x41d9fa,_0x3fa532={'DeaLy':function(_0x444ca9,_0x4c1667){const _0x1832fb=a0_0x4f0b;return _0xae8ccd[_0x1832fb(0x220,'sNL*')](_0x444ca9,_0x4c1667);},'tciNw':function(_0x288616,_0x1faf64){const _0x2f1b40=a0_0x4f0b;return _0xae8ccd[_0x2f1b40(0x22a,'zZi&')](_0x288616,_0x1faf64);},'mekqK':function(_0x2f0e70,_0x514023){const _0x33afd1=a0_0x4f0b;return _0xae8ccd[_0x33afd1(0x1da,'&Ro7')](_0x2f0e70,_0x514023);},'nNdNb':function(_0x2042f3,_0x27f75e,_0x544252){return _0x2042f3(_0x27f75e,_0x544252);},'vmuDk':function(_0x56cb0a,_0x498a4c){return _0x56cb0a+_0x498a4c;},'AHSsR':'finish','PTGPa':_0xae8ccd[_0x424238(0x18c,'4Mc5')]};if(_0xae8ccd[_0x424238(0x1ee,'1zRr')](_0x402f10,0x5))return _0x3c87a8(new Error(_0x424238(0x1d8,'&Ro7')));const _0x589182=_0xbdfd5a[_0x424238(0xf7,'$kNA')](_0xae8ccd[_0x424238(0x15f,'0hvP')])?https:_0xae8ccd['pJitp'](require,_0xae8ccd['YsLWZ']);_0x589182[_0x424238(0x174,'TLtq')](_0xbdfd5a,{'headers':{'User-Agent':_0x424238(0x16c,'iAcS')}},_0x217d1f=>{const _0x177391=_0x424238,_0x2f7cd3={'czSMo':function(_0x278a17,_0xf7ca99){return _0x3fa532['DeaLy'](_0x278a17,_0xf7ca99);},'DXqao':function(_0x94e2ce,_0x272fb3){return _0x94e2ce(_0x272fb3);}};if(_0x3fa532['tciNw'](_0x217d1f[_0x177391(0x198,']QR7')],0x12c)&&_0x3fa532[_0x177391(0x192,'HXsl')](_0x217d1f[_0x177391(0x17d,'((TR')],0x190)&&_0x217d1f[_0x177391(0x173,'HXsl')][_0x177391(0x107,'X]jj')])return _0x3fa532[_0x177391(0x1f8,'He7z')](_0x23bb52,_0x217d1f[_0x177391(0x1f9,')zah')][_0x177391(0x170,'iAcS')],_0x3fa532['vmuDk'](_0x402f10,0x1));if(_0x217d1f[_0x177391(0x19a,'MSke')]!==0xc8)return _0x3c87a8(new Error('HTTP\x20'+_0x217d1f[_0x177391(0x141,'sNL*')]));const _0xaf60ff=fs[_0x177391(0x187,'KeDV')](_0xb305d9);_0x217d1f[_0x177391(0x19c,'dWbw')](_0xaf60ff),_0xaf60ff['on'](_0x3fa532[_0x177391(0x121,']QR7')],()=>{const _0x14e652=_0x177391;_0xaf60ff[_0x14e652(0xf5,'yik]')]();const _0x468674=_0x2f7cd3['czSMo'](_0x2f7cd3[_0x14e652(0x12b,')gWq')](fs[_0x14e652(0x112,']aam')](_0xb305d9)[_0x14e652(0x149,'HXsl')],0x400),0x400)[_0x14e652(0x16d,'2v6$')](0x1);console[_0x14e652(0x10c,'Pzve')]('\x20\x20Downloaded\x20('+_0x468674+'MB)'),_0x1e5efe(_0xb305d9);}),_0xaf60ff['on'](_0x3fa532[_0x177391(0xfb,'iAcS')],_0x44eb3a=>{const _0x25cf12=_0x177391;try{fs['unlinkSync'](_0xb305d9);}catch{}_0x2f7cd3[_0x25cf12(0x147,'sNL*')](_0x3c87a8,_0x44eb3a);});})['on'](_0xae8ccd['Sezaz'],_0x3c87a8);}_0x23bb52(RELEASE_URL,0x0);});}async function ensureMonitorExe(){const _0x4e3ea5=a0_0x5a3b8f,_0x1790ee={'GwAJQ':function(_0x32f549){return _0x32f549();}},_0x2383ec=_0x1790ee[_0x4e3ea5(0x14f,'((TR')](findMonitorExe);if(_0x2383ec)return _0x2383ec;return await downloadMonitorExe();}function ensureDesktopShortcut(_0x56aa71){const _0x50804a=a0_0x5a3b8f,_0x29c7e9={'KDujV':_0x50804a(0x196,'7^5S'),'BGtiT':'Desktop','Ztbqx':_0x50804a(0x11f,'mrKq'),'YksNN':function(_0x4c9af9,_0x5de779,_0x212892){return _0x4c9af9(_0x5de779,_0x212892);},'sccob':_0x50804a(0x100,'KeDV'),'aadIx':_0x50804a(0x11c,'fHs*')};if(process[_0x50804a(0x1b5,'dWbw')]!==_0x29c7e9[_0x50804a(0x17b,'KdPp')])return;const _0x2c7226=path[_0x50804a(0x10d,'fHs*')](os[_0x50804a(0xf3,'0WWA')](),_0x29c7e9[_0x50804a(0x224,'1zRr')],_0x29c7e9[_0x50804a(0x143,'F1C@')]);if(fs[_0x50804a(0x20e,'dWbw')](_0x2c7226))return;try{const _0x310b16=_0x50804a(0x20f,'W9L)')+_0x2c7226[_0x50804a(0x11a,'Pzve')](/\\/g,'\x5c\x5c')+_0x50804a(0x17f,'KeDV')+_0x56aa71[_0x50804a(0x131,'KeDV')](/\\/g,'\x5c\x5c')+_0x50804a(0x1d9,'KwqG')+path[_0x50804a(0x151,'@MPC')](_0x56aa71)[_0x50804a(0x179,'sffC')](/\\/g,'\x5c\x5c')+_0x50804a(0x168,'7^5S')+_0x56aa71[_0x50804a(0x1af,'KdPp')](/\\/g,'\x5c\x5c')+_0x50804a(0x123,'zZi&');_0x29c7e9[_0x50804a(0x1a6,'zZi&')](execSync,_0x50804a(0x222,'2v6$')+_0x310b16+'\x22',{'windowsHide':!![],'stdio':_0x29c7e9[_0x50804a(0x1ad,'p8uB')]}),console[_0x50804a(0x10c,'Pzve')](_0x29c7e9[_0x50804a(0x15b,')gWq')]);}catch{}}function isMonitorRunning(){const _0x16b5a3=a0_0x5a3b8f,_0x3c46c7={'nLGFw':_0x16b5a3(0x10a,'He7z'),'JCHoH':'pipe'};try{const _0x25eb1f=execSync(_0x16b5a3(0x200,'mrKq'),{'encoding':_0x3c46c7[_0x16b5a3(0xfe,'mrKq')],'windowsHide':!![],'stdio':[_0x3c46c7[_0x16b5a3(0x13e,'DdRW')],_0x3c46c7['JCHoH'],_0x16b5a3(0x246,'fFj$')]});return _0x25eb1f[_0x16b5a3(0x1e0,'yik]')]('clawbrid-monitor.exe');}catch{return![];}}const commands={async 'dashboard'(){const _0x59fc3e=a0_0x5a3b8f,_0x455ff0={'jJGnk':function(_0x4c0e5b){return _0x4c0e5b();},'VyJgE':_0x59fc3e(0x1b2,'4Mc5'),'IwWqG':function(_0x11044b,_0x31bc54,_0x1d3b17,_0x27f88e){return _0x11044b(_0x31bc54,_0x1d3b17,_0x27f88e);},'GMYwK':_0x59fc3e(0x207,'@MPC')};_0x455ff0[_0x59fc3e(0x1ca,'3*Ec')](ensureMCP);if(isMonitorRunning()){console[_0x59fc3e(0x1db,'2v6$')](_0x455ff0['VyJgE']);return;}const _0x14316f=await _0x455ff0[_0x59fc3e(0x22c,'KdPp')](ensureMonitorExe);ensureDesktopShortcut(_0x14316f);const _0x1d5181=_0x455ff0[_0x59fc3e(0x23b,'((TR')](spawn,_0x14316f,[],{'stdio':_0x59fc3e(0x18f,'KdPp'),'windowsHide':!![],'detached':!![]});_0x1d5181[_0x59fc3e(0x1e8,'fHs*')](),console[_0x59fc3e(0x16b,'3*Ec')](_0x455ff0[_0x59fc3e(0x223,'KeDV')]);},'start'(){const _0x283303=a0_0x5a3b8f,_0x42652c={'quMHg':function(_0x2d2957,_0x4f6879,_0x9a28e5){return _0x2d2957(_0x4f6879,_0x9a28e5);},'DpqIm':_0x283303(0x116,'HXsl'),'DQbhr':_0x283303(0x152,'WXJc'),'YEEpa':_0x283303(0x10e,'DdRW'),'GLiPC':_0x283303(0x162,'DdRW'),'OPhYx':_0x283303(0x171,']aam'),'aekvW':_0x283303(0x202,'KdPp'),'MUHew':_0x283303(0x117,'He7z'),'tPxIh':_0x283303(0x1aa,'KeDV')},_0x5525fb=args[0x1];if(!_0x5525fb||_0x5525fb===_0x283303(0x15c,'&Ro7'))_0x42652c['quMHg'](tryPM2,_0x283303(0x21f,'0WWA'),path[_0x283303(0x161,')gWq')](CLAWBRID_ROOT,_0x42652c['DpqIm'],_0x42652c['DQbhr'],_0x283303(0x1e5,'KdPp'))),tryPM2(_0x42652c['YEEpa'],path[_0x283303(0x1b6,'XG$[')](CLAWBRID_ROOT,_0x283303(0x236,')zah'),'bridges',_0x42652c['GLiPC'])),tryPM2(_0x283303(0x241,'zZi&'),path[_0x283303(0x12f,'yik]')](CLAWBRID_ROOT,_0x283303(0x14b,'fHs*'),_0x42652c[_0x283303(0x19f,'@MPC')]));else{if(_0x5525fb===_0x42652c[_0x283303(0x132,'He7z')])tryPM2(_0x42652c[_0x283303(0x130,'7^5S')],path[_0x283303(0x12a,'X]jj')](CLAWBRID_ROOT,'src','bridges',_0x42652c[_0x283303(0x1b1,'$kNA')]));else _0x5525fb===_0x283303(0x114,'Stia')?tryPM2(_0x283303(0x13f,'WXJc'),path[_0x283303(0x126,'$kNA')](CLAWBRID_ROOT,_0x42652c[_0x283303(0x1d1,'QWVp')],_0x42652c[_0x283303(0x15a,'Pzve')],_0x42652c[_0x283303(0x1ff,'2v6$')])):console[_0x283303(0x134,'sNL*')]('Unknown\x20target:\x20'+_0x5525fb+_0x283303(0x17a,'ge]&'));}},'stop'(){const _0x37a765=a0_0x5a3b8f,_0x862e37={'pKdAw':_0x37a765(0x139,'X]jj'),'WbmRm':_0x37a765(0x190,'$kNA'),'asDDT':function(_0x2828bb,_0x4c1a0e,_0x4c3007){return _0x2828bb(_0x4c1a0e,_0x4c3007);},'OftCv':function(_0x16a200,_0x5a46a5,_0x4442e1){return _0x16a200(_0x5a46a5,_0x4442e1);},'LfJAo':'clawbrid-cron'},_0x34f792=args[0x1];!_0x34f792||_0x34f792==='all'?(pm2Cmd(_0x862e37[_0x37a765(0x16f,'HXsl')],_0x862e37[_0x37a765(0x1b9,'KeDV')]),_0x862e37['asDDT'](pm2Cmd,_0x37a765(0x1d0,'Pzve'),'clawbrid-telegram'),_0x862e37['OftCv'](pm2Cmd,_0x862e37[_0x37a765(0x191,'DdRW')],_0x862e37[_0x37a765(0xf9,'KdPp')])):_0x862e37[_0x37a765(0x1a4,'F1C@')](pm2Cmd,'stop',_0x37a765(0x129,'MSke')+_0x34f792);},'restart'(){const _0x5bd699=a0_0x5a3b8f,_0x478cfc={'RNhmB':function(_0x372048,_0x4de6a2){return _0x372048===_0x4de6a2;},'HHIVn':_0x5bd699(0x233,'sNL*'),'mooGs':function(_0x20d12c,_0x2261eb,_0x13622f){return _0x20d12c(_0x2261eb,_0x13622f);},'WKRLr':_0x5bd699(0xf4,'F1C@')},_0x169e2d=args[0x1];!_0x169e2d||_0x478cfc['RNhmB'](_0x169e2d,_0x478cfc[_0x5bd699(0x22e,')gWq')])?(_0x478cfc[_0x5bd699(0x159,'(kb*')](pm2Cmd,_0x478cfc[_0x5bd699(0x1b7,'X]jj')],_0x5bd699(0x110,'zZi&')),_0x478cfc[_0x5bd699(0x18b,'0WWA')](pm2Cmd,_0x5bd699(0x193,'TLtq'),_0x5bd699(0x185,'KdPp')),pm2Cmd('restart',_0x5bd699(0x1bb,'XG$['))):pm2Cmd(_0x478cfc[_0x5bd699(0x211,'zZi&')],_0x5bd699(0x14e,'iAcS')+_0x169e2d);},'status'(){const _0x1fa708=a0_0x5a3b8f,_0x6d0229={'YdFgj':function(_0x508308,_0x5536ba,_0x59b49d){return _0x508308(_0x5536ba,_0x59b49d);}};try{_0x6d0229['YdFgj'](execSync,'pm2\x20list',{'stdio':'inherit','windowsHide':!![]});}catch{console[_0x1fa708(0x14c,'@MPC')](_0x1fa708(0x157,'TLtq'));}console[_0x1fa708(0x14a,')gWq')]('\x0aConfig:\x20'+CONFIG_FILE),console[_0x1fa708(0x16b,'3*Ec')](_0x1fa708(0x1f5,'sNL*')+CONFIG_DIR);},'logs'(){const _0x5141fd=a0_0x5a3b8f,_0x9b10e5={'zahvS':function(_0x1cd7cc,_0x51ba57,_0x546f2f){return _0x1cd7cc(_0x51ba57,_0x546f2f);}},_0x1319e6=args[0x1]||_0x5141fd(0x108,'HXsl');if(_0x1319e6==='all')try{_0x9b10e5[_0x5141fd(0x22d,'$kNA')](execSync,'pm2\x20logs\x20--nostream\x20--lines\x2050',{'stdio':_0x5141fd(0x188,'iAcS'),'windowsHide':!![]});}catch{}else try{execSync(_0x5141fd(0x197,'X]jj')+_0x1319e6+'\x20--nostream\x20--lines\x2050',{'stdio':_0x5141fd(0x1ea,'He7z'),'windowsHide':!![]});}catch{}},'config'(){const _0x5de527=a0_0x5a3b8f,_0xc0c13d={'RKggq':_0x5de527(0x1f2,'^M!o'),'McyRw':_0x5de527(0x1bc,'W9L)'),'juniX':_0x5de527(0x1dd,'^M!o'),'qHdFw':function(_0x7322fb,_0x1bd70d){return _0x7322fb(_0x1bd70d);},'yjcLV':function(_0x2ccf0e,_0x3d00ca){return _0x2ccf0e(_0x3d00ca);}};if(!fs[_0x5de527(0x1fe,'j#ld')](CONFIG_FILE)){console[_0x5de527(0x237,'(WIK')](_0xc0c13d['RKggq']);return;}const _0x19b478=JSON[_0x5de527(0x142,'zZi&')](fs[_0x5de527(0x230,'dWbw')](CONFIG_FILE,'utf-8')),_0x1131d6=_0x25e72a=>_0x25e72a?_0x25e72a['slice'](0x0,0x8)+_0x5de527(0x182,'sNL*'):'(not\x20set)';console[_0x5de527(0x109,'TLtq')](_0x5de527(0x1ab,'(WIK')+(_0x19b478[_0x5de527(0x180,'0hvP')]?.[_0x5de527(0x1c1,'X]jj')]||'-')+'\x0a\x20\x20\x20\x20Add\x20Dirs\x20\x20\x20\x20\x20:\x20'+(_0x19b478[_0x5de527(0x154,'j#ld')]?.[_0x5de527(0x135,'Pzve')]?.['join'](',\x20')||'-')+'\x0a\x20\x20\x20\x20Max\x20Turns\x20\x20\x20\x20:\x20'+(_0x19b478['claude']?.[_0x5de527(0x205,'QWVp')]||0x32)+_0x5de527(0x21e,'3*Ec')+(_0x19b478['claude']?.[_0x5de527(0x14d,'Hv6i')]||0x927c0)/0x3e8+_0x5de527(0x219,'(kb*')+(_0x19b478[_0x5de527(0x213,'KdPp')]?.[_0x5de527(0x19e,'4Mc5')]?_0x5de527(0x12c,'X]jj'):'No')+_0x5de527(0x184,'p8uB')+(_0x19b478['slack']?.['enabled']?_0xc0c13d['McyRw']:_0xc0c13d['juniX'])+_0x5de527(0x1ed,'p8uB')+_0xc0c13d[_0x5de527(0x199,'((TR')](_0x1131d6,_0x19b478['slack']?.[_0x5de527(0x102,'XG$[')])+_0x5de527(0x15d,'mrKq')+_0xc0c13d[_0x5de527(0x166,'sNL*')](_0x1131d6,_0x19b478[_0x5de527(0x10f,'sNL*')]?.[_0x5de527(0x1f6,'((TR')])+'\x0a\x0a\x20\x20Telegram\x20\x20\x20\x20\x20\x20\x20:\x20'+(_0x19b478[_0x5de527(0x175,'MSke')]?.[_0x5de527(0x13a,'KdPp')]?_0x5de527(0x11b,'7^5S'):_0xc0c13d[_0x5de527(0x12e,'mrKq')])+_0x5de527(0x23d,'@5ln')+_0xc0c13d['yjcLV'](_0x1131d6,_0x19b478[_0x5de527(0x1d6,'j#ld')]?.[_0x5de527(0x16e,'QWVp')])+'\x0a\x20\x20\x20\x20Admin\x20User\x20\x20\x20:\x20'+(_0x19b478[_0x5de527(0x221,'WXJc')]?.[_0x5de527(0x128,'fHs*')]||_0x5de527(0x232,'4Mc5'))+'\x0a\x20\x20\x20\x20Allowed\x20Users:\x20'+(_0x19b478['telegram']?.['allowedUsers']?.[_0x5de527(0x18d,'2v6$')]?_0x19b478[_0x5de527(0x21b,'ge]&')][_0x5de527(0x164,'p8uB')][_0x5de527(0xf8,'Stia')](',\x20'):'(none)')+_0x5de527(0x104,']QR7')+(_0x19b478[_0x5de527(0x12d,')gWq')]?.[_0x5de527(0x21d,'^M!o')]||0x7)+_0x5de527(0x1e4,'@5ln')+CONFIG_FILE+'\x0a\x20\x20Data\x20Dir\x20\x20\x20\x20\x20\x20\x20:\x20'+CONFIG_DIR+_0x5de527(0x160,'fHs*'));},'update'(){const _0x2e7827=a0_0x5a3b8f,_0x3e0b4a={'jkoyQ':_0x2e7827(0x228,'fFj$'),'jlCUR':_0x2e7827(0x1cc,'MSke'),'FOmWY':_0x2e7827(0x186,'QWVp'),'vRBWI':_0x2e7827(0x18a,'vN7J'),'bbWAg':function(_0x2c8f3d,_0x1ba402,_0x2aac8c){return _0x2c8f3d(_0x1ba402,_0x2aac8c);},'vdUhH':function(_0x535074,_0x28e242,_0x55e66d){return _0x535074(_0x28e242,_0x55e66d);},'aKYoe':_0x2e7827(0xfc,'dWbw'),'bYZDz':'bridges','aDHGx':function(_0x5c97a1,_0x135cbc,_0x1b670f){return _0x5c97a1(_0x135cbc,_0x1b670f);},'oSxPv':_0x2e7827(0x245,'2v6$'),'Itjie':_0x2e7827(0x1c3,'2v6$')},_0x499a5d=require(path[_0x2e7827(0x214,'He7z')](CLAWBRID_ROOT,_0x3e0b4a['jkoyQ']));console[_0x2e7827(0x155,'4Mc5')]('\x20\x20Current\x20version:\x20'+_0x499a5d[_0x2e7827(0x243,'@5ln')]),console[_0x2e7827(0x1f3,'dWbw')](_0x3e0b4a[_0x2e7827(0x1f7,'MSke')]);try{execSync(_0x3e0b4a[_0x2e7827(0x209,'X]jj')],{'stdio':_0x3e0b4a[_0x2e7827(0x1df,'^M!o')],'windowsHide':!![]});}catch{}try{execSync(_0x2e7827(0x119,'dWbw'),{'stdio':_0x3e0b4a[_0x2e7827(0x1e1,'&Ro7')],'windowsHide':!![]});}catch{}try{_0x3e0b4a[_0x2e7827(0x1b3,'XG$[')](execSync,_0x2e7827(0x1ec,'TLtq'),{'stdio':_0x2e7827(0x156,'TLtq'),'windowsHide':!![]});}catch{}_0x3e0b4a[_0x2e7827(0xff,'QWVp')](execSync,_0x2e7827(0x1e3,'vN7J'),{'stdio':_0x2e7827(0x217,'0WWA'),'windowsHide':!![]}),console[_0x2e7827(0x1f3,'dWbw')](_0x2e7827(0x23a,'mrKq'));try{_0x3e0b4a[_0x2e7827(0x1ef,'sffC')](execSync,_0x2e7827(0x1b8,'F1C@'),{'stdio':_0x2e7827(0x1c2,'4Mc5'),'windowsHide':!![]}),console[_0x2e7827(0x1c6,'QWVp')](_0x2e7827(0xfd,'vN7J'));}catch(_0x427764){console[_0x2e7827(0x1eb,'0WWA')](_0x2e7827(0x176,'sffC')+_0x427764['message']);}const _0xa990f7=path['join'](CLAWBRID_ROOT);try{_0x3e0b4a[_0x2e7827(0xfa,'Pzve')](execSync,_0x2e7827(0x1e7,']QR7')+path[_0x2e7827(0x194,']QR7')](_0xa990f7,_0x3e0b4a[_0x2e7827(0x1a3,'WXJc')],_0x3e0b4a[_0x2e7827(0x240,'j#ld')],_0x2e7827(0x204,'fFj$'))+'\x22\x20--name\x20clawbrid-slack',{'stdio':_0x3e0b4a['vRBWI'],'windowsHide':!![]});}catch{}try{_0x3e0b4a[_0x2e7827(0x17e,'KwqG')](execSync,_0x2e7827(0x13b,'F1C@')+path['join'](_0xa990f7,_0x2e7827(0x215,'2v6$'),_0x3e0b4a[_0x2e7827(0x1ac,'Stia')],_0x3e0b4a[_0x2e7827(0x203,'TLtq')])+_0x2e7827(0x167,'KeDV'),{'stdio':_0x3e0b4a[_0x2e7827(0x177,'3*Ec')],'windowsHide':!![]});}catch{}try{execSync(_0x2e7827(0x11e,'DdRW')+path[_0x2e7827(0x158,'dWbw')](_0xa990f7,'src',_0x3e0b4a[_0x2e7827(0x1c7,'1zRr')])+_0x2e7827(0x11d,'F1C@'),{'stdio':_0x2e7827(0x1a0,'KwqG'),'windowsHide':!![]});}catch{}try{execSync(_0x2e7827(0x206,'PsMd'),{'stdio':_0x2e7827(0x105,'mrKq'),'windowsHide':!![]});}catch{}console[_0x2e7827(0x1b4,'ge]&')](_0x2e7827(0x122,'j#ld'));},'version'(){const _0x4c06d6=a0_0x5a3b8f,_0x1895ed=require(path['join'](CLAWBRID_ROOT,_0x4c06d6(0x15e,'W9L)')));console[_0x4c06d6(0x133,'iAcS')]('\x20\x20ClawBrid\x20v'+_0x1895ed[_0x4c06d6(0x1d2,'Stia')]);},async 'setup'(){const _0x51fa6c=a0_0x5a3b8f,_0x5a1f1=await ensureMonitorExe();if(fs[_0x51fa6c(0x106,'KeDV')](CONFIG_FILE))fs[_0x51fa6c(0x165,'@5ln')](CONFIG_FILE);const _0x61f623=spawn(_0x5a1f1,[],{'stdio':_0x51fa6c(0x20c,'WXJc'),'windowsHide':!![],'detached':!![]});_0x61f623[_0x51fa6c(0x1ae,'WXJc')](),console[_0x51fa6c(0x153,'zZi&')](_0x51fa6c(0x242,'Pzve'));},'help'(){const _0x114c4b=a0_0x5a3b8f;console['log'](_0x114c4b(0x1d3,'fHs*'));}};function ensureMCP(){const _0x2a0426=a0_0x5a3b8f,_0x3ceaef={'QfICN':_0x2a0426(0x178,'W9L)'),'xuPSp':_0x2a0426(0x1a1,'2v6$'),'tgYZS':function(_0x6f271a,_0x5ddc33,_0xf47dd5){return _0x6f271a(_0x5ddc33,_0xf47dd5);},'qheRU':'\x20\x20ClawBrid\x20MCP\x20서버\x20등록\x20중...','jCzmh':function(_0xd5d801,_0xb233f5,_0x2ce2c1){return _0xd5d801(_0xb233f5,_0x2ce2c1);},'ufSHP':'inherit','gtLyu':_0x2a0426(0x172,'KwqG'),'pMNbb':_0x2a0426(0x23e,'p8uB')};try{const _0x5d4653=path['join'](__dirname,'..',_0x2a0426(0x227,'X]jj'),_0x3ceaef[_0x2a0426(0x103,']aam')],_0x3ceaef[_0x2a0426(0x1ce,'HXsl')])[_0x2a0426(0x19d,'dWbw')](/\\/g,'/'),_0x5d7536=_0x3ceaef[_0x2a0426(0x1a8,'@5ln')](execSync,'claude\x20mcp\x20list',{'encoding':'utf-8','windowsHide':!![],'timeout':0x2710});!_0x5d7536[_0x2a0426(0x1de,'WXJc')](_0x2a0426(0x23f,'ge]&'))&&(console[_0x2a0426(0x14a,')gWq')](_0x3ceaef[_0x2a0426(0x1be,'@5ln')]),_0x3ceaef[_0x2a0426(0x1d4,'He7z')](execSync,_0x2a0426(0x1d7,'KdPp')+_0x5d4653+'\x22',{'stdio':_0x3ceaef[_0x2a0426(0x189,'2v6$')],'windowsHide':!![]}),console[_0x2a0426(0x1fb,'Stia')](_0x3ceaef[_0x2a0426(0x19b,'W9L)')]));}catch{console[_0x2a0426(0x155,'4Mc5')](_0x3ceaef[_0x2a0426(0x115,'((TR')]),console[_0x2a0426(0x1cb,'KwqG')]('\x20\x20claude\x20mcp\x20add\x20--scope\x20user\x20clawbrid-cron\x20--\x20node\x20<clawbrid경로>/src/mcp/cron-mcp-server.js');}}function ensurePM2(){const _0x55fb52=a0_0x5a3b8f,_0x30df6c={'QQIGN':'ignore','BIvrr':_0x55fb52(0x183,'F1C@'),'VXMWo':_0x55fb52(0x225,'HXsl'),'LPAVj':_0x55fb52(0x17c,'@5ln'),'SjUfQ':'\x20\x20PM2\x20installed\x20successfully.'};try{execSync(_0x55fb52(0x238,'((TR'),{'stdio':_0x30df6c[_0x55fb52(0x18e,'KwqG')],'windowsHide':!![]});}catch{console[_0x55fb52(0x1b0,'He7z')](_0x30df6c[_0x55fb52(0x229,'DdRW')]);try{execSync(_0x30df6c[_0x55fb52(0x234,'&Ro7')],{'stdio':_0x30df6c['LPAVj'],'windowsHide':!![]}),console[_0x55fb52(0x138,'W9L)')](_0x30df6c[_0x55fb52(0x23c,'2v6$')]);}catch{console[_0x55fb52(0x1fc,'&Ro7')](_0x55fb52(0x244,'vN7J')),process['exit'](0x1);}}}function a0_0x21b5(){const _0x1a42af=['iYVdGSkapW','W6hdMCoBW6yseIL4WOaXW4tdPSkv','dMlcP2FdGmoUbq','W7tcQHNcPmom','W7TAxW','W67dSSoSW6JcSKShWPhdO8k2WO7dMHRdSmkXWR3cV8oyWPmZWQ1mDG','W73cIdFcPSodW53cHYfXW41JxsW','W7VdN8kCjmoZ','osrMW6aOWR8A','WO9xWOlcKq','uXSbgSkB','W4tdIx4AW4nSyq','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','W4nkWQJcL8oC','nSoWnSoiW7K','cmoqctPJWQhdK8kH','W5VdHmkQWRBcSs4UFCkRWP3cNCkSW6ubWRaRkXRdM3XoB8oCE3lcMmkmgCkPcmowEXqTWQyKWRJcIsFcLSkjDmkiW73dKhKVdmoaW6hcGa','hSoEW7fkbfS5W5uTgCkLW5/cJCoFkSo3FmkD','WRaohmkLWRdcUmkEFWuMWO3dICkYbSoLrWSIW618CJtcSG','e8oHW50+pa','fvJcGW','n8kiWPSUW40','W53cQSoDW7pcLSkmWQ0V','qfXxox7cGmkoW6y','W6/cKCoSW4xcVq','r0L0uaddPCojfG','pmoJW5W9ia','WPOKl3NdLCo9WOtdKMzdgHVdQ8k1dJ9JuSo9W5VdMmkGbftdMSkbW6f1WPuFEank','WQxdOuauW5yXrdLvW5/dSCkvW7ldOSkKWRVdQqNdPrfPB8kjza','oIOfWQ/cTSkrCmkgm8otlGqcwSkfFwVdNSk5xCovW64IaIy','W4VdHmkQWQdcVMz9zmkPWOpdMCkSW60kW75JkapdIW','W6xdNCk/x3/dO8kt','WOFdLvRdO1/cOmoqWPvMz20','h8o1omk2W4m','hmoPtIldIa','W4bNWRRcN8ogWQdcSW','bNxcPNVdKW','W5FcMbldT8oGWRVdRfFcUCkesCoKjX51DJ3cUc5bW7W2weT2mSohW7ZdTSoUlSk2W6/cOJzKW5b3W53dPGBdS3DlWPVdSJzXWQpdVCkxwY/cPXhdPmoq','uarTAmkEWP92W53cS1eGWQXAn0xdUxFdRZFdUG','eZNdJmkBha','k8o4mColW4K','pSouDHG','W7pdI8k4hW','W5FcRmkoW7hcM8koWQ4IW4ewa8k/WOldVSkms8kUW6PAgJpcK8ogW63cUhJdUCkSseKCW5BcPbfkgaJdP8kBW6tcGH92wqzQgNu5wSko','W7hdLXG','gtxcPSol','xG3dGSk0W6CDW5RdSa','WRRcNgLkwmkDW4VcLa','WQtcVSo8W4NcJW','W4DhWRBcTmow','WQ5+WPnEm8oDW74','WPzmWOtcJW','W57dG2S','l8odW6WfgW','h31zhx7cPCkI','gCondcXWWQddOCk1CmoJ','pNVcJrT/','qSoEAsb6FGVcTIpdQaH7W6iXsCoZWQBdRSo/jCkRW4dcKSo9WRpcSSkOh8kRfSoMbvFcI8kxW7ldPmo+WR3dR0pcPK7cM8kyqCkYW6D3WQddTSkZ','WQdcGmkfWR1h','W4VdHmkQWQdcVG','W4JcPLJcH8oY','aJZcQ8oyF8oBWPJdQSogBSo3zhjjkCooW58EyG','EGOib8kdWQZcQCkl','jmowlvBdO8k/Fmok','WPOKkhRdG8oKWQRdJ25duZJdO8o7jcDTv8kFW5RdHCkLvM3dKmklWQy','lfZcG8oHW6WmW4lcOHtcSaadWRa','WPldNCkgrhe','jrlcMmodzG','xSoNsb1u','qfvAoNNcGq','pCoCCrNdOSk7','W7JdGbzrF8kKW7dcScBdUq','hHyJWRNdHY7dMSooWPnoqq1rW5NdTH3cJCo1W4W/hq5GhgdcHrTur2tcOCkiz3hdUCkQFhVcRCkylsanq3O7WRxdMSkCW5Cf','W5tdMCkQWQhcTa','DsTmWPXa','tSkgu24WW6BcHmkyBCozWP3dQf4','W5VdHmkQWRBcSs4','W4nMWRVcLa','cKxcHW','DCkSWRGLW7aGW6a','cMdcUNVdK8oS','kgOsy8oG','W7jpySklyHFcIbuKrH4RrGeHfehcT8kmW6xcTq','WPS6W6tdI8kaW7ZdSCoqztBcICkeW5m','WQaBW4LoWPrNW68/','W53dMSk5WQZcPW','W7tcOSowW5pcK8kfWOWQW59f','WPtdGh7dQSkhW5BcNJ57W4fZwN8zW7uaW5f/y8oY','agVcTwpdG8o7cw3cLCkhW7nLiSoW','tqxdLCk0WRC','xvDymgZcLSkkW7G','cvJcKY5ofZ1KyxdcNYGdWP08FhhdS1SeuG','mmoDWR0ecG','kbJdNmkadG','W63dMSkHv8oQWRrjcNpcGCkiW54zW6noh3xcGG','WOvXWOtcQCkM','WQFdOmki','athcQCoqDCkrWO7cSmonC8o8AW','d1ewFSoG','BIPSWPvr','wmkTF8oMWPmGF8kLB8oKW7O','W5ldOSkmWQ3cVG','msb9W7Kx','WPK2D3Gg','w1DymgRcL8ko','W6/dNr5gtCk+W4/cRbVdO8kRW44','nComWPOtCfH3W5ySW7xdLCkagG','A8knWROzWQusW4W2W6K','EWddMG','hmoPW5m9bG','rSkKW5jcCM7dIaflWPWJzr0','WRvPWPe','WRaNWOG','WQVcGsS+gSoBW5JcN8kYzCo1W4FcUW','W77dLb5vACkLW4RcRwxdT8kQW4nmx1BcQZ3cV8kvWOy','fSkFwsnZDbpcQ23cOg5uWQ1HimolWPFdJCoBh8kpW77dUCoZW7JdIq','WPlcM05VCa','kL3cSs1T','eg5eW7BdPCozp8osumoOlWKou8kfgYlcKSoMxq','EGqac8oUW73SNONRJBdcS+UtToUGKSoN7iUB7y2XrCoXnmkJBmkVFNCRWPTMmhxTMkBSNPy67zs87jMJWQO0WP7SI7hRJQFcP+UsTEUHLmkW','WRCsW4rCWPfNW6C2WRhcHCogWRtdRq','hSoSpXT+','qqX/WQDqW50Av30ukgLY','W5WdWQ7cJCkaWR9jWQtcK0FcLdlcLgRcIKbpvSkXACokz8oaaKW','BcSwWQxcRmo0pG','W7xcQh4+W4qGh2aiWPVcVSojWRddS8oIW7FdRKxcS1v5iCkUFCoPW5n0W6NdR389hSo1WPhdNmk4W4ZdSLVdMmo9W6amqCkwWPWAqXddO0ddSHH7','dvlcIc5BfJrSig/dI2qUWPyWFx/dS1OkgLC','gdFcPmouzSkt','c2JcUxhdHCoGeG','W6WNWQLddepdLG','tuT4tXa','W4pcLfpcV8oMWRhdOudcQq','odv0W70WWROOtxRcLG','W5JdG2uh','W7tdJSkbWOlcUG','WP5bWRRcOmkg','WOpcUmkRWO5d','W67dIHW','W5/cQa4MWOzKf3OEW4/cVmokWRhcO8oOW7pdS0ZdTW','wmoZxq1H','DqKNeSkr','hSo3WOOCmZS','WOVcMmo7W7VdONm6uCkdWR7dHCk8W4K','W73dQs3dS1q7aa0','kh8GyKS','W73cSKJdO2/cUmouWOz8mJ83W7JcRHOMWOKzW65CWOe','x8oyDcrKCG','eSoOWO0ans3cRJLRWQy','WRJdVCkiCLZdNCkRkW','W6ldHSkG','W4VcMKC','W5X9WRtdL8km','uJpdOIxcKSk5vuJdTSkTW7fmla','WPbmWOO','amo0i8k9','lNqbE8oWzM/dSgdcTmoPW5qVdv7dOSkl','AqddL8k2WRy','qqX/WQDqW50Av30enMD/W6q','cKxcH2zibsbZza','cM0ivvBcRfddSG','wqPWW7FdOcZcG8kjWQ9drq','W4BdIwamW41XBIW','WQVcOvD8vq','W7ddMmkV','W4PLWRpcJCowWRVcRSoGoXZcSCksW4jb','k1KrFSoL','W6NdMqXjymk+W4/cPwJcTCkJWO0kqLtdUxBcTSkiWOaWFmkGWRmMW6/dTGa','WO5gWP3cJCkaWQTU','cSoCW584BqZdQq','sSk7dSk2W5yBzCktEmkZW5OcWRJdGatdH3OUamk6CCk0W6n/lCo7kW','WRXIW7CAa1ddJWpdSXRdUfKGAmoLWQtdJxrgjWfh','pxvslmoHygFdPJNdOmkU','DCotEZXuzrhcPIpcIIfCWQTNB8omW4NdHCouaa','WRldIHRcRf7dRSkr','WRBdSdVcSh4','xmkvnri2W7pdGSk+CCoJWQZdRf9nW6VdPSoJW6zimSoefKRcRwCB','bvS6WQmCW6Swqdmfm3zOW6BdRhbUW7BcO8ofrmktzSkqW7tdGmoRtWtcG8kQWRr7jmk+W5hdGYiSggrusfNcKa','lCoXvSkd','W73cVSo+W6xcL0eu','is58W6e','WRvPWPexiSooW7JcMmk0','c8o/j8k6W4SLySkzEG','WQ3cVSoEW6VcV0KEWPZcOa','WR7dVCkcFq','WRieBwmh','WO3dT8ky','WRisw08ggMO','xmokDcjo','reH+uG','aSoNW7y/DG','bCo1WPqFid3cMa','W4HSWRNcJmoJ','WR/cG8kl','DGpdKq','WP1hWONcPCkiWRP4','tGrSW7BdRd8','WQv6WOzzpG','vGP5','WQFdPSkeyW','W53dHSkQWQhcUs5Q','W64VW6GxhKxdGXtcP1NcTG','WRhcG3bW','krhdJmk8kW','b1SOy8oA','sL5viMNcLSkcW7fwA3hdTSkHoSolW6jO','Bf3cMmoLW7mnW5FcPadcHbWL','ArJdL8kHWQHoWRNcVWxcLa','uGfSWQnx','W4q2WRHgfq','bN/cVwFdLCo6m3ddLSkx','W6tcUHzhW4y5tMybWQBcLCoFWPi','rKH6wrhdQmoE','xJtdH8k0WRi','kSokW5CPDrRdNNldSCkv','W7ddG8k2eG','WR0rwq','gCoPkq','W5zRda','d1FcTr3dKCk9qa','WRdcGmknWQLavxb4W6m','WPZcM1HuzG','aSoVpSkJ','W55TgxJdG8o+WO0','s0bDmwZcGCky','tG95','h8ozbcPGWRy','l8kmWRi','W47cKK7cUmo2WRS','W7FcUbldT8oQWRhdTblcRmkxcmoUjX5GEcO','W7FdLXzm','W6WQlCoSmq','WRHYWO/cICkt','WRaFwMCq','k8oDW7i','pmkFoMS2vGJcSIpcKYfzWQD9imkEW4FcICkasW','sGr9W7RdQcZdImonWRzFray','DSkPW4XQjW','ymk7AUkxK+kwPEkvSokuKEkxVokuIokwK+kwQEkvQUkxL+kwSUkvSokwPokuJ+kvMUkuOokxMEkuG+kxKEkwGUkuI+kvIokwN+kuHEkvUUkvGEkvVokuLUkvVUkwPUkwS+kxS+kxMEkvVUkwRUkwKUkuIUkxJw0','WRSrv0a','ox0mACo1zMFdUwdcS8o4W5KKdK3dR8kjvbLXW5ZcMq','WPLrWP/cJSkt','o0GHj8ojWRH9W7ZdOga9WRq','BYaiWR/cQ8oWa8oFhSoF','AYtdKSktWQO','vCkWW4LElZ/cKcuLWQyHtaFdRmoJWORcOCkVimk9yG5PWQKxeq','AmkjWPOPlYddRMtdSCk6qNzrW4j+W4WAW7/cGG','ehPqnLlcLmks','W6nicXTEp3rMqrDV','W7lcJZK','WRdcGmknWQLavxb4','dvJcOIjeate','Dqqeb8kzWRxcOSkw','W7pdOCkOnSo0','WR/cG8kpWR9wtNzY','gMSgtYJcOLhdO2jkqt0JW40','WRCvE8k6W7/cMmkZFWCRW4pdO8k1p8k365ot66c1DUYBHUUJGIu','W6VdJ8kTe8oMWQHj','W4dcKfq','WRRcT8otW7NcUKKwWPu','v8k8rmo2W7hdTeFdTCkRBCkYW5xdQauTW7RcS3i','W6JcSHZcNCoU','vWzU','l8o5fmopW6ddS0m','W7PEW7byWPyVWQ4HW7dcH8oxWRdcR0ldGhNcSv7cPe7dT8ouW70jt2T1WO/dGNS','W7pdRmk+WQNcGW','CYamWRpcT8oYja','WQJcMhHQqSkfW63cLCkKCW','W7zXCmkrW6y','umk5W59xmNdcQsf3WQiOwsddR8oLWOVdUmkL','z8ksW4nsjaq','W7ZdOSkgW7RcTha+WO/dTq','meBcNmo/','WR5IWOP6xXhdJaNcP1NdSLCIzmoZW6pcIrbljHPiW5pdHdpcISoMW6eNW4O','uc5TAmoTWRf4W4RdUcvVW6CFEuxdUxFdRY3dOdO','W5VdHmkQWRtcTZLNDmoLWPNdMmkHW6qcW6jNAW','yWOdomkDWRFcQ8kuW7OsWRRcGaZcUdjqlCoxWQv7qdzlwSoKhXnUW6FcPY3cUCk/pX5P','fmoIWOesntVcQJjSWReOFGtdVmo0WOlcQa','WRRcGSkeWRTqtM0','dfhcTWnS','WRZdR0aCWOrL','dMJcU1pdKG','emkgWQ8mW78','fvlcIIXida','W4zKCCkrW5a','W5hdJ8kLWQZcPY4','kc10W7GMWRSwqcpcJCoohSkozW','pvmetCoL','W67dJ8kNbSoi','W5xcKfpcO8oLWQZdTa','WP3dLWhcRq','CcenWRG','omoBW5bPmW','WQtdV8ozm0tdM8kJnMjVWQ1PbW4+WQ7cTq4','WOtdJaNcT1NcP8oYWOH2iG','WQRcPh1yqa','WR3cPSoEW6JcQeG0WPFdQCk0','xrfsW6JdVa','W63dKq9h','W6/dNq9oASk0W4y','imkmWRSlW6WtW4qaWQxdRxnLW7uKkSoYW6q','W7vua0/dMG','W75svSk5W6ZcIG','gKxcIYurctzXig/dMNC2WPCJp3RdRG','CapdN8k7','shLToM4','W5eKWQ50gW','efaNWRzBW6q6rcG','EWTTWP58','WRZdPSkFy1VcJSoRAIvLWRvGbq5IWQtcVK7cJxldJv4ceYddJSkiWOhcTSkBWPFcVGDTWPi7W5v/W6nGe8o1WQNcISkoWQFcKSoZz8oRWQbxW6RdTmkGCtumWOBcPmko','BIK9WOZcLG','lmo6i8k/W4aumCkiz8kZW5OEWRBdGatcHa','bmo8WOuqkNpcJJrKWQSPtbZdOCo/WOBdQ8oOjW','W5zOW4/cL8kpW5WCW6ZcGCoNa2RcS3C1W7ddTCoiCmo5etH+W5xdJSk4emkk4PsO4PwT4Psj4Pwo4PA44PwB4PAC4PsH4PsG4Psj4PA+4Pw/4Psl4Psx4PAO4Ps14PE64Psu4Psl4PEO4PAf4PA04PEL4PE34PsL4PAY4PER4Psv4PsA4PwU4PEj4PAW4PAV4PAk4Pwf4PAQ4PwF4Ps4WQxdPCkfdmooC2HaW5KkW5nXkKO3WPPYlu4JbmociCoCjH/cGSkaj8kFWPNcKtVdPa','W5ddTvyTW5a','kuCUj8oC','xfXgmg0','W4RdJCk7WQ/cTcHR','W4vMWRu','pXfTW4yS','y8odWPybW6qwW6SWWQNdRZXAW78pj8oVW7/cLsrRygxdQSoQWORdGrxcICkEieiAW5FcIfBcKGOV','W73dPa7dPLW','WRGrW4i','W63dLb5wBCk4W5hcPa','W7xdQtddIq','WOpdMCk5x1O','W7aYWRCxbf/dKrlcSHxdUbH6BCk3WQhdJdWsyLSgW5ZdHdVcK8oJWR1GWOddMglcJve9rx9R','imoYWOKHla','W48tW53dMCowW7a/WPFcSxddJbdcUq','W7ZdQJJdKfKIdaDTgHhdNmk3','FWT/W7pdPs7dIq','evJcIs5ydsC','AYybWOtcKa','W7ddKXTlECkeW5RcPYS','FfC0qmofq1e','WQpdVCkzEgZdNCk2','kSknWR0iW7CiW50','gKxcIYureZPZzNNdJsSQWOe','FmkbWQTEwaTVW554kSkUW7tcRa','kCo9fSoeW6tdPa','EWqx'];a0_0x21b5=function(){return _0x1a42af;};return a0_0x21b5();}function tryPM2(_0x3687fe,_0x11a52e){const _0x497a04=a0_0x5a3b8f,_0x300dfb={'fAqrw':function(_0x31bacd,_0x12277d,_0x2e9ca0){return _0x31bacd(_0x12277d,_0x2e9ca0);},'yRiHG':_0x497a04(0x20d,'PsMd'),'HRQTX':'inherit','tkNCH':function(_0x3ef76c,_0x47cc7d,_0x2731db){return _0x3ef76c(_0x47cc7d,_0x2731db);}};ensurePM2();try{_0x300dfb[_0x497a04(0x118,'DdRW')](execSync,'pm2\x20describe\x20'+_0x3687fe,{'windowsHide':!![],'stdio':_0x300dfb[_0x497a04(0x226,'Pzve')]}),execSync('pm2\x20restart\x20'+_0x3687fe,{'stdio':_0x300dfb[_0x497a04(0x1e9,'PsMd')],'windowsHide':!![]});}catch{try{_0x300dfb[_0x497a04(0x1dc,'4Mc5')](execSync,'pm2\x20start\x20\x22'+_0x11a52e+'\x22\x20--name\x20'+_0x3687fe,{'stdio':_0x300dfb['HRQTX'],'windowsHide':!![]});}catch(_0xa9d0ac){console[_0x497a04(0x218,'DdRW')](_0x497a04(0x1a9,'fHs*')+_0x3687fe+':\x20'+_0xa9d0ac[_0x497a04(0x1c9,'0WWA')]);}}}function a0_0x4f0b(_0x1b6b98,_0x4ab2f2){_0x1b6b98=_0x1b6b98-0xf3;const _0x21b5c7=a0_0x21b5();let _0x4f0bb7=_0x21b5c7[_0x1b6b98];if(a0_0x4f0b['nKWXXR']===undefined){var _0x469c5c=function(_0x475ab8){const _0x30f020='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0x256fc3='',_0x5c4000='';for(let _0x1e73f4=0x0,_0x5d81ac,_0xf106de,_0x5b7a79=0x0;_0xf106de=_0x475ab8['charAt'](_0x5b7a79++);~_0xf106de&&(_0x5d81ac=_0x1e73f4%0x4?_0x5d81ac*0x40+_0xf106de:_0xf106de,_0x1e73f4++%0x4)?_0x256fc3+=String['fromCharCode'](0xff&_0x5d81ac>>(-0x2*_0x1e73f4&0x6)):0x0){_0xf106de=_0x30f020['indexOf'](_0xf106de);}for(let _0x5f5ca4=0x0,_0x3e6711=_0x256fc3['length'];_0x5f5ca4<_0x3e6711;_0x5f5ca4++){_0x5c4000+='%'+('00'+_0x256fc3['charCodeAt'](_0x5f5ca4)['toString'](0x10))['slice'](-0x2);}return decodeURIComponent(_0x5c4000);};const _0x16bc14=function(_0x321648,_0x95ab89){let _0x2f8bbc=[],_0xd4c6b6=0x0,_0x5aed6e,_0x4fb1fe='';_0x321648=_0x469c5c(_0x321648);let _0x57adc5;for(_0x57adc5=0x0;_0x57adc5<0x100;_0x57adc5++){_0x2f8bbc[_0x57adc5]=_0x57adc5;}for(_0x57adc5=0x0;_0x57adc5<0x100;_0x57adc5++){_0xd4c6b6=(_0xd4c6b6+_0x2f8bbc[_0x57adc5]+_0x95ab89['charCodeAt'](_0x57adc5%_0x95ab89['length']))%0x100,_0x5aed6e=_0x2f8bbc[_0x57adc5],_0x2f8bbc[_0x57adc5]=_0x2f8bbc[_0xd4c6b6],_0x2f8bbc[_0xd4c6b6]=_0x5aed6e;}_0x57adc5=0x0,_0xd4c6b6=0x0;for(let _0x326870=0x0;_0x326870<_0x321648['length'];_0x326870++){_0x57adc5=(_0x57adc5+0x1)%0x100,_0xd4c6b6=(_0xd4c6b6+_0x2f8bbc[_0x57adc5])%0x100,_0x5aed6e=_0x2f8bbc[_0x57adc5],_0x2f8bbc[_0x57adc5]=_0x2f8bbc[_0xd4c6b6],_0x2f8bbc[_0xd4c6b6]=_0x5aed6e,_0x4fb1fe+=String['fromCharCode'](_0x321648['charCodeAt'](_0x326870)^_0x2f8bbc[(_0x2f8bbc[_0x57adc5]+_0x2f8bbc[_0xd4c6b6])%0x100]);}return _0x4fb1fe;};a0_0x4f0b['CPrctv']=_0x16bc14,a0_0x4f0b['IvTmqp']={},a0_0x4f0b['nKWXXR']=!![];}const _0x3aa8cb=_0x21b5c7[0x0],_0x24ef21=_0x1b6b98+_0x3aa8cb,_0x5ac765=a0_0x4f0b['IvTmqp'][_0x24ef21];return!_0x5ac765?(a0_0x4f0b['neulDz']===undefined&&(a0_0x4f0b['neulDz']=!![]),_0x4f0bb7=a0_0x4f0b['CPrctv'](_0x4f0bb7,_0x4ab2f2),a0_0x4f0b['IvTmqp'][_0x24ef21]=_0x4f0bb7):_0x4f0bb7=_0x5ac765,_0x4f0bb7;}function pm2Cmd(_0x7f4727,_0x36962d){const _0x48a8bf=a0_0x5a3b8f,_0x2f6bf0={'CNdUq':'inherit'};try{execSync(_0x48a8bf(0x124,'sffC')+_0x7f4727+'\x20'+_0x36962d,{'stdio':_0x2f6bf0[_0x48a8bf(0x13d,'1zRr')],'windowsHide':!![]});}catch{}}commands[command]?Promise[a0_0x5a3b8f(0x1cf,'$kNA')](commands[command]())[a0_0x5a3b8f(0x137,')zah')](_0x1b3e25=>{const _0x5e09e2=a0_0x5a3b8f;console[_0x5e09e2(0x21c,'KdPp')](_0x5e09e2(0x120,']QR7')+_0x1b3e25['message']),process['exit'](0x1);}):(console['log']('Unknown\x20command:\x20'+command),commands[a0_0x5a3b8f(0x1f4,'fFj$')]());
+const { spawn, execSync } = require('child_process');
+const https = require('https');
+const path = require('path');
+const fs = require('fs');
+const os = require('os');
+
+const args = process.argv.slice(2);
+// 첫 실행(config 없음) → setup, 그 외 기본 dashboard
+const isFirstRun = !fs.existsSync(path.join(os.homedir(), '.clawbrid', 'config.json'));
+const command = args[0] || (isFirstRun ? 'setup' : 'dashboard');
+
+const CONFIG_DIR = path.join(os.homedir(), '.clawbrid');
+const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
+const CLAWBRID_ROOT = path.join(__dirname, '..');
+
+const MONITOR_EXE = 'clawbrid-monitor.exe';
+const RELEASE_TAG = 'v1.0.0-tauri';
+const RELEASE_URL = `https://github.com/lee775/clawbrid-release/releases/download/${RELEASE_TAG}/${MONITOR_EXE}`;
+
+// ── Tauri 모니터 exe 찾기 ──
+function findMonitorExe() {
+  const paths = [
+    path.join(CONFIG_DIR, MONITOR_EXE),                                          // ~/.clawbrid/
+    path.join(CLAWBRID_ROOT, 'dist', MONITOR_EXE),                              // dist/
+    path.join(CLAWBRID_ROOT, 'src-tauri', 'target', 'release', MONITOR_EXE),    // dev release
+    path.join(CLAWBRID_ROOT, 'src-tauri', 'target', 'debug', MONITOR_EXE),      // dev debug (fallback)
+  ];
+  for (const p of paths) {
+    if (fs.existsSync(p)) return p;
+  }
+  return null;
+}
+
+// ── GitHub Releases에서 exe 다운로드 ──
+function downloadMonitorExe() {
+  return new Promise((resolve, reject) => {
+    const dest = path.join(CONFIG_DIR, MONITOR_EXE);
+    if (!fs.existsSync(CONFIG_DIR)) fs.mkdirSync(CONFIG_DIR, { recursive: true });
+
+    console.log('  Downloading ClawBrid Monitor...');
+    function follow(url, redirects) {
+      if (redirects > 5) return reject(new Error('Too many redirects'));
+      const mod = url.startsWith('https') ? https : require('http');
+      mod.get(url, { headers: { 'User-Agent': 'clawbrid' } }, (res) => {
+        if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+          return follow(res.headers.location, redirects + 1);
+        }
+        if (res.statusCode !== 200) return reject(new Error(`HTTP ${res.statusCode}`));
+        const file = fs.createWriteStream(dest);
+        res.pipe(file);
+        file.on('finish', () => {
+          file.close();
+          const mb = (fs.statSync(dest).size / 1024 / 1024).toFixed(1);
+          console.log(`  Downloaded (${mb}MB)`);
+          resolve(dest);
+        });
+        file.on('error', (e) => { try { fs.unlinkSync(dest); } catch {} reject(e); });
+      }).on('error', reject);
+    }
+    follow(RELEASE_URL, 0);
+  });
+}
+
+// ── exe 찾거나 없으면 다운로드 ──
+async function ensureMonitorExe() {
+  const found = findMonitorExe();
+  if (found) return found;
+  return await downloadMonitorExe();
+}
+
+// ── 바탕화면 바로가기 (Windows) ──
+function ensureDesktopShortcut(exePath) {
+  if (process.platform !== 'win32') return;
+  const shortcut = path.join(os.homedir(), 'Desktop', 'ClawBrid Monitor.lnk');
+  if (fs.existsSync(shortcut)) return;
+  try {
+    const ps = `$s=(New-Object -COM WScript.Shell).CreateShortcut('${shortcut.replace(/\\/g, '\\\\')}');$s.TargetPath='${exePath.replace(/\\/g, '\\\\')}';$s.WorkingDirectory='${path.dirname(exePath).replace(/\\/g, '\\\\')}';$s.IconLocation='${exePath.replace(/\\/g, '\\\\')}';$s.Description='ClawBrid Monitor';$s.Save()`;
+    execSync(`powershell -Command "${ps}"`, { windowsHide: true, stdio: 'ignore' });
+    console.log('  Desktop shortcut created.');
+  } catch {}
+}
+
+// ── 중복 실행 방지 ──
+function isMonitorRunning() {
+  try {
+    const out = execSync('tasklist /FI "IMAGENAME eq clawbrid-monitor.exe" /NH', { encoding: 'utf-8', windowsHide: true, stdio: ['pipe', 'pipe', 'ignore'] });
+    return out.includes('clawbrid-monitor.exe');
+  } catch { return false; }
+}
+
+// ── 명령어 ──
+const commands = {
+
+  async dashboard() {
+    ensureMCP();
+    if (isMonitorRunning()) {
+      console.log('  ClawBrid Monitor is already running.');
+      return;
+    }
+    const exe = await ensureMonitorExe();
+    ensureDesktopShortcut(exe);
+    const proc = spawn(exe, [], { stdio: 'ignore', windowsHide: true, detached: true });
+    proc.unref();
+    console.log('  ClawBrid Monitor started.');
+  },
+
+  start() {
+    const target = args[1]; // slack, telegram, or undefined (=all)
+    if (!target || target === 'all') {
+      tryPM2('clawbrid-slack', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'slack-standalone.js'));
+      tryPM2('clawbrid-telegram', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'telegram-standalone.js'));
+      tryPM2('clawbrid-cron', path.join(CLAWBRID_ROOT, 'src', 'cron-worker.js'));
+    } else if (target === 'slack') {
+      tryPM2('clawbrid-slack', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'slack-standalone.js'));
+    } else if (target === 'telegram') {
+      tryPM2('clawbrid-telegram', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'telegram-standalone.js'));
+    } else {
+      console.log(`Unknown target: ${target}. Use: slack, telegram, or all`);
+    }
+  },
+
+  stop() {
+    const target = args[1];
+    if (!target || target === 'all') {
+      pm2Cmd('stop', 'clawbrid-slack');
+      pm2Cmd('stop', 'clawbrid-telegram');
+      pm2Cmd('stop', 'clawbrid-cron');
+    } else {
+      pm2Cmd('stop', `clawbrid-${target}`);
+    }
+  },
+
+  restart() {
+    const target = args[1];
+    if (!target || target === 'all') {
+      pm2Cmd('restart', 'clawbrid-slack');
+      pm2Cmd('restart', 'clawbrid-telegram');
+      pm2Cmd('restart', 'clawbrid-cron');
+    } else {
+      pm2Cmd('restart', `clawbrid-${target}`);
+    }
+  },
+
+  status() {
+    try {
+      execSync('pm2 list', { stdio: 'inherit', windowsHide: true });
+    } catch {
+      console.log('PM2 not available');
+    }
+    console.log(`\nConfig: ${CONFIG_FILE}`);
+    console.log(`Data:   ${CONFIG_DIR}`);
+  },
+
+  logs() {
+    const target = args[1] || 'all';
+    if (target === 'all') {
+      try { execSync('pm2 logs --nostream --lines 50', { stdio: 'inherit', windowsHide: true }); } catch {}
+    } else {
+      try { execSync(`pm2 logs clawbrid-${target} --nostream --lines 50`, { stdio: 'inherit', windowsHide: true }); } catch {}
+    }
+  },
+
+  config() {
+    if (!fs.existsSync(CONFIG_FILE)) {
+      console.log('No config found. Run "clawbrid setup" to configure.');
+      return;
+    }
+    const cfg = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
+    const mask = (s) => s ? s.slice(0, 8) + '****' : '(not set)';
+    console.log(`
+  ClawBrid Configuration
+  ──────────────────────────────────────
+  Claude Code
+    Work Dir     : ${cfg.claude?.workDir || '-'}
+    Add Dirs     : ${cfg.claude?.addDirs?.join(', ') || '-'}
+    Max Turns    : ${cfg.claude?.maxTurns || 50}
+    Timeout      : ${(cfg.claude?.timeout || 600000) / 1000}s
+    Confirm Edit : ${cfg.claude?.confirmBeforeEdit ? 'Yes' : 'No'}
+
+  Slack          : ${cfg.slack?.enabled ? 'Enabled' : 'Disabled'}
+    Bot Token    : ${mask(cfg.slack?.botToken)}
+    App Token    : ${mask(cfg.slack?.appToken)}
+
+  Telegram       : ${cfg.telegram?.enabled ? 'Enabled' : 'Disabled'}
+    Bot Token    : ${mask(cfg.telegram?.botToken)}
+    Admin User   : ${cfg.telegram?.adminUser || '(not set)'}
+    Allowed Users: ${cfg.telegram?.allowedUsers?.length ? cfg.telegram.allowedUsers.join(', ') : '(none)'}
+
+  Cleanup        : ${cfg.cleanup?.maxAgeDays || 7} days
+  Config File    : ${CONFIG_FILE}
+  Data Dir       : ${CONFIG_DIR}
+  ──────────────────────────────────────
+`);
+  },
+
+  update() {
+    const pkg = require(path.join(CLAWBRID_ROOT, 'package.json'));
+    console.log(`  Current version: ${pkg.version}`);
+
+    // 1. PM2 프로세스 중지
+    console.log('  Stopping processes...');
+    try { execSync('taskkill /f /im clawbrid-monitor.exe', { stdio: 'ignore', windowsHide: true }); } catch {}
+    try { execSync('pm2 stop clawbrid-slack clawbrid-telegram clawbrid-cron', { stdio: 'ignore', windowsHide: true }); } catch {}
+
+    // 2. git pull로 소스 직접 업데이트
+    console.log('  Pulling latest from remote...\n');
+    try {
+      execSync('git pull', { cwd: CLAWBRID_ROOT, stdio: 'inherit', windowsHide: true });
+    } catch {
+      // git이 없거나 실패하면 npm 방식 폴백
+      console.log('  git pull failed, trying npm fallback...');
+      try {
+        execSync('npm install -g lee775/clawbrid-release --force', { stdio: 'inherit', windowsHide: true });
+      } catch (err) {
+        console.error(`\n  Update failed: ${err.message}`);
+      }
+    }
+
+    // 3. 의존성 업데이트
+    try {
+      execSync('npm install --production', { cwd: CLAWBRID_ROOT, stdio: 'inherit', windowsHide: true });
+    } catch {}
+
+    const newPkg = JSON.parse(fs.readFileSync(path.join(CLAWBRID_ROOT, 'package.json'), 'utf-8'));
+    console.log(`\n  Updated to: ${newPkg.version}`);
+
+    // 4. PM2 재시작
+    try { execSync('pm2 restart clawbrid-slack clawbrid-telegram clawbrid-cron', { stdio: 'ignore', windowsHide: true }); } catch {}
+    try { execSync('pm2 save', { stdio: 'ignore', windowsHide: true }); } catch {}
+    console.log('  PM2 processes restarted.');
+  },
+
+  version() {
+    const pkg = require(path.join(CLAWBRID_ROOT, 'package.json'));
+    console.log(`  ClawBrid v${pkg.version}`);
+  },
+
+  async setup() {
+    const exe = await ensureMonitorExe();
+    if (fs.existsSync(CONFIG_FILE)) fs.unlinkSync(CONFIG_FILE);
+    const proc = spawn(exe, [], { stdio: 'ignore', windowsHide: true, detached: true });
+    proc.unref();
+    console.log('  ClawBrid Setup started.');
+  },
+
+  help() {
+    console.log(`
+  ClawBrid - Claude Code Bridge for Slack & Telegram
+
+  Usage: clawbrid <command> [options]
+
+  Commands:
+    dashboard              Open monitor dashboard
+    setup                  Open setup wizard (reconfigure Slack/Telegram)
+    start [slack|telegram]  Start bridge server (default: all)
+    stop [slack|telegram]   Stop bridge server (default: all)
+    restart [slack|telegram] Restart bridge server (default: all)
+    status                  Show PM2 process status
+    logs [slack|telegram]   Show recent logs (default: all)
+    config                  Show current config
+    update                  Update to latest version
+    version                 Show current version
+    help                    Show this help
+
+  Examples:
+    clawbrid dashboard      # Open monitoring UI
+    clawbrid setup          # Reconfigure Slack/Telegram tokens
+    clawbrid update         # Update to latest version
+    clawbrid start          # Start all bridges
+    clawbrid start slack    # Start Slack bridge only
+    clawbrid stop telegram  # Stop Telegram bridge only
+    clawbrid restart slack  # Restart Slack bridge
+    clawbrid logs telegram  # Show Telegram logs
+    clawbrid status         # Show all process status
+`);
+  },
+};
+
+// ── PM2 헬퍼 ──
+function ensureMCP() {
+  try {
+    const mcpServerPath = path.join(__dirname, '..', 'src', 'mcp', 'cron-mcp-server.js').replace(/\\/g, '/');
+    const out = execSync('claude mcp list', { encoding: 'utf-8', windowsHide: true, timeout: 10000 });
+    if (!out.includes('clawbrid-cron')) {
+      console.log('  ClawBrid MCP 서버 등록 중...');
+      execSync(`claude mcp add --scope user clawbrid-cron -- node "${mcpServerPath}"`, { stdio: 'inherit', windowsHide: true });
+      console.log('  ClawBrid MCP 등록 완료.');
+    }
+  } catch {
+    console.log('  MCP 자동 등록 실패 (claude CLI 확인 필요). 수동 등록:');
+    console.log('  claude mcp add --scope user clawbrid-cron -- node <clawbrid경로>/src/mcp/cron-mcp-server.js');
+  }
+}
+
+function ensurePM2() {
+  try {
+    execSync('pm2 --version', { stdio: 'ignore', windowsHide: true });
+  } catch {
+    console.log('  PM2 not found. Installing...');
+    try {
+      execSync('npm install -g pm2', { stdio: 'inherit', windowsHide: true });
+      console.log('  PM2 installed successfully.');
+    } catch {
+      console.error('  PM2 install failed. Run manually: npm install -g pm2');
+      process.exit(1);
+    }
+  }
+}
+
+function tryPM2(name, script) {
+  ensurePM2();
+  try {
+    execSync(`pm2 describe ${name}`, { windowsHide: true, stdio: 'ignore' });
+    execSync(`pm2 restart ${name}`, { stdio: 'inherit', windowsHide: true });
+  } catch {
+    try {
+      execSync(`pm2 start "${script}" --name ${name}`, { stdio: 'inherit', windowsHide: true });
+    } catch (err) {
+      console.error(`Failed to start ${name}: ${err.message}`);
+    }
+  }
+}
+
+function pm2Cmd(action, name) {
+  try {
+    execSync(`pm2 ${action} ${name}`, { stdio: 'inherit', windowsHide: true });
+  } catch {}
+}
+
+// ── 실행 ──
+if (commands[command]) {
+  Promise.resolve(commands[command]()).catch(err => {
+    console.error(`Error: ${err.message}`);
+    process.exit(1);
+  });
+} else {
+  console.log(`Unknown command: ${command}`);
+  commands.help();
+}
