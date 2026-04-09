@@ -1346,6 +1346,7 @@ function toggleUsersEdit(inputId, btn) {
     input.readOnly = true;
     btn.textContent = '수정';
     btn.classList.remove('editing');
+    saveSettings();
   }
 }
 
@@ -1585,7 +1586,12 @@ async function updateAll() {
   }
   if (activeTab === 'logs') await renderLog(activeLogTab);
   if (activeTab === 'cron') await renderCrons();
-  if (activeTab === 'settings') { await loadSettings(); await renderMemories(); }
+  if (activeTab === 'settings') {
+    // 사용자가 수정 중이면 loadSettings 건너뛰기 (입력값 덮어쓰기 방지)
+    const editing = document.querySelector('.users-edit-btn.editing');
+    if (!editing) await loadSettings();
+    await renderMemories();
+  }
 }
 
 let _updating = false;
