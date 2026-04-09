@@ -579,6 +579,47 @@
       font-family: 'Geist Mono', monospace;
     }
     .settings-field input:focus { outline: none; border-color: var(--accent); }
+    .settings-field input[readonly] { opacity: 0.6; cursor: default; }
+    .settings-field input[readonly]:focus { border-color: var(--border); }
+
+    .input-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .input-wrap input { flex: 1; padding-right: 40px; }
+    .input-eye {
+      position: absolute;
+      right: 10px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 16px;
+      padding: 2px;
+      line-height: 1;
+    }
+    .input-eye:hover { color: var(--text-primary); }
+
+    .users-field-wrap {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .users-field-wrap input { flex: 1; }
+    .users-edit-btn {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 12px;
+      white-space: nowrap;
+      transition: all 0.15s;
+    }
+    .users-edit-btn:hover { color: var(--text-primary); background: #ffffff0a; }
+    .users-edit-btn.editing { border-color: var(--accent); color: var(--accent); }
 
     /* ── Memory ── */
     .memory-item {
@@ -821,15 +862,24 @@
       <div class="settings-fields">
         <div class="settings-field">
           <label>Bot Token (xoxb-...)</label>
-          <input type="password" id="settings-slack-token" placeholder="xoxb-your-token">
+          <div class="input-wrap">
+            <input type="password" id="settings-slack-token" placeholder="xoxb-your-token">
+            <button class="input-eye" onclick="toggleTokenVisibility('settings-slack-token', this)" title="토큰 표시/숨김">👁</button>
+          </div>
         </div>
         <div class="settings-field">
           <label>App Token (xapp-...)</label>
-          <input type="password" id="settings-slack-app-token" placeholder="xapp-your-token">
+          <div class="input-wrap">
+            <input type="password" id="settings-slack-app-token" placeholder="xapp-your-token">
+            <button class="input-eye" onclick="toggleTokenVisibility('settings-slack-app-token', this)" title="토큰 표시/숨김">👁</button>
+          </div>
         </div>
         <div class="settings-field">
           <label>허용된 사용자 (쉼표 구분)</label>
-          <input type="text" id="settings-slack-users" placeholder="U12345,U67890">
+          <div class="users-field-wrap">
+            <input type="text" id="settings-slack-users" placeholder="U12345,U67890" readonly>
+            <button class="users-edit-btn" onclick="toggleUsersEdit('settings-slack-users', this)">수정</button>
+          </div>
         </div>
       </div>
     </div>
@@ -846,11 +896,17 @@
       <div class="settings-fields">
         <div class="settings-field">
           <label>Bot Token</label>
-          <input type="password" id="settings-tg-token" placeholder="123456:ABC-DEF...">
+          <div class="input-wrap">
+            <input type="password" id="settings-tg-token" placeholder="123456:ABC-DEF...">
+            <button class="input-eye" onclick="toggleTokenVisibility('settings-tg-token', this)" title="토큰 표시/숨김">👁</button>
+          </div>
         </div>
         <div class="settings-field">
           <label>허용된 사용자 ID (쉼표 구분)</label>
-          <input type="text" id="settings-tg-users" placeholder="123456789,987654321">
+          <div class="users-field-wrap">
+            <input type="text" id="settings-tg-users" placeholder="123456789,987654321" readonly>
+            <button class="users-edit-btn" onclick="toggleUsersEdit('settings-tg-users', this)">수정</button>
+          </div>
         </div>
       </div>
     </div>
@@ -1245,6 +1301,33 @@ async function renderLog(name) {
 }
 
 // ── Settings Tab ──
+// ── 토큰 보기/숨김 ──
+function toggleTokenVisibility(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (input.type === 'password') {
+    input.type = 'text';
+    btn.textContent = '🙈';
+  } else {
+    input.type = 'password';
+    btn.textContent = '👁';
+  }
+}
+
+// ── 사용자 필드 수정 토글 ──
+function toggleUsersEdit(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (input.readOnly) {
+    input.readOnly = false;
+    input.focus();
+    btn.textContent = '저장';
+    btn.classList.add('editing');
+  } else {
+    input.readOnly = true;
+    btn.textContent = '수정';
+    btn.classList.remove('editing');
+  }
+}
+
 async function loadSettings() {
   try {
     const cfg = await bridge.loadConfig();
