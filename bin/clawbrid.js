@@ -199,35 +199,27 @@ const commands = {
     const pkg = require(path.join(CLAWBRID_ROOT, 'package.json'));
     console.log(`  Current version: ${pkg.version}`);
 
-    // 1. PM2 프로세스 중지
+    // 1. 프로세스 중지 + 파일 잠금 해제
     console.log('  Stopping processes...');
     try { execSync('taskkill /f /im clawbrid-monitor.exe', { stdio: 'ignore', windowsHide: true }); } catch {}
-    try { execSync('pm2 stop clawbrid-slack clawbrid-telegram clawbrid-cron', { stdio: 'ignore', windowsHide: true }); } catch {}
+    try { execSync('taskkill /f /im electron.exe', { stdio: 'ignore', windowsHide: true }); } catch {}
+    try { execSync('pm2 delete clawbrid-slack clawbrid-telegram clawbrid-cron', { stdio: 'ignore', windowsHide: true }); } catch {}
+    execSync('ping 127.0.0.1 -n 3 >nul', { stdio: 'ignore', windowsHide: true });
 
-    // 2. git pull로 소스 직접 업데이트
-    console.log('  Pulling latest from remote...\n');
+    // 2. npm install --force (기존 파일 덮어쓰기)
+    console.log('  Checking for updates...\n');
     try {
-      execSync('git pull', { cwd: CLAWBRID_ROOT, stdio: 'inherit', windowsHide: true });
-    } catch {
-      // git이 없거나 실패하면 npm 방식 폴백
-      console.log('  git pull failed, trying npm fallback...');
-      try {
-        execSync('npm install -g lee775/clawbrid-release --force', { stdio: 'inherit', windowsHide: true });
-      } catch (err) {
-        console.error(`\n  Update failed: ${err.message}`);
-      }
+      execSync('npm install -g lee775/clawbrid-release --force', { stdio: 'inherit', windowsHide: true });
+      const newPkg = JSON.parse(fs.readFileSync(path.join(CLAWBRID_ROOT, 'package.json'), 'utf-8'));
+      console.log(`\n  Updated to: ${newPkg.version}`);
+    } catch (err) {
+      console.error(`\n  Update failed: ${err.message}`);
     }
 
-    // 3. 의존성 업데이트
-    try {
-      execSync('npm install --production', { cwd: CLAWBRID_ROOT, stdio: 'inherit', windowsHide: true });
-    } catch {}
-
-    const newPkg = JSON.parse(fs.readFileSync(path.join(CLAWBRID_ROOT, 'package.json'), 'utf-8'));
-    console.log(`\n  Updated to: ${newPkg.version}`);
-
-    // 4. PM2 재시작
-    try { execSync('pm2 restart clawbrid-slack clawbrid-telegram clawbrid-cron', { stdio: 'ignore', windowsHide: true }); } catch {}
+    // 3. PM2 다시 등록
+    try { execSync(`pm2 start "${path.join(CLAWBRID_ROOT, 'src', 'bridges', 'slack-standalone.js')}" --name clawbrid-slack`, { stdio: 'ignore', windowsHide: true }); } catch {}
+    try { execSync(`pm2 start "${path.join(CLAWBRID_ROOT, 'src', 'bridges', 'telegram-standalone.js')}" --name clawbrid-telegram`, { stdio: 'ignore', windowsHide: true }); } catch {}
+    try { execSync(`pm2 start "${path.join(CLAWBRID_ROOT, 'src', 'cron-worker.js')}" --name clawbrid-cron`, { stdio: 'ignore', windowsHide: true }); } catch {}
     try { execSync('pm2 save', { stdio: 'ignore', windowsHide: true }); } catch {}
     console.log('  PM2 processes restarted.');
   },
