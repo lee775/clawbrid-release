@@ -154,6 +154,7 @@ async function handleMessage(msg) {
   const hasPhoto = msg.photo && msg.photo.length > 0;
   const hasDocument = !!msg.document;
   const hasVoice = !!(msg.voice || msg.audio);
+  console.log(`[TG] 메시지 수신 | user=${userId} | ${text.slice(0, 80)}${text.length > 80 ? '...' : ''}`);
 
   // 음성 메시지 처리
   if (hasVoice && !text) {
@@ -616,6 +617,7 @@ ${topic}
 
     addToHistory(chatId, 'assistant', responseText);
     if (status) status.done(responseText);
+    console.log(`[TG] 응답 완료 | user=${userId} | ${responseText.slice(0, 100)}${responseText.length > 100 ? '...' : ''}`);
 
     try { await bot.editMessageText('✅ 작업 완료', { chat_id: chatId, message_id: startMsg.message_id }); } catch {}
     await sendLongMessage(chatId, responseText);
@@ -631,7 +633,7 @@ ${topic}
     }
 
   } catch (err) {
-    console.error(`[TG ERROR] ${err.message}`);
+    console.error(`[TG] 에러 | user=${userId} | ${err.message}`);
     if (status) status.error(err.message);
     if (err.message.includes('session') || err.message.includes('resume')) {
       chatSessions.delete(chatId); saveSessions(chatSessions);

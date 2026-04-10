@@ -163,6 +163,7 @@ async function handleMessage({ event, say, client }) {
   const threadTs = event.thread_ts || event.ts;
   let text = event.text?.trim() || '';
   const hasFiles = event.files && event.files.length > 0;
+  console.log(`[SLACK] 메시지 수신 | user=${userId} | ${text.slice(0, 80)}${text.length > 80 ? '...' : ''}`);
 
   if (!text && !hasFiles) return;
 
@@ -602,6 +603,7 @@ ${topic}
 
     addToHistory(channelId, 'assistant', responseText);
     if (status) status.done(responseText);
+    console.log(`[SLACK] 응답 완료 | user=${userId} | ${responseText.slice(0, 100)}${responseText.length > 100 ? '...' : ''}`);
 
     try { await client.chat.update({ channel: channelId, ts: startMsg.ts, text: '✅ 작업 완료' }); } catch {}
     await sendLongMessage(say, responseText);
@@ -617,7 +619,7 @@ ${topic}
     }
 
   } catch (err) {
-    console.error(`[SLACK ERROR] ${err.message}`);
+    console.error(`[SLACK] 에러 | user=${userId} | ${err.message}`);
     if (status) status.error(err.message);
     try { await client.chat.update({ channel: channelId, ts: startMsg.ts, text: '❌ 작업 실패' }); } catch {}
     await say(`❌ 오류:\n\`\`\`\n${err.message}\n\`\`\``);
