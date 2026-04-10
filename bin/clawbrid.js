@@ -296,16 +296,28 @@ const commands = {
 // ── PM2 헬퍼 ──
 function ensureMCP() {
   try {
-    const mcpServerPath = path.join(__dirname, '..', 'src', 'mcp', 'cron-mcp-server.js').replace(/\\/g, '/');
+    const mcpBase = path.join(__dirname, '..', 'src', 'mcp');
     const out = execSync('claude mcp list', { encoding: 'utf-8', windowsHide: true, timeout: 10000 });
+
+    // Cron MCP
     if (!out.includes('clawbrid-cron')) {
-      console.log('  ClawBrid MCP 서버 등록 중...');
-      execSync(`claude mcp add --scope user clawbrid-cron -- node "${mcpServerPath}"`, { stdio: 'inherit', windowsHide: true });
-      console.log('  ClawBrid MCP 등록 완료.');
+      const cronPath = path.join(mcpBase, 'cron-mcp-server.js').replace(/\\/g, '/');
+      console.log('  ClawBrid Cron MCP 등록 중...');
+      execSync(`claude mcp add --scope user clawbrid-cron -- node "${cronPath}"`, { stdio: 'inherit', windowsHide: true });
+      console.log('  ClawBrid Cron MCP 등록 완료.');
+    }
+
+    // Video MCP
+    if (!out.includes('clawbrid-video')) {
+      const videoPath = path.join(mcpBase, 'video-mcp-server.js').replace(/\\/g, '/');
+      console.log('  ClawBrid Video MCP 등록 중...');
+      execSync(`claude mcp add --scope user clawbrid-video -- node "${videoPath}"`, { stdio: 'inherit', windowsHide: true });
+      console.log('  ClawBrid Video MCP 등록 완료.');
     }
   } catch {
     console.log('  MCP 자동 등록 실패 (claude CLI 확인 필요). 수동 등록:');
     console.log('  claude mcp add --scope user clawbrid-cron -- node <clawbrid경로>/src/mcp/cron-mcp-server.js');
+    console.log('  claude mcp add --scope user clawbrid-video -- node <clawbrid경로>/src/mcp/video-mcp-server.js');
   }
 }
 

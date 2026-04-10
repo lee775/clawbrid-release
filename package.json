@@ -11,7 +11,7 @@
     "clawbrid": "bin/clawbrid.js"
   },
   "scripts": {
-    "postinstall": "python -c \"import faster_whisper\" 2>nul || pip install faster-whisper",
+    "postinstall": "(python -c \"import faster_whisper\" 2>nul || pip install faster-whisper) && (yt-dlp --version 2>nul || pip install yt-dlp)",
     "start": "node bin/clawbrid.js",
     "dev": "node bin/clawbrid.js"
   },
@@ -29,7 +29,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/lee775/clawbrid-release.git"
+    "url": "https://github.com/lee775/clawbrid.git"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
