@@ -13,6 +13,7 @@ const plugins = require('../core/plugin-manager');
 const voice = require('../core/voice-transcriber');
 const webTools = require('../core/web-tools');
 const knowledgeGraph = require('../core/knowledge-graph');
+const videoAnalyzer = require('../core/video-analyzer');
 
 let bot = null;
 let status = null;
@@ -198,7 +199,7 @@ async function handleMessage(msg) {
     if (cmd === '/help') {
       const pluginCmds = plugins.getList().flatMap(p => p.commands).filter(c => c.startsWith('/'));
       const pluginHelp = pluginCmds.length ? `\n• 플러그인: ${pluginCmds.join(', ')}` : '';
-      await bot.sendMessage(chatId, `*ClawBrid 명령어*\n• /stop 작업 중단\n• /reset 세션 초기화\n• /queue 대기열 확인\n• /clear 대기열 비우기\n• /search [검색어] 웹 검색\n• /browse [URL] [질문] 웹페이지 분석\n• /ultraplan [주제] 심층 분석 + 실행 계획\n• /graph stats|add|link|find|del|list 지식 그래프\n• /memory list|add|del|search 장기 메모리\n• /plugins 플러그인 목록\n• /cron list|add|del|run|on|off 크론 관리\n• /help 도움말\n• 🎤 음성 메시지 → 자동 텍스트 변환${pluginHelp}`);
+      await bot.sendMessage(chatId, `*ClawBrid 명령어*\n• /stop 작업 중단\n• /reset 세션 초기화\n• /queue 대기열 확인\n• /clear 대기열 비우기\n• /search [검색어] 웹 검색\n• /browse [URL] [질문] 웹페이지 분석\n• /ultraplan [주제] 심층 분석 + 실행 계획\n• /youtube [URL] [질문] 영상 분석 (프레임+음성)\n• /graph stats|add|link|find|del|list 지식 그래프\n• /memory list|add|del|search 장기 메모리\n• /plugins 플러그인 목록\n• /cron list|add|del|run|on|off 크론 관리\n• /help 도움말\n• 🎤 음성 메시지 → 자동 텍스트 변환${pluginHelp}`);
       return;
     }
     if (cmd === '/ultraplan') {
@@ -238,6 +239,33 @@ ${topic}
       saveSessions(chatSessions);
       await bot.sendMessage(chatId, '🧠 *UltraPlan* 심층 분석을 시작합니다...', { parse_mode: 'Markdown' });
       // fall through — browsePassthrough is null, so goes to Claude execution
+    }
+    // ── 영상 분석 명령어 ──
+    if (cmd === '/youtube' || cmd === '/video') {
+      const args = text.split(/\s+/).slice(1).join(' ');
+      const urlMatch = args.match(/(https?:\/\/\S+)/);
+      if (!urlMatch) { await bot.sendMessage(chatId, '사용법: /youtube [URL] [질문]\n예: /youtube https://youtube.com/watch?v=xxx 핵심 내용 요약해줘'); return; }
+      const videoUrl = urlMatch[1];
+      const question = args.replace(videoUrl, '').trim();
+
+      try {
+        const sendProgress = async (msg) => {
+          try { await bot.sendMessage(chatId, msg); } catch {}
+        };
+
+        await sendProgress('🎬 영상 분석을 시작합니다...');
+        const result = await videoAnalyzer.analyzeVideo(videoUrl, question, sendProgress);
+        await bot.sendMessage(chatId, `📹 *${result.title}* 분석 완료! Claude에게 전달 중...`, { parse_mode: 'Markdown' });
+
+        chatSessions.delete(chatId);
+        saveSessions(chatSessions);
+        text = result.prompt;
+        setTimeout(() => videoAnalyzer.cleanup(result.tempDir), 600000);
+        // fall through to Claude execution
+      } catch (e) {
+        await bot.sendMessage(chatId, `❌ 영상 분석 실패: ${e.message}`);
+        return;
+      }
     }
     if (cmd === '/memory') {
       const parts = text.split(/\s+/).slice(1);

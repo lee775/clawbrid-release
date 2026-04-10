@@ -13,6 +13,7 @@ const memory = require('../core/memory-manager');
 const plugins = require('../core/plugin-manager');
 const webTools = require('../core/web-tools');
 const knowledgeGraph = require('../core/knowledge-graph');
+const videoAnalyzer = require('../core/video-analyzer');
 
 let app = null;
 let status = null;
@@ -187,7 +188,7 @@ async function handleMessage({ event, say, client }) {
   if (text.toLowerCase() === '!help') {
     const pluginCmds = plugins.getList().flatMap(p => p.commands).filter(c => c.startsWith('!'));
     const pluginHelp = pluginCmds.length ? `\n• 플러그인: ${pluginCmds.join(', ')}` : '';
-    await say(`*ClawBrid 명령어*\n• \`!stop\` 작업 중단\n• \`!reset\` 세션 초기화\n• \`!queue\` 대기열 확인\n• \`!clear\` 대기열 비우기\n• \`!search [검색어]\` 웹 검색\n• \`!browse [URL] [질문]\` 웹페이지 분석\n• \`!ultraplan [주제]\` 심층 분석 + 실행 계획\n• \`!graph stats|add|link|find|del|list\` 지식 그래프\n• \`!memory list|add|del|search\` 장기 메모리\n• \`!plugins\` 플러그인 목록\n• \`!cron list|add|del|run|on|off\` 크론 관리\n• \`!help\` 도움말${pluginHelp}`); return;
+    await say(`*ClawBrid 명령어*\n• \`!stop\` 작업 중단\n• \`!reset\` 세션 초기화\n• \`!queue\` 대기열 확인\n• \`!clear\` 대기열 비우기\n• \`!search [검색어]\` 웹 검색\n• \`!browse [URL] [질문]\` 웹페이지 분석\n• \`!ultraplan [주제]\` 심층 분석 + 실행 계획\n• \`!youtube [URL] [질문]\` 영상 분석 (프레임+음성)\n• \`!graph stats|add|link|find|del|list\` 지식 그래프\n• \`!memory list|add|del|search\` 장기 메모리\n• \`!plugins\` 플러그인 목록\n• \`!cron list|add|del|run|on|off\` 크론 관리\n• \`!help\` 도움말${pluginHelp}`); return;
   }
   if (text.toLowerCase() === '!queue') {
     const queue = messageQueue.get(channelId) || [];
@@ -239,6 +240,43 @@ ${topic}
     saveSessions(channelSessions);
     await say('🧠 *UltraPlan* 심층 분석을 시작합니다...');
     // fall through to Claude execution below
+  }
+
+  // ── 영상 분석 명령어 ──
+  if (text.toLowerCase().startsWith('!youtube') || text.toLowerCase().startsWith('!video')) {
+    const cmdLen = text.toLowerCase().startsWith('!youtube') ? 8 : 6;
+    const args = text.slice(cmdLen).trim();
+    const urlMatch = args.match(/(https?:\/\/\S+)/);
+    if (!urlMatch) { await say('사용법: `!youtube [URL] [질문]`\n예: `!youtube https://youtube.com/watch?v=xxx 핵심 내용 요약해줘`'); return; }
+    const videoUrl = urlMatch[1];
+    const question = args.replace(videoUrl, '').trim();
+
+    let progressMsg = null;
+    try {
+      const sendProgress = async (msg) => {
+        try {
+          if (progressMsg) { await say(msg); }
+          else { progressMsg = msg; await say(msg); }
+        } catch {}
+      };
+
+      await sendProgress('🎬 영상 분석을 시작합니다...');
+      const result = await videoAnalyzer.analyzeVideo(videoUrl, question, sendProgress);
+      await say(`📹 *${result.title}* 분석 완료! Claude에게 전달 중...`);
+
+      // 새 세션으로 (영상 분석은 독립적)
+      channelSessions.delete(channelId);
+      saveSessions(channelSessions);
+      text = result.prompt;
+      // cleanup은 Claude 응답 후 처리
+      const _tempDir = result.tempDir;
+      const origAfter = null;
+      setTimeout(() => videoAnalyzer.cleanup(_tempDir), 600000); // 10분 후 정리
+      // fall through to Claude execution
+    } catch (e) {
+      await say(`❌ 영상 분석 실패: ${e.message}`);
+      return;
+    }
   }
 
   // ── 메모리 명령어 ──
