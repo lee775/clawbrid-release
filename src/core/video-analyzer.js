@@ -16,25 +16,51 @@ const MAX_DURATION = 3600; // 1시간 제한
 let _ffmpegPath = null;
 function getFFmpegPath() {
   if (_ffmpegPath) return _ffmpegPath;
+
+  // 1. PATH에서 찾기
   try {
     execSync('ffmpeg -version', { windowsHide: true, stdio: 'pipe', timeout: 5000 });
     _ffmpegPath = 'ffmpeg';
     return _ffmpegPath;
   } catch {}
-  // winget 설치 경로 탐색
+
+  // 2. winget 설치 경로 재귀 탐색
   const wingetBase = path.join(os.homedir(), 'AppData', 'Local', 'Microsoft', 'WinGet', 'Packages');
   try {
-    const dirs = fs.readdirSync(wingetBase).filter(d => d.startsWith('Gyan.FFmpeg'));
-    for (const dir of dirs) {
-      const binDir = path.join(wingetBase, dir);
-      const subdirs = fs.readdirSync(binDir).filter(d => d.startsWith('ffmpeg'));
-      for (const sub of subdirs) {
-        const ffmpeg = path.join(binDir, sub, 'bin', 'ffmpeg.exe');
-        if (fs.existsSync(ffmpeg)) { _ffmpegPath = ffmpeg; return _ffmpegPath; }
+    const ffmpegDirs = fs.readdirSync(wingetBase).filter(d => d.toLowerCase().includes('ffmpeg'));
+    for (const dir of ffmpegDirs) {
+      const found = findFileRecursive(path.join(wingetBase, dir), 'ffmpeg.exe', 4);
+      if (found) { _ffmpegPath = found; return _ffmpegPath; }
+    }
+  } catch {}
+
+  // 3. 일반 설치 경로
+  const commonPaths = [
+    'C:\\ffmpeg\\bin\\ffmpeg.exe',
+    path.join(os.homedir(), 'AppData', 'Local', 'Microsoft', 'WinGet', 'Links', 'ffmpeg.exe'),
+    path.join(process.env.ProgramFiles || '', 'ffmpeg', 'bin', 'ffmpeg.exe'),
+  ];
+  for (const p of commonPaths) {
+    if (fs.existsSync(p)) { _ffmpegPath = p; return _ffmpegPath; }
+  }
+
+  throw new Error('ffmpeg를 찾을 수 없습니다. ffmpeg를 설치해주세요.');
+}
+
+function findFileRecursive(dir, filename, maxDepth) {
+  if (maxDepth <= 0) return null;
+  try {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    for (const e of entries) {
+      const full = path.join(dir, e.name);
+      if (e.isFile() && e.name.toLowerCase() === filename.toLowerCase()) return full;
+      if (e.isDirectory()) {
+        const found = findFileRecursive(full, filename, maxDepth - 1);
+        if (found) return found;
       }
     }
   } catch {}
-  throw new Error('ffmpeg를 찾을 수 없습니다. ffmpeg를 설치해주세요.');
+  return null;
 }
 
 /**
@@ -124,14 +150,15 @@ function downloadVideo(url, outputDir) {
       url,
     ];
     const proc = spawn('yt-dlp', args, { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
-    let stderr = '';
+    let stdout = '', stderr = '';
+    proc.stdout.on('data', d => { stdout += d.toString(); });
     proc.stderr.on('data', d => { stderr += d.toString(); });
 
     const timer = setTimeout(() => { proc.kill('SIGTERM'); reject(new Error('다운로드 타임아웃 (5분)')); }, 300000);
 
     proc.on('close', code => {
       clearTimeout(timer);
-      if (code !== 0) return reject(new Error(`다운로드 실패: ${stderr.slice(0, 200)}`));
+      if (code !== 0) return reject(new Error(`다운로드 실패 (code=${code}): ${(stderr || stdout).slice(-300)}`));
       // yt-dlp가 확장자를 바꿀 수 있으므로 실제 파일 탐색
       const files = fs.readdirSync(outputDir).filter(f => f.startsWith('video.'));
       if (!files.length) return reject(new Error('다운로드된 파일을 찾을 수 없습니다'));
@@ -202,7 +229,7 @@ function extractFrames(videoPath, outputDir, duration) {
     proc.on('close', code => {
       clearTimeout(timer);
       const frames = fs.readdirSync(frameDir).filter(f => f.endsWith('.jpg')).sort();
-      if (!frames.length) return reject(new Error('프레임 추출 실패'));
+      if (!frames.length) return reject(new Error(`프레임 추출 실패 (code=${code}): ${stderr.slice(-300)}`));
       resolve({
         paths: frames.map(f => path.join(frameDir, f)),
         interval,
