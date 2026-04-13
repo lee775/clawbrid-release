@@ -5,6 +5,7 @@ const TelegramBot = require('node-telegram-bot-api');
 const https = require('https');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const config = require('../core/config');
 const StatusReporter = require('../core/status-reporter');
 const { runClaude, extractText, extractSessionId, runCodexReview, hasCodeChanges } = require('../core/claude-runner');
@@ -646,6 +647,11 @@ ${topic}
       }).catch(() => resolve(true));
     });
 
+    // 이미지 생성 감지용: 실행 전 스냅샷
+    const imgDir = path.join(os.homedir(), '.clawbrid', 'temp', 'images');
+    let imgsBefore = new Set();
+    try { if (fs.existsSync(imgDir)) imgsBefore = new Set(fs.readdirSync(imgDir)); } catch {}
+
     const { promise, proc } = runClaude(finalPrompt, claudeOptions);
     activeSessions.set(chatId, proc);
     const result = await promise;
@@ -676,18 +682,22 @@ ${topic}
 
     try { await bot.editMessageText('✅ 작업 완료', { chat_id: chatId, message_id: startMsg.message_id }); } catch {}
 
-    // Claude 응답에서 생성된 이미지 파일 자동 감지 및 전송
-    const imgRegex = /[^\s"'<>]*\.clawbrid[\\\/]temp[\\\/]images[\\\/]\S+\.png/gi;
-    const imgPaths = [...new Set((responseText.match(imgRegex) || []).map(p => p.replace(/\\/g, '/')))];
-    for (const imgPath of imgPaths) {
-      if (fs.existsSync(imgPath)) {
-        try {
-          await bot.sendPhoto(chatId, fs.createReadStream(imgPath));
-        } catch (e) {
-          console.error(`[TG] 이미지 전송 실패: ${e.message}`);
+    // Claude 실행 중 새로 생성된 이미지 자동 전송
+    try {
+      if (fs.existsSync(imgDir)) {
+        const imgsAfter = fs.readdirSync(imgDir);
+        const newImgs = imgsAfter.filter(f => !imgsBefore.has(f) && f.endsWith('.png'));
+        for (const img of newImgs) {
+          const imgPath = path.join(imgDir, img);
+          try {
+            await bot.sendPhoto(chatId, fs.createReadStream(imgPath));
+            console.log(`[TG] 이미지 전송: ${img}`);
+          } catch (e) {
+            console.error(`[TG] 이미지 전송 실패: ${e.message}`);
+          }
         }
       }
-    }
+    } catch {}
 
     await sendLongMessage(chatId, responseText);
 
