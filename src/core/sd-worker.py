@@ -41,7 +41,8 @@ def detect_device():
     if torch.cuda.is_available():
         device = "cuda"
         dtype = torch.float16
-        vram = torch.cuda.get_device_properties(0).total_mem / (1024**3)
+        props = torch.cuda.get_device_properties(0)
+        vram = (props.total_memory if hasattr(props, 'total_memory') else getattr(props, 'total_mem', 0)) / (1024**3)
         gpu_name = torch.cuda.get_device_name(0)
         return {"device": "cuda", "gpu": gpu_name, "vram_gb": round(vram, 1)}
     else:
