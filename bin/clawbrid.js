@@ -318,12 +318,9 @@ function ensureMCP() {
   } catch { return; }
 
   for (const srv of servers) {
+    if (existing.includes(srv.name)) continue; // 이미 등록됨 → 스킵
     const srvPath = path.join(mcpBase, srv.file).replace(/\\/g, '/');
     try {
-      if (existing.includes(srv.name)) {
-        // 이미 등록됨 → 경로 갱신 (remove → add)
-        execSync(`claude mcp remove --scope user ${srv.name}`, { stdio: 'ignore', windowsHide: true, timeout: 10000 });
-      }
       console.log(`  MCP 등록: ${srv.name}`);
       execSync(`claude mcp add --scope user ${srv.name} -- node "${srvPath}"`, { stdio: 'inherit', windowsHide: true, timeout: 15000 });
     } catch (e) {
