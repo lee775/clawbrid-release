@@ -278,7 +278,7 @@ ${topic}
         const imageGen = require('../core/image-generator');
         const result = await imageGen.generate({ prompt });
         const img = result.images[0];
-        await bot.sendPhoto(chatId, img.path, { caption: `🎨 프롬프트: ${prompt.slice(0, 200)}` });
+        await bot.sendPhoto(chatId, fs.createReadStream(img.path), { caption: `🎨 프롬프트: ${prompt.slice(0, 200)}` });
       } catch (e) {
         await bot.sendMessage(chatId, `❌ 이미지 생성 실패: ${e.message}`);
       }
@@ -681,7 +681,11 @@ ${topic}
     const imgPaths = [...new Set((responseText.match(imgRegex) || []).map(p => p.replace(/\\/g, '/')))];
     for (const imgPath of imgPaths) {
       if (fs.existsSync(imgPath)) {
-        try { await bot.sendPhoto(chatId, imgPath); } catch {}
+        try {
+          await bot.sendPhoto(chatId, fs.createReadStream(imgPath));
+        } catch (e) {
+          console.error(`[TG] 이미지 전송 실패: ${e.message}`);
+        }
       }
     }
 

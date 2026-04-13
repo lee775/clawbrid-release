@@ -135,6 +135,53 @@ async function handleFiles(event, token) {
   return downloaded;
 }
 
+// ── Slack 이미지 업로드 (uploadV2 → 수동 fallback) ──
+async function slackUploadImage(client, channelId, filePath, comment) {
+  const fileData = fs.readFileSync(filePath);
+  const filename = path.basename(filePath);
+
+  // 방법 1: uploadV2
+  try {
+    await client.files.uploadV2({
+      channel_id: channelId,
+      file: fileData,
+      filename,
+      initial_comment: comment,
+    });
+    return;
+  } catch (e) {
+    console.log(`[SLACK] uploadV2 실패, 수동 업로드 시도: ${e.message}`);
+  }
+
+  // 방법 2: 수동 (getUploadURLExternal → PUT → completeUploadExternal)
+  const urlRes = await client.files.getUploadURLExternal({
+    filename,
+    length: fileData.length,
+  });
+  const uploadUrl = urlRes.upload_url;
+  const fileId = urlRes.file_id;
+
+  // HTTP PUT으로 파일 전송
+  const { URL } = require('url');
+  const parsedUrl = new URL(uploadUrl);
+  const httpModule = parsedUrl.protocol === 'https:' ? require('https') : require('http');
+  await new Promise((resolve, reject) => {
+    const req = httpModule.request(uploadUrl, { method: 'PUT', headers: { 'Content-Type': 'application/octet-stream', 'Content-Length': fileData.length } }, (res) => {
+      res.on('data', () => {});
+      res.on('end', () => resolve());
+    });
+    req.on('error', reject);
+    req.write(fileData);
+    req.end();
+  });
+
+  await client.files.completeUploadExternal({
+    files: [{ id: fileId, title: filename }],
+    channel_id: channelId,
+    initial_comment: comment,
+  });
+}
+
 // ── 메시지 분할 ──
 async function sendLongMessage(say, text) {
   const MAX = 3900;
@@ -292,15 +339,7 @@ ${topic}
       const img = result.images[0];
       // Slack에 이미지 업로드
       try {
-        await client.files.uploadV2({
-          channel_id: channelId,
-          file_uploads: [{
-            file: fs.readFileSync(img.path),
-            filename: path.basename(img.path),
-            title: prompt.slice(0, 100),
-          }],
-          initial_comment: `🎨 *이미지 생성 완료*\n프롬프트: ${prompt}`,
-        });
+        await slackUploadImage(client, channelId, img.path, `🎨 *이미지 생성 완료*\n프롬프트: ${prompt}`);
       } catch (uploadErr) {
         console.error(`[SLACK] 이미지 업로드 실패: ${uploadErr.message}`);
         await say(`🎨 이미지 생성 완료!\n파일: ${img.path}\n(Slack 앱 설정에서 \`files:write\` 권한을 추가하세요)`);
@@ -690,13 +729,7 @@ ${topic}
     for (const imgPath of imgPaths) {
       if (fs.existsSync(imgPath)) {
         try {
-          await client.files.uploadV2({
-            channel_id: channelId,
-            file_uploads: [{
-              file: fs.readFileSync(imgPath),
-              filename: path.basename(imgPath),
-            }],
-          });
+          await slackUploadImage(client, channelId, imgPath);
         } catch (e) {
           console.error(`[SLACK] 이미지 업로드 실패: ${e.message}`);
         }
