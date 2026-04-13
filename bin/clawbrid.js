@@ -107,6 +107,7 @@ const commands = {
   },
 
   start() {
+    ensureMCP();
     const target = args[1]; // slack, telegram, or undefined (=all)
     if (!target || target === 'all') {
       tryPM2('clawbrid-slack', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'slack-standalone.js'));
@@ -245,6 +246,9 @@ const commands = {
     try { execSync(`pm2 start "${path.join(CLAWBRID_ROOT, 'src', 'cron-worker.js')}" --name clawbrid-cron`, { stdio: 'ignore', windowsHide: true }); } catch {}
     try { execSync('pm2 save', { stdio: 'ignore', windowsHide: true }); } catch {}
     console.log('  PM2 processes restarted.');
+
+    // 5. MCP 서버 자동 등록/갱신
+    ensureMCP();
   },
 
   version() {
@@ -296,37 +300,35 @@ const commands = {
 // ── PM2 헬퍼 ──
 function ensureMCP() {
   try {
-    const mcpBase = path.join(__dirname, '..', 'src', 'mcp');
-    const out = execSync('claude mcp list', { encoding: 'utf-8', windowsHide: true, timeout: 10000 });
-
-    // Cron MCP
-    if (!out.includes('clawbrid-cron')) {
-      const cronPath = path.join(mcpBase, 'cron-mcp-server.js').replace(/\\/g, '/');
-      console.log('  ClawBrid Cron MCP 등록 중...');
-      execSync(`claude mcp add --scope user clawbrid-cron -- node "${cronPath}"`, { stdio: 'inherit', windowsHide: true });
-      console.log('  ClawBrid Cron MCP 등록 완료.');
-    }
-
-    // Video MCP
-    if (!out.includes('clawbrid-video')) {
-      const videoPath = path.join(mcpBase, 'video-mcp-server.js').replace(/\\/g, '/');
-      console.log('  ClawBrid Video MCP 등록 중...');
-      execSync(`claude mcp add --scope user clawbrid-video -- node "${videoPath}"`, { stdio: 'inherit', windowsHide: true });
-      console.log('  ClawBrid Video MCP 등록 완료.');
-    }
-
-    // Image MCP (Stable Diffusion)
-    if (!out.includes('clawbrid-image')) {
-      const imagePath = path.join(mcpBase, 'image-mcp-server.js').replace(/\\/g, '/');
-      console.log('  ClawBrid Image MCP 등록 중...');
-      execSync(`claude mcp add --scope user clawbrid-image -- node "${imagePath}"`, { stdio: 'inherit', windowsHide: true });
-      console.log('  ClawBrid Image MCP 등록 완료.');
-    }
+    execSync('claude --version', { stdio: 'ignore', windowsHide: true, timeout: 5000 });
   } catch {
-    console.log('  MCP 자동 등록 실패 (claude CLI 확인 필요). 수동 등록:');
-    console.log('  claude mcp add --scope user clawbrid-cron -- node <clawbrid경로>/src/mcp/cron-mcp-server.js');
-    console.log('  claude mcp add --scope user clawbrid-video -- node <clawbrid경로>/src/mcp/video-mcp-server.js');
-    console.log('  claude mcp add --scope user clawbrid-image -- node <clawbrid경로>/src/mcp/image-mcp-server.js');
+    return; // claude CLI 없으면 스킵
+  }
+
+  const mcpBase = path.join(__dirname, '..', 'src', 'mcp');
+  const servers = [
+    { name: 'clawbrid-cron', file: 'cron-mcp-server.js' },
+    { name: 'clawbrid-video', file: 'video-mcp-server.js' },
+    { name: 'clawbrid-image', file: 'image-mcp-server.js' },
+  ];
+
+  let existing = '';
+  try {
+    existing = execSync('claude mcp list', { encoding: 'utf-8', windowsHide: true, timeout: 10000 });
+  } catch { return; }
+
+  for (const srv of servers) {
+    const srvPath = path.join(mcpBase, srv.file).replace(/\\/g, '/');
+    try {
+      if (existing.includes(srv.name)) {
+        // 이미 등록됨 → 경로 갱신 (remove → add)
+        execSync(`claude mcp remove --scope user ${srv.name}`, { stdio: 'ignore', windowsHide: true, timeout: 10000 });
+      }
+      console.log(`  MCP 등록: ${srv.name}`);
+      execSync(`claude mcp add --scope user ${srv.name} -- node "${srvPath}"`, { stdio: 'inherit', windowsHide: true, timeout: 15000 });
+    } catch (e) {
+      console.log(`  ${srv.name} MCP 등록 실패: ${e.message}`);
+    }
   }
 }
 
