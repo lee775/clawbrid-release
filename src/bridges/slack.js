@@ -681,6 +681,22 @@ ${topic}
     console.log(`[SLACK] 응답 완료 | user=${userId} | ${responseText.slice(0, 100)}${responseText.length > 100 ? '...' : ''}`);
 
     try { await client.chat.update({ channel: channelId, ts: startMsg.ts, text: '✅ 작업 완료' }); } catch {}
+
+    // Claude 응답에서 생성된 이미지 파일 자동 감지 및 전송
+    const imgRegex = /[^\s"'<>]*\.clawbrid[\\\/]temp[\\\/]images[\\\/]\S+\.png/gi;
+    const imgPaths = [...new Set((responseText.match(imgRegex) || []).map(p => p.replace(/\\/g, '/')))];
+    for (const imgPath of imgPaths) {
+      if (fs.existsSync(imgPath)) {
+        try {
+          await client.files.uploadV2({
+            channel_id: channelId,
+            file: imgPath,
+            filename: path.basename(imgPath),
+          });
+        } catch {}
+      }
+    }
+
     await sendLongMessage(say, responseText);
 
     // 코드 변경이 있으면 자동 Codex 리뷰
