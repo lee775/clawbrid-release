@@ -31,7 +31,8 @@ bin/clawbrid.js (CLI 엔트리)
 │   ├── plugin-manager.js  # ~/.clawbrid/plugins/ JS 플러그인
 │   ├── status-reporter.js # 프로세스 상태 모니터링
 │   ├── video-analyzer.js  # yt-dlp + ffmpeg + whisper 영상 분석
-│   ├── image-generator.js # Stable Diffusion WebUI 이미지 생성/합성
+│   ├── image-generator.js # diffusers 기반 이미지 생성/합성 (sd-worker.py 관리)
+│   ├── sd-worker.py       # Python Stable Diffusion 워커 (모델 상주)
 │   ├── voice-transcriber.js # faster-whisper STT (Python)
 │   └── web-tools.js       # DuckDuckGo 검색, URL 브라우징
 ├── src/mcp/

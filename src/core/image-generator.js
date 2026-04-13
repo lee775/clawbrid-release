@@ -1,147 +1,147 @@
 /**
  * ClawBrid 이미지 생성/합성 모듈
- * Local Stable Diffusion WebUI API (Automatic1111) 연동
- * 기본 URL: http://127.0.0.1:7860 (--api 플래그 필요)
+ * Python diffusers 라이브러리 기반 Stable Diffusion
+ * 모델은 Python 워커 프로세스에 상주 (최초 로드 후 메모리 유지)
  */
-const http = require('http');
-const https = require('https');
+const { spawn, execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
 
 const OUTPUT_DIR = path.join(os.homedir(), '.clawbrid', 'temp', 'images');
-const DEFAULT_SD_URL = 'http://127.0.0.1:7860';
+const WORKER_SCRIPT = path.join(__dirname, 'sd-worker.py');
+
+// ── 워커 프로세스 관리 ──
+let worker = null;
+let workerReady = false;
+let pendingRequests = new Map();
+let requestIdCounter = 0;
+let stdoutBuffer = '';
 
 /**
- * config.json에서 SD WebUI URL 읽기
+ * 워커 프로세스 시작/재사용
  */
-function getSDUrl() {
-  try {
-    const cfgPath = path.join(os.homedir(), '.clawbrid', 'config.json');
-    if (fs.existsSync(cfgPath)) {
-      const cfg = JSON.parse(fs.readFileSync(cfgPath, 'utf-8'));
-      if (cfg.stableDiffusion?.url) return cfg.stableDiffusion.url;
-    }
-  } catch {}
-  return DEFAULT_SD_URL;
-}
+function ensureWorker() {
+  if (worker && !worker.killed && worker.exitCode === null) return;
 
-/**
- * SD WebUI HTTP 요청
- */
-function sdRequest(endpoint, method = 'GET', body = null, timeout = 300000) {
-  return new Promise((resolve, reject) => {
-    const baseUrl = getSDUrl();
-    const url = new URL(endpoint, baseUrl);
-    const mod = url.protocol === 'https:' ? https : http;
+  workerReady = false;
+  stdoutBuffer = '';
 
-    const options = {
-      hostname: url.hostname,
-      port: url.port || (url.protocol === 'https:' ? 443 : 80),
-      path: url.pathname + url.search,
-      method,
-      headers: { 'Accept': 'application/json' },
-    };
+  worker = spawn('python', [WORKER_SCRIPT], {
+    stdio: ['pipe', 'pipe', 'pipe'],
+    windowsHide: true,
+  });
 
-    let postData = null;
-    if (body) {
-      postData = JSON.stringify(body);
-      options.headers['Content-Type'] = 'application/json';
-      options.headers['Content-Length'] = Buffer.byteLength(postData);
-    }
+  // stdout: JSON 응답 파싱
+  worker.stdout.on('data', (data) => {
+    stdoutBuffer += data.toString();
+    const lines = stdoutBuffer.split('\n');
+    stdoutBuffer = lines.pop(); // 미완성 라인 보관
 
-    const req = mod.request(options, (res) => {
-      const chunks = [];
-      res.on('data', chunk => chunks.push(chunk));
-      res.on('end', () => {
-        clearTimeout(timer);
-        const raw = Buffer.concat(chunks).toString('utf-8');
-        if (res.statusCode >= 400) {
-          return reject(new Error(`SD WebUI 오류 (HTTP ${res.statusCode}): ${raw.slice(0, 300)}`));
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      try {
+        const msg = JSON.parse(line);
+
+        // ready/loading 등 상태 메시지
+        if (msg.status === 'ready') {
+          workerReady = true;
         }
-        try {
-          resolve(JSON.parse(raw));
-        } catch {
-          reject(new Error(`SD WebUI 응답 파싱 실패: ${raw.slice(0, 200)}`));
+
+        // ID가 있는 요청 응답
+        if (msg.id != null && pendingRequests.has(msg.id)) {
+          const { resolve, reject, timer } = pendingRequests.get(msg.id);
+          pendingRequests.delete(msg.id);
+          clearTimeout(timer);
+          if (msg.error) reject(new Error(msg.error));
+          else resolve(msg);
         }
-      });
-    });
+      } catch {}
+    }
+  });
 
-    const timer = setTimeout(() => {
-      req.destroy();
-      reject(new Error(`SD WebUI 요청 타임아웃 (${Math.round(timeout / 1000)}초)`));
-    }, timeout);
+  // stderr: Python 로그 (모델 다운로드 진행률 등)
+  worker.stderr.on('data', (data) => {
+    const text = data.toString().trim();
+    if (text) console.log(`[SD-Worker] ${text}`);
+  });
 
-    req.on('error', (e) => {
+  worker.on('exit', (code) => {
+    worker = null;
+    workerReady = false;
+    // 대기 중인 요청들 실패 처리
+    for (const [id, { reject, timer }] of pendingRequests) {
       clearTimeout(timer);
-      if (e.code === 'ECONNREFUSED') {
-        reject(new Error(
-          `Stable Diffusion WebUI에 연결할 수 없습니다 (${baseUrl}).\n` +
-          '확인사항:\n' +
-          '1. SD WebUI가 실행 중인지 확인\n' +
-          '2. --api 플래그로 시작했는지 확인\n' +
-          '   (webui-user.bat의 COMMANDLINE_ARGS에 --api 추가)\n' +
-          '3. config.json의 stableDiffusion.url이 올바른지 확인'
-        ));
-      } else {
-        reject(e);
-      }
-    });
+      reject(new Error(`SD 워커 프로세스 종료 (code=${code})`));
+    }
+    pendingRequests.clear();
+  });
 
-    if (postData) req.write(postData);
-    req.end();
+  worker.on('error', (err) => {
+    console.error(`[SD-Worker] 프로세스 시작 실패: ${err.message}`);
   });
 }
 
 /**
- * base64 이미지를 파일로 저장
+ * 워커에 요청 전송 (Promise)
  */
-function saveImage(base64Data, prefix = 'gen') {
-  if (!fs.existsSync(OUTPUT_DIR)) fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-  const filename = `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 6)}.png`;
-  const filePath = path.join(OUTPUT_DIR, filename);
-  fs.writeFileSync(filePath, Buffer.from(base64Data, 'base64'));
-  return filePath;
+function sendRequest(action, params = {}, timeout = 600000) {
+  return new Promise((resolve, reject) => {
+    ensureWorker();
+
+    const id = ++requestIdCounter;
+    const req = JSON.stringify({ id, action, ...params }) + '\n';
+
+    const timer = setTimeout(() => {
+      pendingRequests.delete(id);
+      reject(new Error(`이미지 생성 타임아웃 (${Math.round(timeout / 1000)}초)`));
+    }, timeout);
+
+    pendingRequests.set(id, { resolve, reject, timer });
+
+    try {
+      worker.stdin.write(req);
+    } catch (e) {
+      pendingRequests.delete(id);
+      clearTimeout(timer);
+      reject(new Error(`워커 통신 실패: ${e.message}`));
+    }
+  });
 }
 
 /**
- * 파일에서 base64 읽기
+ * 도구 설치 확인
  */
-function imageToBase64(imagePath) {
-  if (!fs.existsSync(imagePath)) throw new Error(`이미지 파일을 찾을 수 없습니다: ${imagePath}`);
-  return fs.readFileSync(imagePath).toString('base64');
+function checkTools() {
+  const missing = [];
+  try {
+    execSync('python -c "import diffusers"', { stdio: 'pipe', windowsHide: true, timeout: 10000 });
+  } catch { missing.push('diffusers'); }
+  try {
+    execSync('python -c "import torch"', { stdio: 'pipe', windowsHide: true, timeout: 10000 });
+  } catch { missing.push('torch'); }
+  return missing;
 }
+
+// ── 공개 API (MCP/브릿지에서 호출) ──
 
 /**
  * txt2img - 텍스트로 이미지 생성
  */
 async function generate(options = {}) {
-  const body = {
+  cleanupOldImages();
+  const result = await sendRequest('generate', {
     prompt: options.prompt || '',
-    negative_prompt: options.negative_prompt || '(worst quality, low quality:1.4), blurry, watermark, text',
+    negative_prompt: options.negative_prompt,
     width: options.width || 512,
     height: options.height || 512,
     steps: options.steps || 20,
     cfg_scale: options.cfg_scale || 7,
-    sampler_name: options.sampler || 'Euler a',
     seed: options.seed ?? -1,
-    batch_size: Math.min(options.batch_size || 1, 4),
-  };
-
-  const timeout = (body.steps > 30 ? 600 : 300) * 1000;
-  const result = await sdRequest('/sdapi/v1/txt2img', 'POST', body, timeout);
-
-  if (!result.images || !result.images.length) {
-    throw new Error('SD WebUI에서 이미지가 반환되지 않았습니다');
-  }
-
-  const images = [];
-  for (const img of result.images) {
-    const filePath = saveImage(img, 'gen');
-    images.push({ base64: img, path: filePath });
-  }
-
-  return { images, parameters: body };
+    batch_size: options.batch_size || 1,
+    model: options.model,
+  });
+  return { images: result.images, parameters: options };
 }
 
 /**
@@ -149,34 +149,21 @@ async function generate(options = {}) {
  */
 async function edit(options = {}) {
   if (!options.image_path) throw new Error('image_path가 필요합니다');
-  const initBase64 = imageToBase64(options.image_path);
+  if (!fs.existsSync(options.image_path)) throw new Error(`이미지 파일을 찾을 수 없습니다: ${options.image_path}`);
 
-  const body = {
-    init_images: [initBase64],
+  const result = await sendRequest('edit', {
+    image_path: options.image_path.replace(/\\/g, '/'),
     prompt: options.prompt || '',
-    negative_prompt: options.negative_prompt || '(worst quality, low quality:1.4), blurry, watermark',
+    negative_prompt: options.negative_prompt,
     denoising_strength: options.denoising_strength ?? 0.75,
     width: options.width || 512,
     height: options.height || 512,
     steps: options.steps || 20,
     cfg_scale: options.cfg_scale || 7,
-    sampler_name: options.sampler || 'Euler a',
     seed: options.seed ?? -1,
-  };
-
-  const result = await sdRequest('/sdapi/v1/img2img', 'POST', body, 300000);
-
-  if (!result.images || !result.images.length) {
-    throw new Error('SD WebUI에서 이미지가 반환되지 않았습니다');
-  }
-
-  const images = [];
-  for (const img of result.images) {
-    const filePath = saveImage(img, 'edit');
-    images.push({ base64: img, path: filePath });
-  }
-
-  return { images, parameters: body };
+    model: options.model,
+  });
+  return { images: result.images, parameters: options };
 }
 
 /**
@@ -184,90 +171,40 @@ async function edit(options = {}) {
  */
 async function upscale(options = {}) {
   if (!options.image_path) throw new Error('image_path가 필요합니다');
-  const base64 = imageToBase64(options.image_path);
+  if (!fs.existsSync(options.image_path)) throw new Error(`이미지 파일을 찾을 수 없습니다: ${options.image_path}`);
 
-  const body = {
-    image: base64,
-    upscaler_1: options.upscaler || 'R-ESRGAN 4x+',
-    upscaling_resize: options.scale || 2,
-  };
-
-  const result = await sdRequest('/sdapi/v1/extra-single-image', 'POST', body, 300000);
-
-  if (!result.image) {
-    throw new Error('업스케일 결과가 반환되지 않았습니다');
-  }
-
-  const filePath = saveImage(result.image, 'upscale');
-  return { base64: result.image, path: filePath };
+  const result = await sendRequest('upscale', {
+    image_path: options.image_path.replace(/\\/g, '/'),
+    scale: options.scale || 2,
+  });
+  return { base64: result.base64, path: result.path };
 }
 
 /**
- * 사용 가능한 모델 목록
- */
-async function getModels() {
-  return await sdRequest('/sdapi/v1/sd-models', 'GET', null, 10000);
-}
-
-/**
- * 모델 변경
- */
-async function setModel(modelName) {
-  await sdRequest('/sdapi/v1/options', 'POST', { sd_model_checkpoint: modelName }, 120000);
-}
-
-/**
- * 샘플러 목록
- */
-async function getSamplers() {
-  return await sdRequest('/sdapi/v1/samplers', 'GET', null, 10000);
-}
-
-/**
- * 업스케일러 목록
- */
-async function getUpscalers() {
-  return await sdRequest('/sdapi/v1/upscalers', 'GET', null, 10000);
-}
-
-/**
- * SD WebUI 연결 상태 확인
+ * 상태 확인 (GPU/CPU, 모델 로드 여부 등)
  */
 async function getStatus() {
-  try {
-    const [options, samplers] = await Promise.all([
-      sdRequest('/sdapi/v1/options', 'GET', null, 5000),
-      sdRequest('/sdapi/v1/samplers', 'GET', null, 5000),
-    ]);
-    return {
-      connected: true,
-      url: getSDUrl(),
-      currentModel: options.sd_model_checkpoint || '알 수 없음',
-      samplers: samplers.map(s => s.name),
-    };
-  } catch (e) {
+  const missing = checkTools();
+  if (missing.length) {
     return {
       connected: false,
-      url: getSDUrl(),
-      error: e.message,
+      error: `필요한 패키지가 없습니다: ${missing.join(', ')}\n설치: pip install diffusers transformers accelerate torch`,
     };
   }
-}
-
-/**
- * 현재 진행 상태 조회
- */
-async function getProgress() {
   try {
-    const result = await sdRequest('/sdapi/v1/progress', 'GET', null, 5000);
+    const result = await sendRequest('status', {}, 15000);
     return {
-      progress: Math.round((result.progress || 0) * 100),
-      eta: result.eta_relative ? Math.round(result.eta_relative) : null,
-      currentStep: result.state?.sampling_step || 0,
-      totalSteps: result.state?.sampling_steps || 0,
+      connected: true,
+      device: result.device,
+      gpu: result.gpu,
+      vram_gb: result.vram_gb,
+      model_loaded: result.model_loaded,
+      current_model: result.current_model,
+      diffusers_version: result.diffusers_version,
+      torch_version: result.torch_version,
     };
-  } catch {
-    return { progress: 0, eta: null };
+  } catch (e) {
+    return { connected: false, error: e.message };
   }
 }
 
@@ -281,25 +218,28 @@ function cleanupOldImages() {
     for (const f of fs.readdirSync(OUTPUT_DIR)) {
       const fp = path.join(OUTPUT_DIR, f);
       const stat = fs.statSync(fp);
-      if (now - stat.mtimeMs > 3600000) {
-        fs.unlinkSync(fp);
-      }
+      if (now - stat.mtimeMs > 3600000) fs.unlinkSync(fp);
     }
   } catch {}
+}
+
+/**
+ * 워커 종료
+ */
+function shutdown() {
+  if (worker && worker.exitCode === null) {
+    try { worker.stdin.write(JSON.stringify({ action: 'shutdown' }) + '\n'); } catch {}
+    setTimeout(() => { if (worker) { try { worker.kill(); } catch {} } }, 3000);
+  }
 }
 
 module.exports = {
   generate,
   edit,
   upscale,
-  getModels,
-  setModel,
-  getSamplers,
-  getUpscalers,
   getStatus,
-  getProgress,
+  checkTools,
   cleanupOldImages,
-  saveImage,
-  getSDUrl,
+  shutdown,
   OUTPUT_DIR,
 };
