@@ -60,7 +60,7 @@ function registerMCPServers() {
 
   let existing = '';
   try {
-    existing = execSync('claude mcp list', { encoding: 'utf-8', windowsHide: true, timeout: 10000 });
+    existing = execSync('claude mcp list', { encoding: 'utf-8', windowsHide: true, timeout: 30000 });
   } catch {
     return;
   }
