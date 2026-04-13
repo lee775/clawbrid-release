@@ -607,6 +607,45 @@ ${topic}
       claudeOptions.appendSystemPrompt = '너는 일반 사용자의 질문에 답변하는 AI입니다. 파일 시스템 접근, 코드 실행, 시스템 명령은 사용하지 마세요.';
     }
 
+    // 타임아웃 시 사용자에게 계속 진행 여부 확인
+    claudeOptions.onTimeout = () => new Promise((resolve) => {
+      const cbId = `timeout_${chatId}_${Date.now()}`;
+      bot.sendMessage(chatId, '⏰ 작업이 10분을 초과했습니다. 계속 진행할까요?', {
+        reply_markup: {
+          inline_keyboard: [[
+            { text: '✅ 계속 진행', callback_data: `cont_${cbId}` },
+            { text: '🛑 중단', callback_data: `stop_${cbId}` },
+          ]]
+        }
+      }).then((sentMsg) => {
+        let resolved = false;
+        const handler = (query) => {
+          if (resolved) return;
+          if (!query.data.endsWith(cbId)) return;
+          resolved = true;
+          bot.removeListener('callback_query', handler);
+          if (query.data.startsWith('cont_')) {
+            bot.answerCallbackQuery(query.id, { text: '계속 진행합니다' }).catch(() => {});
+            bot.editMessageText('⏰ 계속 진행 중...', { chat_id: chatId, message_id: sentMsg.message_id }).catch(() => {});
+            resolve(true);
+          } else {
+            bot.answerCallbackQuery(query.id, { text: '작업을 중단합니다' }).catch(() => {});
+            bot.editMessageText('🛑 사용자가 중단함', { chat_id: chatId, message_id: sentMsg.message_id }).catch(() => {});
+            resolve(false);
+          }
+        };
+        bot.on('callback_query', handler);
+        // 2분 응답 없으면 자동 계속
+        setTimeout(() => {
+          if (resolved) return;
+          resolved = true;
+          bot.removeListener('callback_query', handler);
+          bot.editMessageText('⏰ 응답 없음 — 자동으로 계속 진행합니다', { chat_id: chatId, message_id: sentMsg.message_id }).catch(() => {});
+          resolve(true);
+        }, 120000);
+      }).catch(() => resolve(true));
+    });
+
     const { promise, proc } = runClaude(finalPrompt, claudeOptions);
     activeSessions.set(chatId, proc);
     const result = await promise;

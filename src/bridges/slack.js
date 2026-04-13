@@ -603,10 +603,56 @@ ${topic}
     // 플러그인 전처리 훅
     finalPrompt = plugins.runBeforePrompt(finalPrompt, { userId, chatId: channelId, source: 'slack' });
 
+    // 타임아웃 시 사용자에게 계속 진행 여부 확인
+    const onTimeout = () => new Promise((resolve) => {
+      const ts = Date.now();
+      say({
+        text: '⏰ 작업이 10분을 초과했습니다. 계속 진행할까요?',
+        blocks: [
+          { type: 'section', text: { type: 'mrkdwn', text: '⏰ 작업이 10분을 초과했습니다. 계속 진행할까요?' } },
+          { type: 'actions', block_id: `timeout_${ts}`, elements: [
+            { type: 'button', text: { type: 'plain_text', text: '✅ 계속 진행' }, action_id: `timeout_continue_${ts}`, style: 'primary' },
+            { type: 'button', text: { type: 'plain_text', text: '🛑 중단' }, action_id: `timeout_stop_${ts}`, style: 'danger' },
+          ] },
+        ],
+      }).then(() => {
+        let resolved = false;
+        const contHandler = async ({ ack, respond }) => {
+          if (resolved) return;
+          resolved = true;
+          await ack();
+          await respond({ text: '⏰ 계속 진행 중...', replace_original: true });
+          app.action(`timeout_continue_${ts}`, () => {});
+          app.action(`timeout_stop_${ts}`, () => {});
+          resolve(true);
+        };
+        const stopHandler = async ({ ack, respond }) => {
+          if (resolved) return;
+          resolved = true;
+          await ack();
+          await respond({ text: '🛑 사용자가 중단함', replace_original: true });
+          app.action(`timeout_continue_${ts}`, () => {});
+          app.action(`timeout_stop_${ts}`, () => {});
+          resolve(false);
+        };
+        app.action(`timeout_continue_${ts}`, contHandler);
+        app.action(`timeout_stop_${ts}`, stopHandler);
+        // 2분 응답 없으면 자동 계속
+        setTimeout(() => {
+          if (resolved) return;
+          resolved = true;
+          app.action(`timeout_continue_${ts}`, () => {});
+          app.action(`timeout_stop_${ts}`, () => {});
+          resolve(true);
+        }, 120000);
+      }).catch(() => resolve(true));
+    });
+
     const { promise, proc } = runClaude(finalPrompt, {
       resumeSessionId,
       isAdmin: true,
       appendSystemPrompt: `${memory.MEMORY_SYSTEM_PROMPT}\n${knowledgeGraph.GRAPH_SYSTEM_PROMPT}`,
+      onTimeout,
     });
     activeSessions.set(sessionKey, proc);
     const result = await promise;

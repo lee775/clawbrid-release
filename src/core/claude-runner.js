@@ -1,1 +1,192 @@
-const a0_0x29bd7c=a0_0x3246;(function(_0x437d7f,_0x4313e2){const _0x23437b=a0_0x3246,_0x43c557=_0x437d7f();while(!![]){try{const _0x559d9f=-parseInt(_0x23437b(0x129,'fc$b'))/0x1+-parseInt(_0x23437b(0x16d,'a%jc'))/0x2*(parseInt(_0x23437b(0x186,'n7Be'))/0x3)+parseInt(_0x23437b(0x18b,'36j3'))/0x4+-parseInt(_0x23437b(0x1aa,'bFJE'))/0x5+-parseInt(_0x23437b(0x189,'0FV('))/0x6*(parseInt(_0x23437b(0x14d,'^k3B'))/0x7)+-parseInt(_0x23437b(0x136,'d](g'))/0x8*(-parseInt(_0x23437b(0x1a5,'d](g'))/0x9)+parseInt(_0x23437b(0x181,'^k3B'))/0xa*(parseInt(_0x23437b(0x144,')T#E'))/0xb);if(_0x559d9f===_0x4313e2)break;else _0x43c557['push'](_0x43c557['shift']());}catch(_0x38dd65){_0x43c557['push'](_0x43c557['shift']());}}}(a0_0x2e37,0x9437b));function a0_0x3246(_0x15d74f,_0x32d760){_0x15d74f=_0x15d74f-0x121;const _0x2e37c7=a0_0x2e37();let _0x32463b=_0x2e37c7[_0x15d74f];if(a0_0x3246['dHQIij']===undefined){var _0xdd8bb5=function(_0x5973e5){const _0x220436='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0x83d4a2='',_0x27e363='';for(let _0x249e23=0x0,_0x48674b,_0x8e53ae,_0x21545c=0x0;_0x8e53ae=_0x5973e5['charAt'](_0x21545c++);~_0x8e53ae&&(_0x48674b=_0x249e23%0x4?_0x48674b*0x40+_0x8e53ae:_0x8e53ae,_0x249e23++%0x4)?_0x83d4a2+=String['fromCharCode'](0xff&_0x48674b>>(-0x2*_0x249e23&0x6)):0x0){_0x8e53ae=_0x220436['indexOf'](_0x8e53ae);}for(let _0xde88a0=0x0,_0x3b7aff=_0x83d4a2['length'];_0xde88a0<_0x3b7aff;_0xde88a0++){_0x27e363+='%'+('00'+_0x83d4a2['charCodeAt'](_0xde88a0)['toString'](0x10))['slice'](-0x2);}return decodeURIComponent(_0x27e363);};const _0x4e04af=function(_0x132119,_0x2efa59){let _0x2d47df=[],_0xe869d3=0x0,_0x3f2115,_0x2bff40='';_0x132119=_0xdd8bb5(_0x132119);let _0x4d6894;for(_0x4d6894=0x0;_0x4d6894<0x100;_0x4d6894++){_0x2d47df[_0x4d6894]=_0x4d6894;}for(_0x4d6894=0x0;_0x4d6894<0x100;_0x4d6894++){_0xe869d3=(_0xe869d3+_0x2d47df[_0x4d6894]+_0x2efa59['charCodeAt'](_0x4d6894%_0x2efa59['length']))%0x100,_0x3f2115=_0x2d47df[_0x4d6894],_0x2d47df[_0x4d6894]=_0x2d47df[_0xe869d3],_0x2d47df[_0xe869d3]=_0x3f2115;}_0x4d6894=0x0,_0xe869d3=0x0;for(let _0xc32465=0x0;_0xc32465<_0x132119['length'];_0xc32465++){_0x4d6894=(_0x4d6894+0x1)%0x100,_0xe869d3=(_0xe869d3+_0x2d47df[_0x4d6894])%0x100,_0x3f2115=_0x2d47df[_0x4d6894],_0x2d47df[_0x4d6894]=_0x2d47df[_0xe869d3],_0x2d47df[_0xe869d3]=_0x3f2115,_0x2bff40+=String['fromCharCode'](_0x132119['charCodeAt'](_0xc32465)^_0x2d47df[(_0x2d47df[_0x4d6894]+_0x2d47df[_0xe869d3])%0x100]);}return _0x2bff40;};a0_0x3246['qZTORS']=_0x4e04af,a0_0x3246['RzOSzt']={},a0_0x3246['dHQIij']=!![];}const _0x2770fc=_0x2e37c7[0x0],_0xee9a8b=_0x15d74f+_0x2770fc,_0x2b1de0=a0_0x3246['RzOSzt'][_0xee9a8b];return!_0x2b1de0?(a0_0x3246['yhacTh']===undefined&&(a0_0x3246['yhacTh']=!![]),_0x32463b=a0_0x3246['qZTORS'](_0x32463b,_0x32d760),a0_0x3246['RzOSzt'][_0xee9a8b]=_0x32463b):_0x32463b=_0x2b1de0,_0x32463b;}const {spawn}=require(a0_0x29bd7c(0x183,'^k3B')),config=require(a0_0x29bd7c(0x169,'K^9h'));function runClaude(_0x145d33,_0x17c0ae={}){const _0x2294f7=a0_0x29bd7c,_0x442655={'tObXv':function(_0x3445eb,_0x9ebc5b){return _0x3445eb(_0x9ebc5b);},'mygjk':function(_0x12ee6e,_0x1aed86){return _0x12ee6e(_0x1aed86);},'MAIFL':function(_0x267a41,_0x56e4f8){return _0x267a41(_0x56e4f8);},'pJxFA':function(_0x1fbba9,_0xeb8815){return _0x1fbba9/_0xeb8815;},'ONkmU':_0x2294f7(0x170,'DPTC'),'BNBEs':function(_0x2f223f,_0x4fbfcd){return _0x2f223f(_0x4fbfcd);},'EKhkp':function(_0x2a4967,_0x22f8d0){return _0x2a4967||_0x22f8d0;},'JrtEA':_0x2294f7(0x124,'tPJI'),'lMKgF':_0x2294f7(0x142,'n7Be'),'AwPDX':_0x2294f7(0x164,'hq[!'),'XnRBF':_0x2294f7(0x192,'TEZ@'),'LtcxF':_0x2294f7(0x173,'DPTC'),'hUFbo':_0x2294f7(0x131,'[S%*'),'sVRRi':_0x2294f7(0x130,'FqMJ'),'TySNd':function(_0x19d616,_0x2acc77,_0x5dac4f,_0x4ff94c){return _0x19d616(_0x2acc77,_0x5dac4f,_0x4ff94c);},'vqEtR':_0x2294f7(0x128,'V%km'),'bDAKv':_0x2294f7(0x143,'MR^]'),'JmJnN':_0x2294f7(0x14a,'o86D'),'ExXxU':function(_0x2f1c30,_0x3565c4,_0x1ca103){return _0x2f1c30(_0x3565c4,_0x1ca103);},'tDpMQ':_0x2294f7(0x133,'uYy&')},_0x5f3ea6=config['load'](),{resumeSessionId:resumeSessionId=null,isAdmin:isAdmin=![],allowedTools:allowedTools=null,appendSystemPrompt:appendSystemPrompt=null}=_0x17c0ae;let _0x4e9f45=null;const _0x5cb279=new Promise((_0x56944c,_0x56d3e5)=>{const _0x58184a=_0x2294f7,_0x125e3a={'SvTAP':_0x58184a(0x18a,'H!Wt'),'OKlxZ':function(_0x4ec557,_0x716df1){const _0x20e828=_0x58184a;return _0x442655[_0x20e828(0x18f,'[S%*')](_0x4ec557,_0x716df1);},'jkCIK':function(_0x4b8321,_0x43b05b){const _0x17e7c3=_0x58184a;return _0x442655[_0x17e7c3(0x179,'K^9h')](_0x4b8321,_0x43b05b);},'fkvqH':_0x442655[_0x58184a(0x175,'o86D')],'sWBvr':function(_0x61119,_0x555da8){return _0x61119!==_0x555da8;},'gBupf':function(_0x46e63b,_0x42fb26){const _0x553f66=_0x58184a;return _0x442655[_0x553f66(0x1ab,'a%jc')](_0x46e63b,_0x42fb26);},'cPxDI':function(_0x351579,_0x16bf40){const _0x244697=_0x58184a;return _0x442655[_0x244697(0x19e,'DPTC')](_0x351579,_0x16bf40);}};let _0x44508b=![];const _0x5c41b2=['-p','-',_0x58184a(0x199,'MPgg'),_0x442655[_0x58184a(0x16e,'6aDv')],_0x442655['lMKgF'],String(_0x5f3ea6['claude'][_0x58184a(0x146,'cBGE')])];isAdmin&&_0x5c41b2[_0x58184a(0x15a,'6aDv')](_0x442655[_0x58184a(0x176,'0aDz')]);for(const _0x5a6c92 of _0x5f3ea6[_0x58184a(0x15e,'[S%*')][_0x58184a(0x1a1,'H!Wt')]){_0x5c41b2[_0x58184a(0x1a9,'bFJE')](_0x442655[_0x58184a(0x13a,'uL59')],_0x5a6c92);}resumeSessionId&&_0x5c41b2[_0x58184a(0x13d,'H!Wt')](_0x442655[_0x58184a(0x1b1,'uL59')],resumeSessionId);allowedTools&&_0x5c41b2[_0x58184a(0x197,'MPgg')](_0x442655[_0x58184a(0x198,'bFJE')],allowedTools[_0x58184a(0x195,'QqE*')](','));appendSystemPrompt&&_0x5c41b2['push'](_0x442655['sVRRi'],appendSystemPrompt);let _0x4235ae=_0x145d33;_0x5f3ea6[_0x58184a(0x15e,'[S%*')][_0x58184a(0x167,'2J#$')]&&(_0x4235ae=_0x58184a(0x16b,'MR^]')+_0x145d33);const _0x352480=_0x442655[_0x58184a(0x145,'TwsW')](spawn,_0x442655[_0x58184a(0x132,'uYy&')],_0x5c41b2,{'cwd':_0x5f3ea6['claude'][_0x58184a(0x162,'MR^]')],'env':{...process.env,'FORCE_COLOR':'0'},'stdio':[_0x58184a(0x17e,'3Mo4'),_0x442655[_0x58184a(0x139,'TEZ@')],'pipe'],'windowsHide':!![]});_0x4e9f45=_0x352480,_0x352480[_0x58184a(0x14e,'bB5U')][_0x58184a(0x1ad,'8)C%')](_0x4235ae),_0x352480[_0x58184a(0x15c,'MPgg')][_0x58184a(0x156,'MPgg')]();let _0x4e4327='',_0x24d469='';_0x352480['stdout']['on'](_0x442655['JmJnN'],_0x305e7a=>{const _0x32188d=_0x58184a;_0x4e4327+=_0x305e7a[_0x32188d(0x140,'[S%*')]();}),_0x352480[_0x58184a(0x1ac,'fc$b')]['on'](_0x58184a(0x158,'0FV('),_0x285d7e=>{const _0x322a72=_0x58184a;_0x24d469+=_0x285d7e[_0x322a72(0x154,'T81z')]();});const _0x26bc8e=_0x442655['ExXxU'](setTimeout,()=>{const _0x34c351=_0x58184a;if(_0x44508b)return;_0x44508b=!![],_0x352480[_0x34c351(0x134,'8)C%')](_0x125e3a[_0x34c351(0x1a4,'mgl)')]),_0x125e3a[_0x34c351(0x122,')T#E')](_0x56d3e5,new Error(_0x34c351(0x126,'MPgg')+_0x125e3a[_0x34c351(0x193,'o86D')](_0x5f3ea6[_0x34c351(0x151,'K^9h')][_0x34c351(0x174,'tPJI')],0x3e8)+_0x34c351(0x137,'MPgg')));},_0x5f3ea6['claude']['timeout']);_0x352480['on'](_0x442655[_0x58184a(0x16a,'[^rj')],_0x567e98=>{const _0xa38589=_0x58184a,_0x22eb39=_0x125e3a[_0xa38589(0x178,'T81z')][_0xa38589(0x157,'n7Be')]('|');let _0xc181e=0x0;while(!![]){switch(_0x22eb39[_0xc181e++]){case'0':if(_0x125e3a[_0xa38589(0x152,'7zVx')](_0x567e98,0x0)&&!_0x4e4327){_0x125e3a[_0xa38589(0x16c,'7S*w')](_0x56d3e5,new Error('Claude\x20종료\x20코드:\x20'+_0x567e98+'\x0a'+_0x24d469));return;}continue;case'1':_0x125e3a[_0xa38589(0x160,'W0wa')](clearTimeout,_0x26bc8e);continue;case'2':if(_0x44508b)return;continue;case'3':try{_0x56944c(JSON['parse'](_0x4e4327));}catch{_0x125e3a[_0xa38589(0x1a6,'Jp2[')](_0x56944c,{'result':_0x125e3a[_0xa38589(0x17c,'V#em')](_0x4e4327,_0x24d469),'session_id':null});}continue;case'4':_0x44508b=!![];continue;}break;}}),_0x352480['on'](_0x58184a(0x147,'36j3'),_0x19fc62=>{const _0x3feb50=_0x58184a;_0x442655[_0x3feb50(0x165,'v(yW')](clearTimeout,_0x26bc8e);if(_0x44508b)return;_0x44508b=!![],_0x442655[_0x3feb50(0x17f,'Gs#y')](_0x56d3e5,_0x19fc62);});});return{'promise':_0x5cb279,'proc':_0x4e9f45};}function extractText(_0xef231b){const _0x2375ef=a0_0x29bd7c,_0x33195e={'yAYgD':_0x2375ef(0x1a8,'327M')};if(_0xef231b[_0x2375ef(0x12f,'K^9h')])return _0xef231b[_0x2375ef(0x1a2,'%y1q')];if(_0xef231b[_0x2375ef(0x194,'MPgg')]){if(typeof _0xef231b[_0x2375ef(0x188,'fc$b')]===_0x33195e[_0x2375ef(0x148,'mB$y')])return _0xef231b[_0x2375ef(0x1af,'0FV(')];if(Array[_0x2375ef(0x19f,'8)C%')](_0xef231b[_0x2375ef(0x16f,'n7Be')]))return _0xef231b[_0x2375ef(0x194,'MPgg')][_0x2375ef(0x14f,'6aDv')](_0xbd7cdb=>_0xbd7cdb[_0x2375ef(0x19a,'2J#$')]==='text')['map'](_0x23b704=>_0x23b704[_0x2375ef(0x127,'3Mo4')])['join']('\x0a');}if(_0xef231b[_0x2375ef(0x12a,'bFJE')])return _0xef231b[_0x2375ef(0x17a,'bB5U')];return JSON['stringify'](_0xef231b,null,0x2);}function extractSessionId(_0x4fd610){const _0x224246=a0_0x29bd7c;return _0x4fd610[_0x224246(0x177,'FqMJ')]||_0x4fd610[_0x224246(0x1a3,'7zVx')]||null;}function isCodexReady(){const _0x2251a7=a0_0x29bd7c,_0x4afa6d={'pcvmM':'child_process','hhQwF':function(_0x1547a3,_0x4ee5a6,_0x5807d1){return _0x1547a3(_0x4ee5a6,_0x5807d1);},'UUMBd':_0x2251a7(0x15d,'o86D'),'eOdsx':'utf-8'};try{const {execSync:_0x266973}=require(_0x4afa6d[_0x2251a7(0x171,'$Bu9')]),_0x279c8f=_0x4afa6d[_0x2251a7(0x18c,'0aDz')](_0x266973,_0x4afa6d[_0x2251a7(0x182,'hq[!')],{'encoding':_0x4afa6d[_0x2251a7(0x150,'$Bu9')],'timeout':0x1388,'windowsHide':!![]})[_0x2251a7(0x141,'7zVx')]();return!!_0x279c8f;}catch{return![];}}function runCodexReview(){const _0x58bafa=a0_0x29bd7c,_0x57316f={'DtMUN':function(_0x5c539c,_0x47d973){return _0x5c539c(_0x47d973);},'sqbuj':_0x58bafa(0x191,'6aDv'),'aTQns':'codex','bAkax':_0x58bafa(0x14b,'V#em'),'vnJxV':_0x58bafa(0x12b,'JmT9'),'ZGFCG':_0x58bafa(0x15b,'2J#$'),'DzbFM':function(_0xdd0bb1,_0x2c2c72,_0x388c23){return _0xdd0bb1(_0x2c2c72,_0x388c23);},'NNAPj':_0x58bafa(0x19c,'K^9h'),'NhnIW':function(_0x212898){return _0x212898();}};if(!_0x57316f[_0x58bafa(0x185,'a%jc')](isCodexReady))return Promise['resolve'](null);const _0x2eccb8=config[_0x58bafa(0x190,'TEZ@')]();return new Promise(_0x51667c=>{const _0x255903=_0x58bafa,_0x3c556b={'IvCVW':_0x57316f[_0x255903(0x15f,'W0wa')]},_0x4ca2e1=spawn(_0x57316f[_0x255903(0x13e,'x4LW')],[_0x57316f[_0x255903(0x153,'yx00')],_0x255903(0x12d,'uL59')],{'cwd':_0x2eccb8[_0x255903(0x123,'327M')]['workDir'],'stdio':[_0x57316f['vnJxV'],_0x57316f[_0x255903(0x17d,'Gs#y')],_0x255903(0x138,'mB$y')],'windowsHide':!![],'shell':!![]});let _0x4f1261='';_0x4ca2e1['stdout']['on'](_0x57316f['ZGFCG'],_0x321b6e=>{const _0x5099b2=_0x255903;_0x4f1261+=_0x321b6e[_0x5099b2(0x1b0,'V%km')]();}),_0x4ca2e1['stderr']['on'](_0x255903(0x184,'[^rj'),()=>{});const _0x51f22d=_0x57316f[_0x255903(0x159,'^k3B')](setTimeout,()=>{const _0x1dc756=_0x255903;_0x4ca2e1[_0x1dc756(0x166,'$Bu9')](_0x3c556b[_0x1dc756(0x168,'3Mo4')]),_0x51667c(null);},0x1d4c0);_0x4ca2e1['on'](_0x57316f[_0x255903(0x172,'TEZ@')],()=>{const _0x5325a3=_0x255903;_0x57316f[_0x5325a3(0x17b,'bFJE')](clearTimeout,_0x51f22d),_0x57316f[_0x5325a3(0x180,'7zVx')](_0x51667c,_0x4f1261[_0x5325a3(0x12c,'Jp2[')]()||null);}),_0x4ca2e1['on'](_0x255903(0x187,'TwsW'),()=>{const _0x541630=_0x255903;clearTimeout(_0x51f22d),_0x57316f[_0x541630(0x180,'7zVx')](_0x51667c,null);});});}function hasCodeChanges(){const _0x1d51a8=a0_0x29bd7c,_0x15e6fc={'EqNQM':function(_0x4855ef,_0xa2b481){return _0x4855ef(_0xa2b481);},'fZKGT':_0x1d51a8(0x149,'QqE*'),'HKLoa':_0x1d51a8(0x1a0,'bFJE'),'yPZJO':'git\x20diff\x20--cached\x20--shortstat','BGuTC':function(_0x1449c4,_0x22741c){return _0x1449c4||_0x22741c;}},_0x16af16=config[_0x1d51a8(0x13f,'MPgg')]();try{const {execSync:_0x136c45}=_0x15e6fc[_0x1d51a8(0x14c,'V%km')](require,_0x15e6fc[_0x1d51a8(0x18e,'6aDv')]),_0x4d66fc=_0x136c45('git\x20diff\x20--shortstat',{'cwd':_0x16af16[_0x1d51a8(0x155,'d](g')][_0x1d51a8(0x163,'327M')],'encoding':_0x15e6fc[_0x1d51a8(0x161,'36j3')],'windowsHide':!![]})['trim'](),_0x1cb4e0=_0x136c45(_0x15e6fc['yPZJO'],{'cwd':_0x16af16[_0x1d51a8(0x1ae,'uYy&')]['workDir'],'encoding':_0x15e6fc[_0x1d51a8(0x125,'H!Wt')],'windowsHide':!![]})['trim']();return!!_0x15e6fc[_0x1d51a8(0x121,'Gs#y')](_0x4d66fc,_0x1cb4e0);}catch{return![];}}function a0_0x2e37(){const _0x3597eb=['ydb5W4FdU8ormqZcPmoS','WQaLW4NdJ8km','i0BdNSk/BCooW7e','jh0OW5RcOq','W7tcVsVcRW8bja','eZJcSXBcIH8','ywZcSmkEWOhcUJxcTai','ECk8dHOu','p8kgWPZdPhddUa9P','wWb6fbW','xCoywmoCW4dcP1To','e8o5l8o2gr4','ixW9WP8','yZb9W4tcOCkwtsxcKSoCWPi/ka','WR7dVmoUWQlcVq','W4NdHK9uydq','puFdTSk5EG','rSo0W7xcIGj8','eCoDDSo9WRWcWPS','W4vuW6nVEtZcPqu','f8oVemkaWOy','gmo6AMPXWQtdQhaMsY4raq','W5tdSXqtwa','ugu8w8o0','a8oHpmoQeXW','WQqrW60X','W53cKGpcHaC','4O6uW4hTG4lSNkhSL6BSMiezkG','rt/dSmk/','W5jxW5fUBZa','WOVcHXGckNfbimkmw0pcLW','pgW9WOtdUmocga','WPFcUSoxWOO','sdbMcq','DSk2aSknWQNcNfi','W6CvfCkEW6nHWQLH','l8kPwmoyWQRdLq','W6tcG8kftmktW50AW5CiW6hcTSkTW4hdMCojWRLqWOyEASoAW5S','WPGMWPldHvpdQmkwWQ9jWQ8oW7rFqa','u8oPW5hcIZq','rSo0W7VcJam','ivZdS8kH','W6ywr8oLWOC/W69AtSkUW68JWP4','nmkgW7/cRIRcQsfWyr7cSvK','7lwSW4hSTiRQSzNcIW','lvtdUfu','WRDGm8kBW4C','a8o1iCk6WOy','WOJcIXGckNuDfCkXwN3cNSkv','WQtdRhZdMf5eo1bCuNqO','W6xcRdZcGW','WOmsWPtdSSog','cmkoy8ob','W4fKWQddNu3dRSkpWQ0','zNVcQSka','hw/dPCo/cSkpWQO6BmkOWPu','WO3dGf3dKa','lH9Le8kAgLFdM1zgWP/cNq','W7FdLSkArLK','W6pcSCoKzSkvf8o3fW','WQn1DSkDkG','jhZdKvC9','DmoPcSkmxCo6WONcK8kVmmkncIK','WOqLWQ5/','pSknrSkPjdm','W7rkW75krG','WRpdS8oQymkDW4lcRqm','y2r2W4tcGa','WRXsfSodWR3cJq','uhVdQ8kWea','pSkGsSoyWQldHa','yv7cGCkBWPO','oKVdUveS','eutcTfFcVmoOW540','zCotWQFdQhBdUa','aCkpzG','qZldPmo3bG','fSotBmoO','W4xcUmoVAmkc','WQPocCoF','os5ZrG','f8kvzSomW4W','WOmRWR57gCk1WOpcGmkWWRnhWOhdKmkQWOu','W5zNWPldNfVdOG','c8oYW5xdPZu','n8oiW5VdQGu','WO5msmkDoq','WORdHL/dNSo+wWm','f8oIl8o0mXddLq','W7NdJSojBSoduCoTW47cO3i/g1CcWQziW6FdRmkwgHtdN3ldKCkRhc3dSCkqcW','ACk1AWOE','xL3dO8kV','pIbPqCoepWxdV8kwW78UmdvNW7ZdTey','EcZdI8kDgG','C8oJsmocWQJdH8k3W7u','WRmZWO54W7u','WQBSIBxSIONTH6NcMUYNSUY4MqhcTU2oL+YEHUYDVCkv7iMG7kkNW5CSWR7cGtRdHhVdH8kwdulcTU2xGEQYRUUbVmoH7igL7kc47zAu6RI6hoYHV+YwRSky67go65g77iMayoYcK+YyHoYDGEYxO+QZKSkS7jET65EUfU2pVUYEH+YELNNSLA7RLAxQSBGj67k76Rgj7zAw7kwBW7tRQPdSOBZdKoYgIUUQUU2vK+QZGchTMBJSNRpSN75e67ox7jsx7kEXDfFTM5/SNPKy7jw57j2wW6RTJlxSNllSN6yO7iQz7kgs7zwp7ks6moUNLCkhmmkT','d2TzWRlcGq','W4NcH8kDW5ddUGFcV8kyW6CaWO0','WPbjdSoYWPK','uY3dPSoQf8omWQO','W5qsWPpdMmoiDCo/WR0p','rvFdUCkUjq','WPTQm8kaW5S','W4HdW5pdGCkpFmkIWQq','WROlW686W4NdUZW','WQ8kWRfZna','fhddPa/cTG','WRRdI8kxt8kkW5CAW6XmW7y','a0dcKvlcHG','lCkgu8oRWOC','FxvHW57cJ0pdLG','fx0dWQldLW','l8k4smkeca','W6ddMIS/tq','qtpdUmkU','W7VdJqyTCa','vN3cJSk4WQy','WRddU8k6hSkTW57cKXVcVCk2','WOhcTSoGtCoj','W6lcQSoKqSkRW7xcRZRcTmkVW5XGya','WQmwWOPu','WRldMSocWQ7cMq','axlcUSopgmouWPewta','W4BdNCk7z08','W5NdNuvfDYHz','qmkckmk4W6XAW5VcImoSW6hcUsmg','W4BcKaJcVYmHgG','W7u1mCohBIfwWRxcLGGYW443','pw/dPtZcQa','W7dcOt/cHbqhja','WRXHmCoWWOW','W7HkWRRdR3m','WRLle8k0','WOLYpCoJWP3cRvS','W7Gje8k0W5uKWR9dvq','WOOVWPLxkG','b8koBmorW4FcRe0','FCoUcSko','CreaW7RdR1xcNCkvWOtdVSk6W50','fmkuCCon','ovWiWPxdTG','sComBCoqW5BcSKX2smoVsqbqW7S1','ktz3qG','WPBcMSo4pWNdMmoKWQtdVmoGDa','pSkGrmoEWQm'];a0_0x2e37=function(){return _0x3597eb;};return a0_0x2e37();}module[a0_0x29bd7c(0x18d,'H!Wt')]={'runClaude':runClaude,'extractText':extractText,'extractSessionId':extractSessionId,'runCodexReview':runCodexReview,'hasCodeChanges':hasCodeChanges};
+/**
+ * Claude Code 실행기
+ * - 권한 확인 (confirmBeforeEdit) 지원
+ * - stdin 방식으로 프롬프트 전달
+ */
+const { spawn } = require('child_process');
+const config = require('./config');
+
+function runClaude(prompt, options = {}) {
+  const cfg = config.load();
+  const {
+    resumeSessionId = null,
+    isAdmin = false,
+    allowedTools = null,
+    appendSystemPrompt = null,
+  } = options;
+
+  let _proc = null;
+
+  const promise = new Promise((resolve, reject) => {
+    let settled = false;
+    const args = [
+      '-p', '-',
+      '--output-format', 'json',
+      '--max-turns', String(cfg.claude.maxTurns),
+    ];
+
+    if (isAdmin) {
+      args.push('--dangerously-skip-permissions');
+    }
+
+    // 디렉터리 접근 권한
+    for (const dir of cfg.claude.addDirs) {
+      args.push('--add-dir', dir);
+    }
+
+    // 세션 이어가기
+    if (resumeSessionId) {
+      args.push('--resume', resumeSessionId);
+    }
+
+    // 비관리자 도구 제한
+    if (allowedTools) {
+      args.push('--allowedTools', allowedTools.join(','));
+    }
+
+    // 시스템 프롬프트 추가
+    if (appendSystemPrompt) {
+      args.push('--append-system-prompt', appendSystemPrompt);
+    }
+
+    // 파일 수정/삭제 전 확인 프롬프트 주입
+    let finalPrompt = prompt;
+    if (cfg.claude.confirmBeforeEdit) {
+      finalPrompt = `[시스템 지침] 파일을 수정(Edit/Write)하거나 삭제하기 전에 반드시 사용자에게 어떤 파일을 어떻게 변경할지 먼저 설명하고 확인을 받아줘. 확인 없이 파일을 수정하지 마.\n\n${prompt}`;
+    }
+
+    const proc = spawn('claude', args, {
+      cwd: cfg.claude.workDir,
+      env: { ...process.env, FORCE_COLOR: '0' },
+      stdio: ['pipe', 'pipe', 'pipe'],
+      windowsHide: true,
+    });
+    _proc = proc;
+
+    proc.stdin.write(finalPrompt);
+    proc.stdin.end();
+
+    let stdout = '';
+    let stderr = '';
+
+    proc.stdout.on('data', (data) => { stdout += data.toString(); });
+    proc.stderr.on('data', (data) => { stderr += data.toString(); });
+
+    let timeoutTimer = null;
+    function resetTimer() {
+      if (timeoutTimer) clearTimeout(timeoutTimer);
+      timeoutTimer = setTimeout(async () => {
+        if (settled) return;
+        if (options.onTimeout) {
+          try {
+            const shouldContinue = await options.onTimeout();
+            if (shouldContinue) {
+              resetTimer();
+            } else {
+              if (settled) return;
+              settled = true;
+              proc.kill('SIGTERM');
+              reject(new Error('🛑 사용자가 작업을 중단했습니다'));
+            }
+          } catch {
+            if (settled) return;
+            settled = true;
+            proc.kill('SIGTERM');
+            reject(new Error(`⏰ 타임아웃 (${cfg.claude.timeout / 1000}초 초과)`));
+          }
+        } else {
+          settled = true;
+          proc.kill('SIGTERM');
+          reject(new Error(`⏰ 타임아웃 (${cfg.claude.timeout / 1000}초 초과)`));
+        }
+      }, cfg.claude.timeout);
+    }
+    resetTimer();
+
+    proc.on('close', (code) => {
+      if (timeoutTimer) clearTimeout(timeoutTimer);
+      if (settled) return;
+      settled = true;
+      if (code !== 0 && !stdout) {
+        reject(new Error(`Claude 종료 코드: ${code}\n${stderr}`));
+        return;
+      }
+      try {
+        resolve(JSON.parse(stdout));
+      } catch {
+        resolve({ result: stdout || stderr, session_id: null });
+      }
+    });
+
+    proc.on('error', (err) => {
+      if (timeoutTimer) clearTimeout(timeoutTimer);
+      if (settled) return;
+      settled = true;
+      reject(err);
+    });
+  });
+
+  return { promise, proc: _proc };
+}
+
+function extractText(result) {
+  if (result.result) return result.result;
+  if (result.content) {
+    if (typeof result.content === 'string') return result.content;
+    if (Array.isArray(result.content)) {
+      return result.content.filter(c => c.type === 'text').map(c => c.text).join('\n');
+    }
+  }
+  if (result.message) return result.message;
+  return JSON.stringify(result, null, 2);
+}
+
+function extractSessionId(result) {
+  return result.session_id || result.sessionId || null;
+}
+
+// ── Codex 리뷰 ──
+function isCodexReady() {
+  try {
+    const { execSync } = require('child_process');
+    const out = execSync('codex --version', { encoding: 'utf-8', timeout: 5000, windowsHide: true }).trim();
+    return !!out;
+  } catch { return false; }
+}
+
+function runCodexReview() {
+  if (!isCodexReady()) return Promise.resolve(null);
+  const cfg = config.load();
+  return new Promise((resolve) => {
+    const proc = spawn('codex', ['review', '--quiet'], {
+      cwd: cfg.claude.workDir,
+      stdio: ['pipe', 'pipe', 'pipe'],
+      windowsHide: true,
+      shell: true,
+    });
+
+    let stdout = '';
+    proc.stdout.on('data', (d) => { stdout += d.toString(); });
+    proc.stderr.on('data', () => {});
+
+    const timer = setTimeout(() => { proc.kill('SIGTERM'); resolve(null); }, 120000);
+
+    proc.on('close', () => {
+      clearTimeout(timer);
+      resolve(stdout.trim() || null);
+    });
+    proc.on('error', () => { clearTimeout(timer); resolve(null); });
+  });
+}
+
+function hasCodeChanges() {
+  const cfg = config.load();
+  try {
+    const { execSync } = require('child_process');
+    const diff = execSync('git diff --shortstat', { cwd: cfg.claude.workDir, encoding: 'utf-8', windowsHide: true }).trim();
+    const staged = execSync('git diff --cached --shortstat', { cwd: cfg.claude.workDir, encoding: 'utf-8', windowsHide: true }).trim();
+    return !!(diff || staged);
+  } catch { return false; }
+}
+
+module.exports = { runClaude, extractText, extractSessionId, runCodexReview, hasCodeChanges };
