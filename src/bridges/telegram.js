@@ -604,7 +604,7 @@ ${topic}
       claudeOptions.isAdmin = true;
       claudeOptions.appendSystemPrompt = `${memory.MEMORY_SYSTEM_PROMPT}\n${knowledgeGraph.GRAPH_SYSTEM_PROMPT}`;
     } else {
-      claudeOptions.allowedTools = ['WebSearch', 'WebFetch'];
+      claudeOptions.allowedTools = ['WebSearch', 'WebFetch', 'mcp__clawbrid-image__image_generate', 'mcp__clawbrid-image__image_edit', 'mcp__clawbrid-image__image_upscale', 'mcp__clawbrid-image__image_status'];
       claudeOptions.appendSystemPrompt = '너는 일반 사용자의 질문에 답변하는 AI입니다. 파일 시스템 접근, 코드 실행, 시스템 명령은 사용하지 마세요.';
     }
 
