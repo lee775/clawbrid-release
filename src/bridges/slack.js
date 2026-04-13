@@ -14,6 +14,7 @@ const plugins = require('../core/plugin-manager');
 const webTools = require('../core/web-tools');
 const knowledgeGraph = require('../core/knowledge-graph');
 const videoAnalyzer = require('../core/video-analyzer');
+const imageGen = require('../core/image-generator');
 
 let app = null;
 let status = null;
@@ -189,7 +190,7 @@ async function handleMessage({ event, say, client }) {
   if (text.toLowerCase() === '!help') {
     const pluginCmds = plugins.getList().flatMap(p => p.commands).filter(c => c.startsWith('!'));
     const pluginHelp = pluginCmds.length ? `\n• 플러그인: ${pluginCmds.join(', ')}` : '';
-    await say(`*ClawBrid 명령어*\n• \`!stop\` 작업 중단\n• \`!reset\` 세션 초기화\n• \`!queue\` 대기열 확인\n• \`!clear\` 대기열 비우기\n• \`!search [검색어]\` 웹 검색\n• \`!browse [URL] [질문]\` 웹페이지 분석\n• \`!ultraplan [주제]\` 심층 분석 + 실행 계획\n• \`!youtube [URL] [질문]\` 영상 분석 (프레임+음성)\n• \`!graph stats|add|link|find|del|list\` 지식 그래프\n• \`!memory list|add|del|search\` 장기 메모리\n• \`!plugins\` 플러그인 목록\n• \`!cron list|add|del|run|on|off\` 크론 관리\n• \`!help\` 도움말${pluginHelp}`); return;
+    await say(`*ClawBrid 명령어*\n• \`!stop\` 작업 중단\n• \`!reset\` 세션 초기화\n• \`!queue\` 대기열 확인\n• \`!clear\` 대기열 비우기\n• \`!search [검색어]\` 웹 검색\n• \`!browse [URL] [질문]\` 웹페이지 분석\n• \`!ultraplan [주제]\` 심층 분석 + 실행 계획\n• \`!youtube [URL] [질문]\` 영상 분석 (프레임+음성)\n• \`!image [프롬프트]\` AI 이미지 생성 (Stable Diffusion)\n• \`!graph stats|add|link|find|del|list\` 지식 그래프\n• \`!memory list|add|del|search\` 장기 메모리\n• \`!plugins\` 플러그인 목록\n• \`!cron list|add|del|run|on|off\` 크론 관리\n• \`!help\` 도움말${pluginHelp}`); return;
   }
   if (text.toLowerCase() === '!queue') {
     const queue = messageQueue.get(channelId) || [];
@@ -278,6 +279,34 @@ ${topic}
       await say(`❌ 영상 분석 실패: ${e.message}`);
       return;
     }
+  }
+
+  // ── 이미지 생성 명령어 ──
+  if (text.toLowerCase().startsWith('!image')) {
+    const prompt = text.slice(6).trim();
+    if (!prompt) { await say('사용법: `!image [프롬프트]`\n예: `!image a beautiful sunset over mountains, digital art`'); return; }
+
+    try {
+      await say('🎨 이미지 생성 중... (Stable Diffusion)');
+      const result = await imageGen.generate({ prompt });
+      const img = result.images[0];
+      // Slack에 이미지 업로드
+      try {
+        await client.files.uploadV2({
+          channel_id: channelId,
+          file: fs.readFileSync(img.path),
+          filename: path.basename(img.path),
+          title: prompt.slice(0, 100),
+          initial_comment: `🎨 *이미지 생성 완료*\n프롬프트: ${prompt}`,
+        });
+      } catch (uploadErr) {
+        // 업로드 실패시 경로만 안내
+        await say(`🎨 이미지 생성 완료!\n파일: ${img.path}\n(Slack 파일 업로드 권한을 확인하세요)`);
+      }
+    } catch (e) {
+      await say(`❌ 이미지 생성 실패: ${e.message}`);
+    }
+    return;
   }
 
   // ── 메모리 명령어 ──

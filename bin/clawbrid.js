@@ -314,10 +314,19 @@ function ensureMCP() {
       execSync(`claude mcp add --scope user clawbrid-video -- node "${videoPath}"`, { stdio: 'inherit', windowsHide: true });
       console.log('  ClawBrid Video MCP 등록 완료.');
     }
+
+    // Image MCP (Stable Diffusion)
+    if (!out.includes('clawbrid-image')) {
+      const imagePath = path.join(mcpBase, 'image-mcp-server.js').replace(/\\/g, '/');
+      console.log('  ClawBrid Image MCP 등록 중...');
+      execSync(`claude mcp add --scope user clawbrid-image -- node "${imagePath}"`, { stdio: 'inherit', windowsHide: true });
+      console.log('  ClawBrid Image MCP 등록 완료.');
+    }
   } catch {
     console.log('  MCP 자동 등록 실패 (claude CLI 확인 필요). 수동 등록:');
     console.log('  claude mcp add --scope user clawbrid-cron -- node <clawbrid경로>/src/mcp/cron-mcp-server.js');
     console.log('  claude mcp add --scope user clawbrid-video -- node <clawbrid경로>/src/mcp/video-mcp-server.js');
+    console.log('  claude mcp add --scope user clawbrid-image -- node <clawbrid경로>/src/mcp/image-mcp-server.js');
   }
 }
 

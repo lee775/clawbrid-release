@@ -200,7 +200,7 @@ async function handleMessage(msg) {
     if (cmd === '/help') {
       const pluginCmds = plugins.getList().flatMap(p => p.commands).filter(c => c.startsWith('/'));
       const pluginHelp = pluginCmds.length ? `\n• 플러그인: ${pluginCmds.join(', ')}` : '';
-      await bot.sendMessage(chatId, `*ClawBrid 명령어*\n• /stop 작업 중단\n• /reset 세션 초기화\n• /queue 대기열 확인\n• /clear 대기열 비우기\n• /search [검색어] 웹 검색\n• /browse [URL] [질문] 웹페이지 분석\n• /ultraplan [주제] 심층 분석 + 실행 계획\n• /youtube [URL] [질문] 영상 분석 (프레임+음성)\n• /graph stats|add|link|find|del|list 지식 그래프\n• /memory list|add|del|search 장기 메모리\n• /plugins 플러그인 목록\n• /cron list|add|del|run|on|off 크론 관리\n• /help 도움말\n• 🎤 음성 메시지 → 자동 텍스트 변환${pluginHelp}`);
+      await bot.sendMessage(chatId, `*ClawBrid 명령어*\n• /stop 작업 중단\n• /reset 세션 초기화\n• /queue 대기열 확인\n• /clear 대기열 비우기\n• /search [검색어] 웹 검색\n• /browse [URL] [질문] 웹페이지 분석\n• /ultraplan [주제] 심층 분석 + 실행 계획\n• /youtube [URL] [질문] 영상 분석 (프레임+음성)\n• /image [프롬프트] AI 이미지 생성 (Stable Diffusion)\n• /graph stats|add|link|find|del|list 지식 그래프\n• /memory list|add|del|search 장기 메모리\n• /plugins 플러그인 목록\n• /cron list|add|del|run|on|off 크론 관리\n• /help 도움말\n• 🎤 음성 메시지 → 자동 텍스트 변환${pluginHelp}`);
       return;
     }
     if (cmd === '/ultraplan') {
@@ -267,6 +267,22 @@ ${topic}
         await bot.sendMessage(chatId, `❌ 영상 분석 실패: ${e.message}`);
         return;
       }
+    }
+    // ── 이미지 생성 명령어 ──
+    if (cmd === '/image') {
+      const prompt = text.split(/\s+/).slice(1).join(' ');
+      if (!prompt) { await bot.sendMessage(chatId, '사용법: /image [프롬프트]\n예: /image a beautiful sunset over mountains, digital art'); return; }
+
+      try {
+        await bot.sendMessage(chatId, '🎨 이미지 생성 중... (Stable Diffusion)');
+        const imageGen = require('../core/image-generator');
+        const result = await imageGen.generate({ prompt });
+        const img = result.images[0];
+        await bot.sendPhoto(chatId, img.path, { caption: `🎨 프롬프트: ${prompt.slice(0, 200)}` });
+      } catch (e) {
+        await bot.sendMessage(chatId, `❌ 이미지 생성 실패: ${e.message}`);
+      }
+      return;
     }
     if (cmd === '/memory') {
       const parts = text.split(/\s+/).slice(1);
