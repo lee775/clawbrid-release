@@ -172,7 +172,7 @@ claude mcp add --scope user clawbrid-image -- node <path>/src/mcp/image-mcp-serv
 1. [api.slack.com/apps](https://api.slack.com/apps)에서 앱 생성
 2. **Socket Mode** 활성화 → App-Level Token 생성
 3. **OAuth & Permissions** → Bot Token Scopes 추가:
-   - `chat:write`, `files:read`, `app_mentions:read`
+   - `chat:write`, `files:read`, `files:write`, `app_mentions:read`
    - `im:history`, `im:read`, `im:write`
 4. **Event Subscriptions** → Bot Events 추가:
    - `message.im`, `app_mention`

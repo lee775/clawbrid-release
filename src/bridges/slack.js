@@ -294,14 +294,16 @@ ${topic}
       try {
         await client.files.uploadV2({
           channel_id: channelId,
-          file: fs.readFileSync(img.path),
-          filename: path.basename(img.path),
-          title: prompt.slice(0, 100),
+          file_uploads: [{
+            file: fs.readFileSync(img.path),
+            filename: path.basename(img.path),
+            title: prompt.slice(0, 100),
+          }],
           initial_comment: `🎨 *이미지 생성 완료*\n프롬프트: ${prompt}`,
         });
       } catch (uploadErr) {
-        // 업로드 실패시 경로만 안내
-        await say(`🎨 이미지 생성 완료!\n파일: ${img.path}\n(Slack 파일 업로드 권한을 확인하세요)`);
+        console.error(`[SLACK] 이미지 업로드 실패: ${uploadErr.message}`);
+        await say(`🎨 이미지 생성 완료!\n파일: ${img.path}\n(Slack 앱 설정에서 \`files:write\` 권한을 추가하세요)`);
       }
     } catch (e) {
       await say(`❌ 이미지 생성 실패: ${e.message}`);
@@ -690,10 +692,14 @@ ${topic}
         try {
           await client.files.uploadV2({
             channel_id: channelId,
-            file: imgPath,
-            filename: path.basename(imgPath),
+            file_uploads: [{
+              file: fs.readFileSync(imgPath),
+              filename: path.basename(imgPath),
+            }],
           });
-        } catch {}
+        } catch (e) {
+          console.error(`[SLACK] 이미지 업로드 실패: ${e.message}`);
+        }
       }
     }
 
