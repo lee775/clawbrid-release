@@ -996,7 +996,12 @@ function formatUptime(ms) {
 function formatTime(iso) {
   if (!iso) return '-';
   const d = new Date(iso);
-  return `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}`;
+  const now = new Date();
+  const time = `${d.getHours().toString().padStart(2,'0')}:${d.getMinutes().toString().padStart(2,'0')}:${d.getSeconds().toString().padStart(2,'0')}`;
+  if (now - d > 86400000) {
+    return `${d.getMonth()+1}/${d.getDate()} ${time}`;
+  }
+  return time;
 }
 
 function cronToHuman(expr) {
