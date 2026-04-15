@@ -144,8 +144,8 @@ function downloadVideo(url, outputDir) {
     const args = [
       '-f', 'bestvideo[height<=720]+bestaudio/best[height<=720]/best',
       '--merge-output-format', 'mp4',
-      '--ffmpeg-location', path.dirname(ffmpegPath),
-      '-o', outputFile,
+      '--ffmpeg-location', path.dirname(ffmpegPath).replace(/\\/g, '/'),
+      '-o', outputFile.replace(/\\/g, '/'),
       '--no-playlist',
       url,
     ];
@@ -160,9 +160,11 @@ function downloadVideo(url, outputDir) {
       clearTimeout(timer);
       if (code !== 0) return reject(new Error(`다운로드 실패 (code=${code}): ${(stderr || stdout).slice(-300)}`));
       // yt-dlp가 확장자를 바꿀 수 있으므로 실제 파일 탐색
+      // 병합된 최종 mp4를 우선 선택 (DASH 분리 파일 video.f398.mp4 등 제외)
       const files = fs.readdirSync(outputDir).filter(f => f.startsWith('video.'));
       if (!files.length) return reject(new Error('다운로드된 파일을 찾을 수 없습니다'));
-      resolve(path.join(outputDir, files[0]));
+      const merged = files.find(f => f === 'video.mp4') || files.find(f => f.endsWith('.mp4')) || files[0];
+      resolve(path.join(outputDir, merged));
     });
     proc.on('error', e => { clearTimeout(timer); reject(e); });
   });
@@ -176,9 +178,9 @@ function extractAudio(videoPath, outputDir) {
   const audioPath = path.join(outputDir, 'audio.wav');
   return new Promise((resolve, reject) => {
     const proc = spawn(ffmpeg, [
-      '-i', videoPath,
+      '-i', videoPath.replace(/\\/g, '/'),
       '-vn', '-acodec', 'pcm_s16le', '-ar', '16000', '-ac', '1',
-      '-y', audioPath,
+      '-y', audioPath.replace(/\\/g, '/'),
     ], { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
 
     let stderr = '';
@@ -214,11 +216,11 @@ function extractFrames(videoPath, outputDir, duration) {
 
   return new Promise((resolve, reject) => {
     const proc = spawn(ffmpeg, [
-      '-i', videoPath,
+      '-i', videoPath.replace(/\\/g, '/'),
       '-vf', `fps=1/${interval},scale=640:-1`,
       '-q:v', '3',
       '-y',
-      path.join(frameDir, 'frame_%03d.jpg'),
+      path.join(frameDir, 'frame_%03d.jpg').replace(/\\/g, '/'),
     ], { windowsHide: true, stdio: ['pipe', 'pipe', 'pipe'] });
 
     let stderr = '';
