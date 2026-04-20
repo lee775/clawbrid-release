@@ -80,10 +80,10 @@ function runClaude(prompt, options = {}) {
         if (options.onTimeout) {
           try {
             const shouldContinue = await options.onTimeout();
+            if (settled) return;
             if (shouldContinue) {
               resetTimer();
             } else {
-              if (settled) return;
               settled = true;
               proc.kill('SIGTERM');
               reject(new Error('🛑 사용자가 작업을 중단했습니다'));

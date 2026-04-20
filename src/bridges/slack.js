@@ -20,6 +20,9 @@ const imageGen = require('../core/image-generator');
 let app = null;
 let status = null;
 
+// 타임아웃 버튼 디스패치 (ts → { resolve, resolved, channel, messageTs })
+const pendingTimeouts = new Map();
+
 // ── 세션 관리 ──
 function loadSessions() {
   try {
@@ -647,7 +650,10 @@ ${topic}
 
     // 타임아웃 시 사용자에게 계속 진행 여부 확인
     const onTimeout = () => new Promise((resolve) => {
-      const ts = Date.now();
+      const ts = String(Date.now());
+      const entry = { resolve, resolved: false, channel: null, messageTs: null };
+      pendingTimeouts.set(ts, entry);
+      console.log(`[SLACK] timeout fired, ts=${ts}, showing buttons`);
       say({
         text: '⏰ 작업이 10분을 초과했습니다. 계속 진행할까요?',
         blocks: [
@@ -657,37 +663,36 @@ ${topic}
             { type: 'button', text: { type: 'plain_text', text: '🛑 중단' }, action_id: `timeout_stop_${ts}`, style: 'danger' },
           ] },
         ],
-      }).then(() => {
-        let resolved = false;
-        const contHandler = async ({ ack, respond }) => {
-          if (resolved) return;
-          resolved = true;
-          await ack();
-          await respond({ text: '⏰ 계속 진행 중...', replace_original: true });
-          app.action(`timeout_continue_${ts}`, () => {});
-          app.action(`timeout_stop_${ts}`, () => {});
-          resolve(true);
-        };
-        const stopHandler = async ({ ack, respond }) => {
-          if (resolved) return;
-          resolved = true;
-          await ack();
-          await respond({ text: '🛑 사용자가 중단함', replace_original: true });
-          app.action(`timeout_continue_${ts}`, () => {});
-          app.action(`timeout_stop_${ts}`, () => {});
-          resolve(false);
-        };
-        app.action(`timeout_continue_${ts}`, contHandler);
-        app.action(`timeout_stop_${ts}`, stopHandler);
-        // 2분 응답 없으면 자동 계속
-        setTimeout(() => {
-          if (resolved) return;
-          resolved = true;
-          app.action(`timeout_continue_${ts}`, () => {});
-          app.action(`timeout_stop_${ts}`, () => {});
-          resolve(true);
-        }, 120000);
-      }).catch(() => resolve(true));
+      }).then((sent) => {
+        entry.channel = sent.channel;
+        entry.messageTs = sent.ts;
+      }).catch((err) => {
+        console.error(`[SLACK] timeout button send failed: ${err.message}`);
+        if (entry.resolved) return;
+        entry.resolved = true;
+        pendingTimeouts.delete(ts);
+        resolve(true); // 메시지 못 보냈으면 기본 continue
+      });
+      // 2분 응답 없으면 자동 계속 (메시지 업데이트 포함)
+      setTimeout(async () => {
+        if (entry.resolved) return;
+        entry.resolved = true;
+        pendingTimeouts.delete(ts);
+        console.log(`[SLACK] timeout auto-continue fired, ts=${ts}`);
+        if (entry.channel && entry.messageTs && app) {
+          try {
+            await app.client.chat.update({
+              channel: entry.channel,
+              ts: entry.messageTs,
+              text: '⏰ 응답 없음 — 자동으로 계속 진행합니다',
+              blocks: [],
+            });
+          } catch (err) {
+            console.error(`[SLACK] auto-continue update failed: ${err.message}`);
+          }
+        }
+        resolve(true);
+      }, 120000);
     });
 
     // 이미지 생성 감지용: 실행 전 스냅샷
@@ -800,6 +805,30 @@ async function start() {
   app.event('app_mention', async (args) => {
     args.event.text = args.event.text.replace(/<@[A-Z0-9]+>/g, '').trim();
     await handleMessage(args);
+  });
+
+  // 타임아웃 버튼 영구 핸들러 (ack를 항상 최상단에서 실행)
+  app.action(/^timeout_(continue|stop)_\d+$/, async ({ ack, action, body, client }) => {
+    await ack();
+    const m = action.action_id.match(/^timeout_(continue|stop)_(\d+)$/);
+    if (!m) return;
+    const [, choice, ts] = m;
+    const entry = pendingTimeouts.get(ts);
+    console.log(`[SLACK] timeout action: ${action.action_id}, known=${!!entry && !entry.resolved}`);
+    if (!entry || entry.resolved) return; // 만료/중복 클릭은 조용히 무시 (ack는 이미 했음)
+    entry.resolved = true;
+    pendingTimeouts.delete(ts);
+    const channel = body.channel?.id || entry.channel;
+    const messageTs = body.message?.ts || entry.messageTs;
+    const newText = choice === 'continue' ? '⏰ 계속 진행 중...' : '🛑 사용자가 중단함';
+    if (channel && messageTs) {
+      try {
+        await client.chat.update({ channel, ts: messageTs, text: newText, blocks: [] });
+      } catch (err) {
+        console.error(`[SLACK] chat.update failed: ${err.message}`);
+      }
+    }
+    entry.resolve(choice === 'continue');
   });
 
   await app.start();

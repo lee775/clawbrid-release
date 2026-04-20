@@ -19,6 +19,9 @@ const videoAnalyzer = require('../core/video-analyzer');
 let bot = null;
 let status = null;
 
+// 타임아웃 버튼 디스패치 (ts → { resolve, resolved, chatId, messageId })
+const pendingTimeouts = new Map();
+
 // ── 권한 ──
 function isAdmin(userId) {
   const cfg = config.load();
@@ -610,41 +613,42 @@ ${topic}
 
     // 타임아웃 시 사용자에게 계속 진행 여부 확인
     claudeOptions.onTimeout = () => new Promise((resolve) => {
-      const cbId = `timeout_${chatId}_${Date.now()}`;
+      const ts = String(Date.now());
+      const entry = { resolve, resolved: false, chatId, messageId: null };
+      pendingTimeouts.set(ts, entry);
+      console.log(`[TELEGRAM] timeout fired, ts=${ts}, chatId=${chatId}`);
       bot.sendMessage(chatId, '⏰ 작업이 10분을 초과했습니다. 계속 진행할까요?', {
         reply_markup: {
           inline_keyboard: [[
-            { text: '✅ 계속 진행', callback_data: `cont_${cbId}` },
-            { text: '🛑 중단', callback_data: `stop_${cbId}` },
+            { text: '✅ 계속 진행', callback_data: `timeout_continue_${ts}` },
+            { text: '🛑 중단', callback_data: `timeout_stop_${ts}` },
           ]]
         }
       }).then((sentMsg) => {
-        let resolved = false;
-        const handler = (query) => {
-          if (resolved) return;
-          if (!query.data.endsWith(cbId)) return;
-          resolved = true;
-          bot.removeListener('callback_query', handler);
-          if (query.data.startsWith('cont_')) {
-            bot.answerCallbackQuery(query.id, { text: '계속 진행합니다' }).catch(() => {});
-            bot.editMessageText('⏰ 계속 진행 중...', { chat_id: chatId, message_id: sentMsg.message_id }).catch(() => {});
-            resolve(true);
-          } else {
-            bot.answerCallbackQuery(query.id, { text: '작업을 중단합니다' }).catch(() => {});
-            bot.editMessageText('🛑 사용자가 중단함', { chat_id: chatId, message_id: sentMsg.message_id }).catch(() => {});
-            resolve(false);
-          }
-        };
-        bot.on('callback_query', handler);
-        // 2분 응답 없으면 자동 계속
-        setTimeout(() => {
-          if (resolved) return;
-          resolved = true;
-          bot.removeListener('callback_query', handler);
-          bot.editMessageText('⏰ 응답 없음 — 자동으로 계속 진행합니다', { chat_id: chatId, message_id: sentMsg.message_id }).catch(() => {});
-          resolve(true);
-        }, 120000);
-      }).catch(() => resolve(true));
+        entry.messageId = sentMsg.message_id;
+      }).catch((err) => {
+        console.error(`[TELEGRAM] timeout button send failed: ${err.message}`);
+        if (entry.resolved) return;
+        entry.resolved = true;
+        pendingTimeouts.delete(ts);
+        resolve(true); // 전송 실패 시 기본 continue
+      });
+      // 2분 응답 없으면 자동 계속 (메시지 업데이트 포함)
+      setTimeout(() => {
+        if (entry.resolved) return;
+        entry.resolved = true;
+        pendingTimeouts.delete(ts);
+        console.log(`[TELEGRAM] timeout auto-continue fired, ts=${ts}`);
+        if (entry.messageId && bot) {
+          bot.editMessageText('⏰ 응답 없음 — 자동으로 계속 진행합니다', {
+            chat_id: entry.chatId,
+            message_id: entry.messageId,
+          }).catch((err) => {
+            console.error(`[TELEGRAM] auto-continue update failed: ${err.message}`);
+          });
+        }
+        resolve(true);
+      }, 120000);
     });
 
     // 이미지 생성 감지용: 실행 전 스냅샷
@@ -747,6 +751,32 @@ async function start() {
 
   bot = new TelegramBot(cfg.telegram.botToken, { polling: true });
   bot.on('message', handleMessage);
+
+  // 타임아웃 버튼 영구 핸들러 (answerCallbackQuery를 항상 실행)
+  bot.on('callback_query', async (query) => {
+    const m = query.data?.match(/^timeout_(continue|stop)_(\d+)$/);
+    if (!m) return; // 다른 callback_query는 통과
+    const [, choice, ts] = m;
+    const entry = pendingTimeouts.get(ts);
+    console.log(`[TELEGRAM] timeout action: ${query.data}, known=${!!entry && !entry.resolved}`);
+    if (!entry || entry.resolved) {
+      bot.answerCallbackQuery(query.id, { text: '⏰ 이미 처리됨' }).catch(() => {});
+      return;
+    }
+    entry.resolved = true;
+    pendingTimeouts.delete(ts);
+    const isContinue = choice === 'continue';
+    bot.answerCallbackQuery(query.id, { text: isContinue ? '계속 진행합니다' : '작업을 중단합니다' }).catch(() => {});
+    if (entry.chatId && entry.messageId) {
+      bot.editMessageText(isContinue ? '⏰ 계속 진행 중...' : '🛑 사용자가 중단함', {
+        chat_id: entry.chatId,
+        message_id: entry.messageId,
+      }).catch((err) => {
+        console.error(`[TELEGRAM] editMessageText failed: ${err.message}`);
+      });
+    }
+    entry.resolve(isContinue);
+  });
 
   console.log('[TELEGRAM] Bridge started');
   return true;
