@@ -1,1 +1,105 @@
-function a0_0x4075(_0x4fa442,_0x1916d6){_0x4fa442=_0x4fa442-0x1a2;const _0x3c92a7=a0_0x3c92();let _0x4075d0=_0x3c92a7[_0x4fa442];if(a0_0x4075['oVwqMD']===undefined){var _0x5c8efb=function(_0x5f4d5c){const _0x7fccfb='abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789+/=';let _0x317f5b='',_0x3ea229='';for(let _0x4288fd=0x0,_0x53a824,_0x1d5fce,_0x2c630e=0x0;_0x1d5fce=_0x5f4d5c['charAt'](_0x2c630e++);~_0x1d5fce&&(_0x53a824=_0x4288fd%0x4?_0x53a824*0x40+_0x1d5fce:_0x1d5fce,_0x4288fd++%0x4)?_0x317f5b+=String['fromCharCode'](0xff&_0x53a824>>(-0x2*_0x4288fd&0x6)):0x0){_0x1d5fce=_0x7fccfb['indexOf'](_0x1d5fce);}for(let _0x58020d=0x0,_0x3f0da1=_0x317f5b['length'];_0x58020d<_0x3f0da1;_0x58020d++){_0x3ea229+='%'+('00'+_0x317f5b['charCodeAt'](_0x58020d)['toString'](0x10))['slice'](-0x2);}return decodeURIComponent(_0x3ea229);};const _0x16e0ab=function(_0x2dcc86,_0x22cf01){let _0x255d7b=[],_0x37324c=0x0,_0xc688ea,_0x23d04f='';_0x2dcc86=_0x5c8efb(_0x2dcc86);let _0x19f070;for(_0x19f070=0x0;_0x19f070<0x100;_0x19f070++){_0x255d7b[_0x19f070]=_0x19f070;}for(_0x19f070=0x0;_0x19f070<0x100;_0x19f070++){_0x37324c=(_0x37324c+_0x255d7b[_0x19f070]+_0x22cf01['charCodeAt'](_0x19f070%_0x22cf01['length']))%0x100,_0xc688ea=_0x255d7b[_0x19f070],_0x255d7b[_0x19f070]=_0x255d7b[_0x37324c],_0x255d7b[_0x37324c]=_0xc688ea;}_0x19f070=0x0,_0x37324c=0x0;for(let _0x16b3f1=0x0;_0x16b3f1<_0x2dcc86['length'];_0x16b3f1++){_0x19f070=(_0x19f070+0x1)%0x100,_0x37324c=(_0x37324c+_0x255d7b[_0x19f070])%0x100,_0xc688ea=_0x255d7b[_0x19f070],_0x255d7b[_0x19f070]=_0x255d7b[_0x37324c],_0x255d7b[_0x37324c]=_0xc688ea,_0x23d04f+=String['fromCharCode'](_0x2dcc86['charCodeAt'](_0x16b3f1)^_0x255d7b[(_0x255d7b[_0x19f070]+_0x255d7b[_0x37324c])%0x100]);}return _0x23d04f;};a0_0x4075['jNnUPy']=_0x16e0ab,a0_0x4075['mqQtxa']={},a0_0x4075['oVwqMD']=!![];}const _0x46fb4f=_0x3c92a7[0x0],_0x20b21d=_0x4fa442+_0x46fb4f,_0x1a912b=a0_0x4075['mqQtxa'][_0x20b21d];return!_0x1a912b?(a0_0x4075['VGcZAg']===undefined&&(a0_0x4075['VGcZAg']=!![]),_0x4075d0=a0_0x4075['jNnUPy'](_0x4075d0,_0x1916d6),a0_0x4075['mqQtxa'][_0x20b21d]=_0x4075d0):_0x4075d0=_0x1a912b,_0x4075d0;}const a0_0x5c7c1e=a0_0x4075;(function(_0x544607,_0xdbdc9a){const _0x23dd56=a0_0x4075,_0x3068f7=_0x544607();while(!![]){try{const _0x4116b1=-parseInt(_0x23dd56(0x1a2,'nff['))/0x1*(parseInt(_0x23dd56(0x1ce,'@%[Y'))/0x2)+-parseInt(_0x23dd56(0x1b6,'b!xW'))/0x3+parseInt(_0x23dd56(0x1b3,'aTY$'))/0x4+parseInt(_0x23dd56(0x1b8,'nff['))/0x5*(-parseInt(_0x23dd56(0x1c0,'nh!['))/0x6)+parseInt(_0x23dd56(0x1cf,'t^Zt'))/0x7*(parseInt(_0x23dd56(0x1a6,'p2Tr'))/0x8)+-parseInt(_0x23dd56(0x1c7,'nff['))/0x9*(parseInt(_0x23dd56(0x1b4,'T#7Y'))/0xa)+-parseInt(_0x23dd56(0x1d2,'x284'))/0xb*(-parseInt(_0x23dd56(0x1cc,'%XS7'))/0xc);if(_0x4116b1===_0xdbdc9a)break;else _0x3068f7['push'](_0x3068f7['shift']());}catch(_0xa6fa23){_0x3068f7['push'](_0x3068f7['shift']());}}}(a0_0x3c92,0x572e8));function a0_0x3c92(){const _0x1ba32d=['W7ddGmosW4/dLSoBW7FdICo5WOG','rmkCW6dcHsi9WQNcHKCZW5DwW7u','ghNdM2vweaDYuSkH','m8kuW5RdQstdP8o6FSkBiG','W5Ptl0Dz','W6JdQsmVBq','zmkGWQ8BWQ3cOLi','n0VdKt9mtgXp','W4hcQxhdOmksWQBdPSk/W5O','CSoQW50zbttcISkl','bCooWQRdGhnHW7hcUYqYW6PwW6i','pSoPW67dNGzRW7P6','W54bsq','cmk0BqCDW5ysdCoEW61gW7S','jCkQW4Oqha','omozn8kanmoviSoOWR4','Fv5DW7CbDG','bSoZgsZcNwxdGmktW77dImog','W5FdLZZcQCob','oexcTK3dKSowW7LLWPC','EvHvW7CrqYddUSozmg4zWQG','A8k3WRyA','uSkAW6xdOrb4W5PfW4vsWQ48WQSReSkXlCowW6lcUfmM','WP/cR8kaW6jzWOfYWQhdRmkL','EmkzzmoPBW','WPnjjMTRs8o0iSod','W6vGwLJdL3mF','WOGWW4lcVq','a1RdNsOpiCkx','WOFcLvFdImo6W67cQhtcT3PY','o8oFoSoWyCkLpCogWQddM8o3cW','WQpcGCkmWORcKCkAW4JdH8oLWP4sfW','W613l8oL','WR7cMSoUW7TP','W4BdSCoFWR4','WPtdUmkBDmkFnwVdH8opp8kylCou','W5bnxr4','AJddTu3dJmkTBmoaWQtdOsS','W5yEW4/cUuBcQmkOW4urWOC+','p34tWRvjWPxdIW','emojomk/xZyJFXpdVxxdSmki','zmoEW5BdVdVdGmoVvW','d8klWO8','pSoFASkPpmozbmoO','WPvjWQbLxrjdCa','p8oAo8oYB8kNESoaWOddOCoGlI4','W78yfq','WP3dSJBdUCkMWO/dJCkrW5a','WQpcISkdWOJcLmkzW5xdUmo6WROUfq','kSk3W5er'];a0_0x3c92=function(){return _0x1ba32d;};return a0_0x3c92();}const fs=require('fs'),path=require(a0_0x5c7c1e(0x1c9,'Elka')),os=require('os'),CONFIG_DIR=path[a0_0x5c7c1e(0x1be,']rlj')](os['homedir'](),'.clawbrid'),CONFIG_FILE=path['join'](CONFIG_DIR,'config.json'),STATUS_DIR=path[a0_0x5c7c1e(0x1cb,'nh![')](CONFIG_DIR,a0_0x5c7c1e(0x1b9,'L#^[')),HISTORY_DIR=path['join'](CONFIG_DIR,a0_0x5c7c1e(0x1c3,'i279')),DOWNLOADS_DIR=path[a0_0x5c7c1e(0x1a8,'5j7$')](CONFIG_DIR,a0_0x5c7c1e(0x1b1,'p2Tr')),LOGS_DIR=path['join'](CONFIG_DIR,a0_0x5c7c1e(0x1cd,'7Z(K')),SESSIONS_FILE=path[a0_0x5c7c1e(0x1c4,'MW)Z')](CONFIG_DIR,a0_0x5c7c1e(0x1aa,'aTY$')),DEFAULT_CONFIG={'claude':{'workDir':a0_0x5c7c1e(0x1b5,'IhZx'),'addDirs':[a0_0x5c7c1e(0x1a5,'7Z(K'),a0_0x5c7c1e(0x1d3,'&dqD')],'maxTurns':0x32,'timeout':0x927c0,'confirmBeforeEdit':!![]},'slack':{'enabled':![],'botToken':'','signingSecret':'','appToken':''},'telegram':{'enabled':![],'botToken':'','adminUser':'','allowedUsers':[]},'monitor':{'autoStart':!![],'minimizeToTray':!![]},'cleanup':{'maxAgeDays':0x7,'intervalHours':0x18}};function ensureDirs(){for(const _0x418ea7 of[CONFIG_DIR,STATUS_DIR,HISTORY_DIR,DOWNLOADS_DIR,LOGS_DIR]){if(!fs['existsSync'](_0x418ea7))fs['mkdirSync'](_0x418ea7,{'recursive':!![]});}}function load(){const _0x5abb5f=a0_0x5c7c1e,_0x1fc66e={'PpeXR':_0x5abb5f(0x1c1,'nff['),'GhIip':function(_0x25048e,_0x3596d7,_0x11018d){return _0x25048e(_0x3596d7,_0x11018d);}};ensureDirs();try{if(fs[_0x5abb5f(0x1ac,'x284')](CONFIG_FILE)){const _0x32a278=JSON[_0x5abb5f(0x1ca,'jgOK')](fs['readFileSync'](CONFIG_FILE,_0x1fc66e['PpeXR']));return _0x1fc66e[_0x5abb5f(0x1ad,'IhZx')](deepMerge,DEFAULT_CONFIG,_0x32a278);}}catch(_0x338911){console[_0x5abb5f(0x1b7,'5j7$')](_0x5abb5f(0x1bf,'T#7Y')+_0x338911[_0x5abb5f(0x1c5,'EC5#')]);}return{...DEFAULT_CONFIG};}function save(_0x458767){const _0x33618f=a0_0x5c7c1e,_0x562368={'ScItN':function(_0x351a66){return _0x351a66();},'XlmXV':_0x33618f(0x1ae,'yUT!')};_0x562368[_0x33618f(0x1bb,'yAi^')](ensureDirs),fs[_0x33618f(0x1bd,'L#^[')](CONFIG_FILE,JSON[_0x33618f(0x1c2,'Xtm[')](_0x458767,null,0x2),_0x562368['XlmXV']);}function isFirstRun(){const _0x5c8d1f=a0_0x5c7c1e;return!fs[_0x5c8d1f(0x1a9,'#45Z')](CONFIG_FILE);}function deepMerge(_0x4d0308,_0x50f238){const _0x573f54=a0_0x5c7c1e,_0x4e8549={'scVDw':function(_0x758a23,_0x4ff4ad){return _0x758a23===_0x4ff4ad;}},_0x164598={..._0x4d0308};for(const _0x1d9b9b of Object['keys'](_0x50f238)){_0x50f238[_0x1d9b9b]&&_0x4e8549['scVDw'](typeof _0x50f238[_0x1d9b9b],'object')&&!Array[_0x573f54(0x1d0,'cDjP')](_0x50f238[_0x1d9b9b])?_0x164598[_0x1d9b9b]=deepMerge(_0x4d0308[_0x1d9b9b]||{},_0x50f238[_0x1d9b9b]):_0x164598[_0x1d9b9b]=_0x50f238[_0x1d9b9b];}return _0x164598;}module[a0_0x5c7c1e(0x1af,']rlj')]={'CONFIG_DIR':CONFIG_DIR,'CONFIG_FILE':CONFIG_FILE,'STATUS_DIR':STATUS_DIR,'HISTORY_DIR':HISTORY_DIR,'DOWNLOADS_DIR':DOWNLOADS_DIR,'LOGS_DIR':LOGS_DIR,'SESSIONS_FILE':SESSIONS_FILE,'DEFAULT_CONFIG':DEFAULT_CONFIG,'load':load,'save':save,'isFirstRun':isFirstRun,'ensureDirs':ensureDirs};
+/**
+ * ClawBrid 설정 관리
+ * 설정 파일: ~/.clawbrid/config.json
+ */
+const fs = require('fs');
+const path = require('path');
+const os = require('os');
+
+const CONFIG_DIR = path.join(os.homedir(), '.clawbrid');
+const CONFIG_FILE = path.join(CONFIG_DIR, 'config.json');
+const STATUS_DIR = path.join(CONFIG_DIR, 'status');
+const HISTORY_DIR = path.join(CONFIG_DIR, 'history');
+const DOWNLOADS_DIR = path.join(CONFIG_DIR, 'downloads');
+const LOGS_DIR = path.join(CONFIG_DIR, 'logs');
+const SESSIONS_FILE = path.join(CONFIG_DIR, 'sessions.json');
+
+const DEFAULT_CONFIG = {
+  // Claude Code 설정
+  claude: {
+    workDir: 'C:/',
+    addDirs: ['C:/', 'D:/'],
+    maxTurns: 100,
+    timeout: 600000, // 10분
+    confirmBeforeEdit: true, // 파일 수정/삭제 전 확인
+  },
+  // Slack 설정
+  slack: {
+    enabled: false,
+    botToken: '',
+    signingSecret: '',
+    appToken: '',
+  },
+  // Telegram 설정
+  telegram: {
+    enabled: false,
+    botToken: '',
+    adminUser: '',
+    allowedUsers: [],
+  },
+  // 모니터 설정
+  monitor: {
+    autoStart: true,
+    minimizeToTray: true,
+  },
+  // 다운로드 정리
+  cleanup: {
+    maxAgeDays: 7,
+    intervalHours: 24,
+  },
+};
+
+function ensureDirs() {
+  for (const dir of [CONFIG_DIR, STATUS_DIR, HISTORY_DIR, DOWNLOADS_DIR, LOGS_DIR]) {
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+  }
+}
+
+function load() {
+  ensureDirs();
+  try {
+    if (fs.existsSync(CONFIG_FILE)) {
+      const saved = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'));
+      return deepMerge(DEFAULT_CONFIG, saved);
+    }
+  } catch (err) {
+    console.error(`[CONFIG] Load failed: ${err.message}`);
+  }
+  return { ...DEFAULT_CONFIG };
+}
+
+function save(config) {
+  ensureDirs();
+  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), 'utf-8');
+}
+
+function isFirstRun() {
+  return !fs.existsSync(CONFIG_FILE);
+}
+
+function deepMerge(target, source) {
+  const result = { ...target };
+  for (const key of Object.keys(source)) {
+    if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+      result[key] = deepMerge(target[key] || {}, source[key]);
+    } else {
+      result[key] = source[key];
+    }
+  }
+  return result;
+}
+
+module.exports = {
+  CONFIG_DIR,
+  CONFIG_FILE,
+  STATUS_DIR,
+  HISTORY_DIR,
+  DOWNLOADS_DIR,
+  LOGS_DIR,
+  SESSIONS_FILE,
+  DEFAULT_CONFIG,
+  load,
+  save,
+  isFirstRun,
+  ensureDirs,
+};

@@ -130,6 +130,28 @@ function runClaude(prompt, options = {}) {
 }
 
 function extractText(result) {
+  if (!result) return '(no result)';
+
+  // max turns 초과로 CLI가 강제 종료된 경우
+  const hitMaxTurns = result.terminal_reason === 'max_turns' ||
+    (Array.isArray(result.errors) && result.errors.some(e => typeof e === 'string' && /max.*turn/i.test(e)));
+  if (hitMaxTurns) {
+    let partial = typeof result.result === 'string' ? result.result : '';
+    if (!partial && Array.isArray(result.messages)) {
+      const texts = [];
+      for (const m of result.messages) {
+        if (Array.isArray(m.content)) {
+          for (const c of m.content) if (c && c.type === 'text' && c.text) texts.push(c.text);
+        } else if (typeof m.content === 'string') {
+          texts.push(m.content);
+        }
+      }
+      partial = texts.join('\n');
+    }
+    const prefix = partial.trim() ? `${partial.trim()}\n\n---\n` : '';
+    return `${prefix}⚠️ 작업 턴 수 제한에 도달해 중단됐습니다. "방금하던거 마저 진행해줘"로 이어서 진행 가능합니다. (세션 유지됨)`;
+  }
+
   if (result.result) return result.result;
   if (result.content) {
     if (typeof result.content === 'string') return result.content;
