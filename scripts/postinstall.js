@@ -30,23 +30,6 @@ function installOptionalTools() {
       execSync('pip install yt-dlp', { stdio: 'inherit', windowsHide: true, timeout: 120000 });
     } catch { console.log('  yt-dlp 설치 실패 (영상 분석 기능 비활성화)'); }
   }
-
-  // diffusers + torch (이미지 생성)
-  try {
-    execSync('python -c "import diffusers, torch"', { stdio: 'ignore', windowsHide: true, timeout: 10000 });
-  } catch {
-    try {
-      console.log('  Installing diffusers + torch (이미지 생성)...');
-      execSync('pip install diffusers transformers accelerate Pillow', { stdio: 'inherit', windowsHide: true, timeout: 300000 });
-      // torch: CUDA 버전 시도 후 실패 시 CPU 버전
-      try {
-        execSync('python -c "import torch"', { stdio: 'ignore', windowsHide: true, timeout: 5000 });
-      } catch {
-        console.log('  Installing PyTorch...');
-        execSync('pip install torch', { stdio: 'inherit', windowsHide: true, timeout: 600000 });
-      }
-    } catch { console.log('  diffusers/torch 설치 실패 (이미지 생성 기능 비활성화)'); }
-  }
 }
 
 // ── 2. MCP 서버 자동 등록 ──

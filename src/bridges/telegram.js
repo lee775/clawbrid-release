@@ -155,7 +155,6 @@ async function handleMessage(msg) {
   const chatId = String(msg.chat.id);
   const userId = String(msg.from.id);
   let text = msg.text?.trim() || '';
-  const hasPhoto = msg.photo && msg.photo.length > 0;
   const hasDocument = !!msg.document;
   const hasVoice = !!(msg.voice || msg.audio);
   console.log(`[TG] 메시지 수신 | user=${userId} | ${text.slice(0, 80)}${text.length > 80 ? '...' : ''}`);
@@ -180,7 +179,7 @@ async function handleMessage(msg) {
     }
   }
 
-  if (!text && !hasPhoto && !hasDocument) return;
+  if (!text && !hasDocument) return;
 
   // 권한 체크
   if (!isAllowed(userId)) {
@@ -547,15 +546,6 @@ ${topic}
         prompt = prompt ? `${prompt}\n\n--- 첨부파일 ---\n${info}\n\n위 첨부파일을 Read 도구로 직접 읽어줘.` : `첨부파일을 분석해줘:\n\n${info}`;
       }
     }
-    if (hasPhoto) {
-      const photo = msg.photo[msg.photo.length - 1];
-      const dl = await downloadTelegramFile(photo.file_id);
-      if (dl) {
-        const info = `[이미지] ${dl.name} (${(dl.size/1024).toFixed(1)}KB)\n경로: ${dl.path}`;
-        prompt = prompt ? `${prompt}\n\n--- 이미지 ---\n${info}\n\n이미지를 Read 도구로 확인해줘.` : `이미지를 분석해줘:\n\n${info}`;
-      }
-    }
-
     addToHistory(chatId, 'user', prompt);
 
     let finalPrompt = prompt;
