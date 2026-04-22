@@ -9,6 +9,28 @@ const path = require('path');
 const os = require('os');
 
 const IMAGE_DIR = path.join(os.homedir(), '.clawbrid', 'temp', 'images');
+// Codex CLI 기본 이미지 출력 경로 (~/.codex/generated_images/<session>/ig_*.png)
+const CODEX_IMAGE_DIR = path.join(os.homedir(), '.codex', 'generated_images');
+
+// 디렉토리를 재귀적으로 돌며 이미지 파일 경로를 Set으로 반환
+function snapshotImages(rootDir) {
+  const found = new Set();
+  try {
+    if (!fs.existsSync(rootDir)) return found;
+    const stack = [rootDir];
+    while (stack.length) {
+      const cur = stack.pop();
+      let entries;
+      try { entries = fs.readdirSync(cur, { withFileTypes: true }); } catch { continue; }
+      for (const e of entries) {
+        const full = path.join(cur, e.name);
+        if (e.isDirectory()) stack.push(full);
+        else if (e.isFile() && /\.(png|jpe?g|webp)$/i.test(e.name)) found.add(full);
+      }
+    }
+  } catch {}
+  return found;
+}
 
 function isCodexReady() {
   try {
@@ -129,7 +151,8 @@ async function generate(userText, progressFn, options = {}) {
   }
 
   fs.mkdirSync(IMAGE_DIR, { recursive: true });
-  const before = new Set(fs.readdirSync(IMAGE_DIR));
+  const beforeLocal = new Set(fs.readdirSync(IMAGE_DIR));
+  const beforeCodex = snapshotImages(CODEX_IMAGE_DIR);
 
   let englishPrompt;
   if (enhance) {
@@ -149,10 +172,17 @@ Prompt: ${englishPrompt}`;
 
   await runCodex(codexPrompt);
 
-  const after = fs.readdirSync(IMAGE_DIR);
-  const newFiles = after
-    .filter((f) => !before.has(f) && /\.(png|jpe?g|webp)$/i.test(f))
+  // 1. IMAGE_DIR에서 새 파일 탐지
+  const afterLocal = fs.readdirSync(IMAGE_DIR);
+  const newLocal = afterLocal
+    .filter((f) => !beforeLocal.has(f) && /\.(png|jpe?g|webp)$/i.test(f))
     .map((f) => path.join(IMAGE_DIR, f));
+
+  // 2. Codex 기본 경로(~/.codex/generated_images)도 함께 스캔 (Codex가 지시를 무시하고 기본 경로에 저장하는 케이스)
+  const afterCodex = snapshotImages(CODEX_IMAGE_DIR);
+  const newCodex = [...afterCodex].filter((f) => !beforeCodex.has(f));
+
+  const newFiles = [...newLocal, ...newCodex];
 
   if (!newFiles.length) {
     throw new Error('Codex가 이미지를 생성하지 않았습니다. (저장 경로 확인 필요)');
