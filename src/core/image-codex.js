@@ -188,11 +188,32 @@ Prompt: ${englishPrompt}`;
     .filter((f) => !beforeLocal.has(f) && /\.(png|jpe?g|webp)$/i.test(f))
     .map((f) => path.join(IMAGE_DIR, f));
 
-  // 2. Codex 기본 경로(~/.codex/generated_images)도 함께 스캔 (Codex가 지시를 무시하고 기본 경로에 저장하는 케이스)
+  // 2. Codex 기본 경로(~/.codex/generated_images)도 스캔 (Codex가 지시를 무시하고 기본 경로에 저장하는 케이스,
+  //    특히 편집 모드에서 자주 발생). 감지된 파일은 IMAGE_DIR로 이동시켜 브릿지가 단일 경로만 감시하도록 함.
   const afterCodex = snapshotImages(CODEX_IMAGE_DIR);
   const newCodex = [...afterCodex].filter((f) => !beforeCodex.has(f));
+  const movedFromCodex = [];
+  for (const src of newCodex) {
+    const base = path.basename(src);
+    let dest = path.join(IMAGE_DIR, base);
+    // 파일명 충돌 방지
+    if (fs.existsSync(dest)) {
+      dest = path.join(IMAGE_DIR, `${Date.now()}_${base}`);
+    }
+    try {
+      fs.renameSync(src, dest);
+      movedFromCodex.push(dest);
+    } catch (e) {
+      // 크로스 디바이스 등 rename 실패 시 copy + unlink fallback
+      try {
+        fs.copyFileSync(src, dest);
+        fs.unlinkSync(src);
+        movedFromCodex.push(dest);
+      } catch { movedFromCodex.push(src); } // 이동 실패 시 원본 경로라도 반환
+    }
+  }
 
-  const newFiles = [...newLocal, ...newCodex];
+  const newFiles = [...newLocal, ...movedFromCodex];
 
   if (!newFiles.length) {
     throw new Error('Codex가 이미지를 생성하지 않았습니다. (저장 경로 확인 필요)');
