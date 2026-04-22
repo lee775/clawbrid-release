@@ -113,8 +113,9 @@ User request: ${userText}`;
 function runCodex(prompt) {
   return new Promise((resolve, reject) => {
     const cmd = `codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox ${quoteArg(prompt)}`;
+    // stdin='ignore' 필수 — pipe로 열어두면 codex가 stdin EOF 대기로 hang
     const proc = spawn(cmd, [], {
-      stdio: ['pipe', 'pipe', 'pipe'],
+      stdio: ['ignore', 'pipe', 'pipe'],
       windowsHide: true,
       shell: true,
     });
