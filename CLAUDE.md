@@ -31,14 +31,11 @@ bin/clawbrid.js (CLI 엔트리)
 │   ├── plugin-manager.js  # ~/.clawbrid/plugins/ JS 플러그인
 │   ├── status-reporter.js # 프로세스 상태 모니터링
 │   ├── video-analyzer.js  # yt-dlp + ffmpeg + whisper 영상 분석
-│   ├── image-generator.js # diffusers 기반 이미지 생성/합성 (sd-worker.py 관리)
-│   ├── sd-worker.py       # Python Stable Diffusion 워커 (모델 상주)
 │   ├── voice-transcriber.js # faster-whisper STT (Python)
 │   └── web-tools.js       # DuckDuckGo 검색, URL 브라우징
 ├── src/mcp/
 │   ├── cron-mcp-server.js  # Claude CLI용 MCP 크론 서버
-│   ├── video-mcp-server.js # Claude CLI용 MCP 영상 분석 서버
-│   └── image-mcp-server.js # Claude CLI용 MCP 이미지 생성 서버
+│   └── video-mcp-server.js # Claude CLI용 MCP 영상 분석 서버
 ├── src/monitor/           # Tauri 대시보드 프론트엔드
 │   ├── index.html         # 메인 대시보드 UI (32KB)
 │   ├── setup.html         # 설정 마법사 (14KB)
@@ -109,7 +106,6 @@ clawbrid version        # 버전 출력
 | `search [query]` | DuckDuckGo 웹 검색 |
 | `browse [URL] [질문]` | 웹페이지 읽기, 질문 시 Claude 분석 |
 | `youtube [URL] [질문]` | 영상 분석 (프레임 캡처 + 음성 변환 → Claude) |
-| `image [프롬프트]` | AI 이미지 생성 (로컬 Stable Diffusion) |
 | `ultraplan [주제]` | 심층 분석 + 구조화된 실행 계획 |
 | `graph stats/add/link/find/del/list` | Knowledge Graph 관리 |
 | `memory save/search/list/del` | 장기 메모리 관리 |

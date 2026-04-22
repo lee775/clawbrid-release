@@ -204,7 +204,7 @@ async function handleMessage(msg) {
     if (cmd === '/help') {
       const pluginCmds = plugins.getList().flatMap(p => p.commands).filter(c => c.startsWith('/'));
       const pluginHelp = pluginCmds.length ? `\n• 플러그인: ${pluginCmds.join(', ')}` : '';
-      await bot.sendMessage(chatId, `*ClawBrid 명령어*\n• /stop 작업 중단\n• /reset 세션 초기화\n• /queue 대기열 확인\n• /clear 대기열 비우기\n• /search [검색어] 웹 검색\n• /browse [URL] [질문] 웹페이지 분석\n• /ultraplan [주제] 심층 분석 + 실행 계획\n• /youtube [URL] [질문] 영상 분석 (프레임+음성)\n• /image [프롬프트] AI 이미지 생성 (Stable Diffusion)\n• /graph stats|add|link|find|del|list 지식 그래프\n• /memory list|add|del|search 장기 메모리\n• /plugins 플러그인 목록\n• /cron list|add|del|run|on|off 크론 관리\n• /help 도움말\n• 🎤 음성 메시지 → 자동 텍스트 변환${pluginHelp}`);
+      await bot.sendMessage(chatId, `*ClawBrid 명령어*\n• /stop 작업 중단\n• /reset 세션 초기화\n• /queue 대기열 확인\n• /clear 대기열 비우기\n• /search [검색어] 웹 검색\n• /browse [URL] [질문] 웹페이지 분석\n• /ultraplan [주제] 심층 분석 + 실행 계획\n• /youtube [URL] [질문] 영상 분석 (프레임+음성)\n• /graph stats|add|link|find|del|list 지식 그래프\n• /memory list|add|del|search 장기 메모리\n• /plugins 플러그인 목록\n• /cron list|add|del|run|on|off 크론 관리\n• /help 도움말\n• 🎤 음성 메시지 → 자동 텍스트 변환${pluginHelp}`);
       return;
     }
     if (cmd === '/ultraplan') {
@@ -271,22 +271,6 @@ ${topic}
         await bot.sendMessage(chatId, `❌ 영상 분석 실패: ${e.message}`);
         return;
       }
-    }
-    // ── 이미지 생성 명령어 ──
-    if (cmd === '/image') {
-      const prompt = text.split(/\s+/).slice(1).join(' ');
-      if (!prompt) { await bot.sendMessage(chatId, '사용법: /image [프롬프트]\n예: /image a beautiful sunset over mountains, digital art'); return; }
-
-      try {
-        await bot.sendMessage(chatId, '🎨 이미지 생성 중... (Stable Diffusion)');
-        const imageGen = require('../core/image-generator');
-        const result = await imageGen.generate({ prompt });
-        const img = result.images[0];
-        await bot.sendPhoto(chatId, fs.createReadStream(img.path), { caption: `🎨 프롬프트: ${prompt.slice(0, 200)}` });
-      } catch (e) {
-        await bot.sendMessage(chatId, `❌ 이미지 생성 실패: ${e.message}`);
-      }
-      return;
     }
     if (cmd === '/memory') {
       const parts = text.split(/\s+/).slice(1);
@@ -607,7 +591,7 @@ ${topic}
       claudeOptions.isAdmin = true;
       claudeOptions.appendSystemPrompt = `${memory.MEMORY_SYSTEM_PROMPT}\n${knowledgeGraph.GRAPH_SYSTEM_PROMPT}`;
     } else {
-      claudeOptions.allowedTools = ['WebSearch', 'WebFetch', 'mcp__clawbrid-image__image_generate', 'mcp__clawbrid-image__image_edit', 'mcp__clawbrid-image__image_upscale', 'mcp__clawbrid-image__image_status'];
+      claudeOptions.allowedTools = ['WebSearch', 'WebFetch'];
       claudeOptions.appendSystemPrompt = '너는 일반 사용자의 질문에 답변하는 AI입니다. 파일 시스템 접근, 코드 실행, 시스템 명령은 사용하지 마세요.';
     }
 
@@ -651,11 +635,6 @@ ${topic}
       }, 120000);
     });
 
-    // 이미지 생성 감지용: 실행 전 스냅샷
-    const imgDir = path.join(os.homedir(), '.clawbrid', 'temp', 'images');
-    let imgsBefore = new Set();
-    try { if (fs.existsSync(imgDir)) imgsBefore = new Set(fs.readdirSync(imgDir)); } catch {}
-
     const { promise, proc } = runClaude(finalPrompt, claudeOptions);
     activeSessions.set(chatId, proc);
     const result = await promise;
@@ -685,23 +664,6 @@ ${topic}
     console.log(`[TG] 응답 완료 | user=${userId} | ${responseText.slice(0, 100)}${responseText.length > 100 ? '...' : ''}`);
 
     try { await bot.editMessageText('✅ 작업 완료', { chat_id: chatId, message_id: startMsg.message_id }); } catch {}
-
-    // Claude 실행 중 새로 생성된 이미지 자동 전송
-    try {
-      if (fs.existsSync(imgDir)) {
-        const imgsAfter = fs.readdirSync(imgDir);
-        const newImgs = imgsAfter.filter(f => !imgsBefore.has(f) && f.endsWith('.png'));
-        for (const img of newImgs) {
-          const imgPath = path.join(imgDir, img);
-          try {
-            await bot.sendPhoto(chatId, fs.createReadStream(imgPath));
-            console.log(`[TG] 이미지 전송: ${img}`);
-          } catch (e) {
-            console.error(`[TG] 이미지 전송 실패: ${e.message}`);
-          }
-        }
-      }
-    } catch {}
 
     await sendLongMessage(chatId, responseText);
 

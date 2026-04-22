@@ -142,29 +142,11 @@ Claude Code에서 영상 분석이 필요할 때 자동으로 호출됩니다.
 | `video_info` | 영상 메타데이터만 빠르게 조회 (제목, 길이, 채널 등) |
 | `video_check_tools` | 필요 도구(yt-dlp, ffmpeg, whisper) 설치 상태 확인 |
 
-### clawbrid-image
-Claude Code에서 이미지 생성/합성이 필요할 때 자동으로 호출됩니다. diffusers + torch 기반 (자동 설치).
-
-```
-"고양이가 우주에 떠있는 그림 그려줘" → Claude가 image_generate 도구로 자동 생성
-"이 이미지를 애니메이션 스타일로 바꿔줘" → Claude가 image_edit 도구로 합성
-```
-
-| 도구 | 설명 |
-|------|------|
-| `image_generate` | 텍스트→이미지 생성 (txt2img) |
-| `image_edit` | 이미지 기반 수정/합성 (img2img) |
-| `image_upscale` | 이미지 고해상도 업스케일 |
-| `image_status` | 환경 상태 확인 (GPU/CPU, 모델 로드) |
-
-**참고**: 최초 실행 시 SD 모델(~4GB) 자동 다운로드. GPU(NVIDIA CUDA) 있으면 수초, CPU만 있으면 수분 소요.
-
 ### 수동 MCP 등록
 
 ```bash
 claude mcp add --scope user clawbrid-cron -- node <path>/src/mcp/cron-mcp-server.js
 claude mcp add --scope user clawbrid-video -- node <path>/src/mcp/video-mcp-server.js
-claude mcp add --scope user clawbrid-image -- node <path>/src/mcp/image-mcp-server.js
 ```
 
 ## Slack Setup
@@ -211,8 +193,7 @@ clawbrid dashboard → Tauri Monitor (Rust + WebView2)
                       └── PM2: clawbrid-cron       (Node.js)
 
 Claude Code CLI ──── MCP: clawbrid-cron   (stdio)
-                ├─── MCP: clawbrid-video  (stdio)
-                └─── MCP: clawbrid-image  (stdio) → diffusers/torch
+                └─── MCP: clawbrid-video  (stdio)
 ```
 
 - **Tauri Monitor**: 6탭 대시보드 (Dashboard, Chat, PM2, Cron, Logs, Settings)

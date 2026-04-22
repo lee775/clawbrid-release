@@ -309,7 +309,6 @@ function ensureMCP() {
   const servers = [
     { name: 'clawbrid-cron', file: 'cron-mcp-server.js' },
     { name: 'clawbrid-video', file: 'video-mcp-server.js' },
-    { name: 'clawbrid-image', file: 'image-mcp-server.js' },
   ];
 
   let existing = '';

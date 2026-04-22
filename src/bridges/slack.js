@@ -15,7 +15,6 @@ const plugins = require('../core/plugin-manager');
 const webTools = require('../core/web-tools');
 const knowledgeGraph = require('../core/knowledge-graph');
 const videoAnalyzer = require('../core/video-analyzer');
-const imageGen = require('../core/image-generator');
 
 let app = null;
 let status = null;
@@ -139,53 +138,6 @@ async function handleFiles(event, token) {
   return downloaded;
 }
 
-// ── Slack 이미지 업로드 (uploadV2 → 수동 fallback) ──
-async function slackUploadImage(client, channelId, filePath, comment) {
-  const fileData = fs.readFileSync(filePath);
-  const filename = path.basename(filePath);
-
-  // 방법 1: uploadV2
-  try {
-    await client.files.uploadV2({
-      channel_id: channelId,
-      file: fileData,
-      filename,
-      initial_comment: comment,
-    });
-    return;
-  } catch (e) {
-    console.log(`[SLACK] uploadV2 실패, 수동 업로드 시도: ${e.message}`);
-  }
-
-  // 방법 2: 수동 (getUploadURLExternal → PUT → completeUploadExternal)
-  const urlRes = await client.files.getUploadURLExternal({
-    filename,
-    length: fileData.length,
-  });
-  const uploadUrl = urlRes.upload_url;
-  const fileId = urlRes.file_id;
-
-  // HTTP PUT으로 파일 전송
-  const { URL } = require('url');
-  const parsedUrl = new URL(uploadUrl);
-  const httpModule = parsedUrl.protocol === 'https:' ? require('https') : require('http');
-  await new Promise((resolve, reject) => {
-    const req = httpModule.request(uploadUrl, { method: 'PUT', headers: { 'Content-Type': 'application/octet-stream', 'Content-Length': fileData.length } }, (res) => {
-      res.on('data', () => {});
-      res.on('end', () => resolve());
-    });
-    req.on('error', reject);
-    req.write(fileData);
-    req.end();
-  });
-
-  await client.files.completeUploadExternal({
-    files: [{ id: fileId, title: filename }],
-    channel_id: channelId,
-    initial_comment: comment,
-  });
-}
-
 // ── 메시지 분할 ──
 async function sendLongMessage(say, text) {
   const MAX = 3900;
@@ -241,7 +193,7 @@ async function handleMessage({ event, say, client }) {
   if (text.toLowerCase() === '!help') {
     const pluginCmds = plugins.getList().flatMap(p => p.commands).filter(c => c.startsWith('!'));
     const pluginHelp = pluginCmds.length ? `\n• 플러그인: ${pluginCmds.join(', ')}` : '';
-    await say(`*ClawBrid 명령어*\n• \`!stop\` 작업 중단\n• \`!reset\` 세션 초기화\n• \`!queue\` 대기열 확인\n• \`!clear\` 대기열 비우기\n• \`!search [검색어]\` 웹 검색\n• \`!browse [URL] [질문]\` 웹페이지 분석\n• \`!ultraplan [주제]\` 심층 분석 + 실행 계획\n• \`!youtube [URL] [질문]\` 영상 분석 (프레임+음성)\n• \`!image [프롬프트]\` AI 이미지 생성 (Stable Diffusion)\n• \`!graph stats|add|link|find|del|list\` 지식 그래프\n• \`!memory list|add|del|search\` 장기 메모리\n• \`!plugins\` 플러그인 목록\n• \`!cron list|add|del|run|on|off\` 크론 관리\n• \`!help\` 도움말${pluginHelp}`); return;
+    await say(`*ClawBrid 명령어*\n• \`!stop\` 작업 중단\n• \`!reset\` 세션 초기화\n• \`!queue\` 대기열 확인\n• \`!clear\` 대기열 비우기\n• \`!search [검색어]\` 웹 검색\n• \`!browse [URL] [질문]\` 웹페이지 분석\n• \`!ultraplan [주제]\` 심층 분석 + 실행 계획\n• \`!youtube [URL] [질문]\` 영상 분석 (프레임+음성)\n• \`!graph stats|add|link|find|del|list\` 지식 그래프\n• \`!memory list|add|del|search\` 장기 메모리\n• \`!plugins\` 플러그인 목록\n• \`!cron list|add|del|run|on|off\` 크론 관리\n• \`!help\` 도움말${pluginHelp}`); return;
   }
   if (text.toLowerCase() === '!queue') {
     const queue = messageQueue.get(channelId) || [];
@@ -330,28 +282,6 @@ ${topic}
       await say(`❌ 영상 분석 실패: ${e.message}`);
       return;
     }
-  }
-
-  // ── 이미지 생성 명령어 ──
-  if (text.toLowerCase().startsWith('!image')) {
-    const prompt = text.slice(6).trim();
-    if (!prompt) { await say('사용법: `!image [프롬프트]`\n예: `!image a beautiful sunset over mountains, digital art`'); return; }
-
-    try {
-      await say('🎨 이미지 생성 중... (Stable Diffusion)');
-      const result = await imageGen.generate({ prompt });
-      const img = result.images[0];
-      // Slack에 이미지 업로드
-      try {
-        await slackUploadImage(client, channelId, img.path, `🎨 *이미지 생성 완료*\n프롬프트: ${prompt}`);
-      } catch (uploadErr) {
-        console.error(`[SLACK] 이미지 업로드 실패: ${uploadErr.message}`);
-        await say(`🎨 이미지 생성 완료!\n파일: ${img.path}\n(Slack 앱 설정에서 \`files:write\` 권한을 추가하세요)`);
-      }
-    } catch (e) {
-      await say(`❌ 이미지 생성 실패: ${e.message}`);
-    }
-    return;
   }
 
   // ── 메모리 명령어 ──
@@ -695,11 +625,6 @@ ${topic}
       }, 120000);
     });
 
-    // 이미지 생성 감지용: 실행 전 스냅샷
-    const imgDir = path.join(os.homedir(), '.clawbrid', 'temp', 'images');
-    let imgsBefore = new Set();
-    try { if (fs.existsSync(imgDir)) imgsBefore = new Set(fs.readdirSync(imgDir)); } catch {}
-
     const { promise, proc } = runClaude(finalPrompt, {
       resumeSessionId,
       isAdmin: true,
@@ -733,23 +658,6 @@ ${topic}
     console.log(`[SLACK] 응답 완료 | user=${userId} | ${responseText.slice(0, 100)}${responseText.length > 100 ? '...' : ''}`);
 
     try { await client.chat.update({ channel: channelId, ts: startMsg.ts, text: '✅ 작업 완료' }); } catch {}
-
-    // Claude 실행 중 새로 생성된 이미지 자동 전송
-    try {
-      if (fs.existsSync(imgDir)) {
-        const imgsAfter = fs.readdirSync(imgDir);
-        const newImgs = imgsAfter.filter(f => !imgsBefore.has(f) && f.endsWith('.png'));
-        for (const img of newImgs) {
-          const imgPath = path.join(imgDir, img);
-          try {
-            await slackUploadImage(client, channelId, imgPath);
-            console.log(`[SLACK] 이미지 전송: ${img}`);
-          } catch (e) {
-            console.error(`[SLACK] 이미지 업로드 실패: ${e.message}`);
-          }
-        }
-      }
-    } catch {}
 
     await sendLongMessage(say, responseText);
 
