@@ -204,7 +204,7 @@ async function handleMessage(msg) {
     if (cmd === '/help') {
       const pluginCmds = plugins.getList().flatMap(p => p.commands).filter(c => c.startsWith('/'));
       const pluginHelp = pluginCmds.length ? `\n• 플러그인: ${pluginCmds.join(', ')}` : '';
-      await bot.sendMessage(chatId, `*ClawBrid 명령어*\n• /stop 작업 중단\n• /reset 세션 초기화\n• /queue 대기열 확인\n• /clear 대기열 비우기\n• /search [검색어] 웹 검색\n• /browse [URL] [질문] 웹페이지 분석\n• /ultraplan [주제] 심층 분석 + 실행 계획\n• /youtube [URL] [질문] 영상 분석 (프레임+음성)\n• /image [요청] Codex 이미지 생성 (자연어 "~그려줘"도 가능)\n• /graph stats|add|link|find|del|list 지식 그래프\n• /memory list|add|del|search 장기 메모리\n• /plugins 플러그인 목록\n• /cron list|add|del|run|on|off 크론 관리\n• /help 도움말\n• 🎤 음성 메시지 → 자동 텍스트 변환${pluginHelp}`);
+      await bot.sendMessage(chatId, `*ClawBrid 명령어*\n• /stop 작업 중단\n• /reset 세션 초기화\n• /queue 대기열 확인\n• /clear 대기열 비우기\n• /search [검색어] 웹 검색\n• /browse [URL] [질문] 웹페이지 분석\n• /ultraplan [주제] 심층 분석 + 실행 계획\n• /youtube [URL] [질문] 영상 분석 (프레임+음성)\n• /image [요청] Codex 이미지 생성 (자연어로도 가능: "강아지 그려줘")\n• /graph stats|add|link|find|del|list 지식 그래프\n• /memory list|add|del|search 장기 메모리\n• /plugins 플러그인 목록\n• /cron list|add|del|run|on|off 크론 관리\n• /help 도움말\n• 🎤 음성 메시지 → 자동 텍스트 변환${pluginHelp}`);
       return;
     }
     if (cmd === '/ultraplan') {
@@ -519,37 +519,33 @@ ${topic}
     }
   }
 
-  // ── 이미지 생성 (/image 명령어 또는 자연어 요청) ──
-  {
-    const lower = text.toLowerCase();
-    const isImageCmd = lower.startsWith('/image');
-    if (isImageCmd || (text && imageCodex.isImageRequest(text))) {
-      const imageReq = isImageCmd ? text.replace(/^\/image(?:@\S+)?/i, '').trim() : text;
-      if (!imageReq) {
-        await bot.sendMessage(chatId, '사용법: /image [요청 내용]\n예: /image 푸른 바다 위의 노을');
-        return;
-      }
-      if (!imageCodex.isCodexReady()) {
-        await bot.sendMessage(chatId, '❌ Codex CLI가 설치되지 않았습니다. `npm install -g @anthropic-ai/codex` 등으로 설치해주세요.');
-        return;
-      }
-      try {
-        const progress = async (m) => { try { await bot.sendMessage(chatId, m); } catch {} };
-        const { englishPrompt, files } = await imageCodex.generate(imageReq, progress);
-        await bot.sendMessage(chatId, `✅ ${files.length}개 이미지 생성 완료, 전송 중...`);
-        for (const f of files) {
-          try {
-            await bot.sendPhoto(chatId, fs.createReadStream(f), { caption: `🎨 ${englishPrompt.slice(0, 900)}` });
-          } catch (e) {
-            await bot.sendMessage(chatId, `❌ 전송 실패 (${path.basename(f)}): ${e.message}`);
-          }
-        }
-        imageCodex.cleanup(files);
-      } catch (err) {
-        await bot.sendMessage(chatId, `❌ 이미지 생성 실패: ${err.message}`);
-      }
+  // ── 이미지 생성 /image 바로가기 (자연어는 MCP가 자동 처리) ──
+  if (text.toLowerCase().startsWith('/image')) {
+    const imageReq = text.replace(/^\/image(?:@\S+)?/i, '').trim();
+    if (!imageReq) {
+      await bot.sendMessage(chatId, '사용법: /image [요청 내용]\n예: /image 푸른 바다 위의 노을');
       return;
     }
+    if (!imageCodex.isCodexReady()) {
+      await bot.sendMessage(chatId, '❌ Codex CLI가 설치되지 않았습니다.');
+      return;
+    }
+    try {
+      const progress = async (m) => { try { await bot.sendMessage(chatId, m); } catch {} };
+      const { englishPrompt, files } = await imageCodex.generate(imageReq, progress);
+      await bot.sendMessage(chatId, `✅ ${files.length}개 이미지 생성 완료, 전송 중...`);
+      for (const f of files) {
+        try {
+          await bot.sendPhoto(chatId, fs.createReadStream(f), { caption: `🎨 ${englishPrompt.slice(0, 900)}` });
+        } catch (e) {
+          await bot.sendMessage(chatId, `❌ 전송 실패 (${path.basename(f)}): ${e.message}`);
+        }
+      }
+      imageCodex.cleanup(files);
+    } catch (err) {
+      await bot.sendMessage(chatId, `❌ 이미지 생성 실패: ${err.message}`);
+    }
+    return;
   }
 
   if (activeSessions.has(chatId)) {
@@ -615,8 +611,8 @@ ${topic}
       claudeOptions.isAdmin = true;
       claudeOptions.appendSystemPrompt = `${memory.MEMORY_SYSTEM_PROMPT}\n${knowledgeGraph.GRAPH_SYSTEM_PROMPT}`;
     } else {
-      claudeOptions.allowedTools = ['WebSearch', 'WebFetch'];
-      claudeOptions.appendSystemPrompt = '너는 일반 사용자의 질문에 답변하는 AI입니다. 파일 시스템 접근, 코드 실행, 시스템 명령은 사용하지 마세요.';
+      claudeOptions.allowedTools = ['WebSearch', 'WebFetch', 'mcp__clawbrid-image__image_generate'];
+      claudeOptions.appendSystemPrompt = '너는 일반 사용자의 질문에 답변하는 AI입니다. 파일 시스템 접근, 코드 실행, 시스템 명령은 사용하지 마세요. 단, 이미지 생성 요청은 mcp__clawbrid-image__image_generate 도구로 처리 가능합니다.';
     }
 
     // 타임아웃 시 사용자에게 계속 진행 여부 확인
@@ -659,6 +655,10 @@ ${topic}
       }, 120000);
     });
 
+    // 이미지 MCP가 IMAGE_DIR에 새 파일을 만들면 감지하여 전송
+    const imagesBefore = new Set();
+    try { if (fs.existsSync(imageCodex.IMAGE_DIR)) fs.readdirSync(imageCodex.IMAGE_DIR).forEach(f => imagesBefore.add(f)); } catch {}
+
     const { promise, proc } = runClaude(finalPrompt, claudeOptions);
     activeSessions.set(chatId, proc);
     const result = await promise;
@@ -690,6 +690,24 @@ ${topic}
     try { await bot.editMessageText('✅ 작업 완료', { chat_id: chatId, message_id: startMsg.message_id }); } catch {}
 
     await sendLongMessage(chatId, responseText);
+
+    // MCP가 생성한 새 이미지 감지 → 전송 → 정리
+    try {
+      if (fs.existsSync(imageCodex.IMAGE_DIR)) {
+        const after = fs.readdirSync(imageCodex.IMAGE_DIR);
+        const newFiles = after
+          .filter(f => !imagesBefore.has(f) && /\.(png|jpe?g|webp)$/i.test(f))
+          .map(f => path.join(imageCodex.IMAGE_DIR, f));
+        if (newFiles.length) {
+          await bot.sendMessage(chatId, `🎨 이미지 ${newFiles.length}개 생성됨, 전송 중...`);
+          for (const f of newFiles) {
+            try { await bot.sendPhoto(chatId, fs.createReadStream(f)); }
+            catch (e) { await bot.sendMessage(chatId, `❌ 전송 실패 (${path.basename(f)}): ${e.message}`); }
+          }
+          imageCodex.cleanup(newFiles);
+        }
+      }
+    } catch (e) { console.error(`[TG] image snapshot error: ${e.message}`); }
 
     // 코드 변경이 있으면 자동 Codex 리뷰
     if (hasCodeChanges()) {

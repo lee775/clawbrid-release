@@ -235,7 +235,7 @@ async function handleMessage({ event, say, client }) {
   if (text.toLowerCase() === '!help') {
     const pluginCmds = plugins.getList().flatMap(p => p.commands).filter(c => c.startsWith('!'));
     const pluginHelp = pluginCmds.length ? `\n• 플러그인: ${pluginCmds.join(', ')}` : '';
-    await say(`*ClawBrid 명령어*\n• \`!stop\` 작업 중단\n• \`!reset\` 세션 초기화\n• \`!queue\` 대기열 확인\n• \`!clear\` 대기열 비우기\n• \`!search [검색어]\` 웹 검색\n• \`!browse [URL] [질문]\` 웹페이지 분석\n• \`!ultraplan [주제]\` 심층 분석 + 실행 계획\n• \`!youtube [URL] [질문]\` 영상 분석 (프레임+음성)\n• \`!image [요청]\` Codex 이미지 생성 (자연어로 "~그려줘"도 가능)\n• \`!graph stats|add|link|find|del|list\` 지식 그래프\n• \`!memory list|add|del|search\` 장기 메모리\n• \`!plugins\` 플러그인 목록\n• \`!cron list|add|del|run|on|off\` 크론 관리\n• \`!help\` 도움말${pluginHelp}`); return;
+    await say(`*ClawBrid 명령어*\n• \`!stop\` 작업 중단\n• \`!reset\` 세션 초기화\n• \`!queue\` 대기열 확인\n• \`!clear\` 대기열 비우기\n• \`!search [검색어]\` 웹 검색\n• \`!browse [URL] [질문]\` 웹페이지 분석\n• \`!ultraplan [주제]\` 심층 분석 + 실행 계획\n• \`!youtube [URL] [질문]\` 영상 분석 (프레임+음성)\n• \`!image [요청]\` Codex 이미지 생성 (자연어로도 가능: "강아지 그려줘")\n• \`!graph stats|add|link|find|del|list\` 지식 그래프\n• \`!memory list|add|del|search\` 장기 메모리\n• \`!plugins\` 플러그인 목록\n• \`!cron list|add|del|run|on|off\` 크론 관리\n• \`!help\` 도움말${pluginHelp}`); return;
   }
   if (text.toLowerCase() === '!queue') {
     const queue = messageQueue.get(channelId) || [];
@@ -248,33 +248,30 @@ async function handleMessage({ event, say, client }) {
     await say('🗑️ 대기열 비워짐'); return;
   }
 
-  // ── 이미지 생성 (!image 명령어 또는 자연어 요청) ──
-  {
-    const isImageCmd = text.toLowerCase().startsWith('!image');
-    if (isImageCmd || (text && imageCodex.isImageRequest(text))) {
-      const imageReq = isImageCmd ? text.slice(6).trim() : text;
-      if (!imageReq) { await say('사용법: `!image [요청 내용]`\n예: `!image 푸른 바다 위의 노을`'); return; }
-      if (!imageCodex.isCodexReady()) {
-        await say('❌ Codex CLI가 설치되지 않았습니다. `npm install -g @anthropic-ai/codex` 등으로 설치해주세요.');
-        return;
-      }
-      try {
-        const progress = async (m) => { try { await say(m); } catch {} };
-        const { englishPrompt, files } = await imageCodex.generate(imageReq, progress);
-        await say(`✅ ${files.length}개 이미지 생성 완료, 업로드 중...`);
-        for (const f of files) {
-          try {
-            await slackUploadImage(client, channelId, f, `🎨 ${englishPrompt.slice(0, 200)}`);
-          } catch (e) {
-            await say(`❌ 업로드 실패 (${path.basename(f)}): ${e.message}`);
-          }
-        }
-        imageCodex.cleanup(files);
-      } catch (err) {
-        await say(`❌ 이미지 생성 실패: ${err.message}`);
-      }
+  // ── 이미지 생성 !image 바로가기 (자연어는 MCP가 자동 처리) ──
+  if (text.toLowerCase().startsWith('!image')) {
+    const imageReq = text.slice(6).trim();
+    if (!imageReq) { await say('사용법: `!image [요청 내용]`\n예: `!image 푸른 바다 위의 노을`'); return; }
+    if (!imageCodex.isCodexReady()) {
+      await say('❌ Codex CLI가 설치되지 않았습니다.');
       return;
     }
+    try {
+      const progress = async (m) => { try { await say(m); } catch {} };
+      const { englishPrompt, files } = await imageCodex.generate(imageReq, progress);
+      await say(`✅ ${files.length}개 이미지 생성 완료, 업로드 중...`);
+      for (const f of files) {
+        try {
+          await slackUploadImage(client, channelId, f, `🎨 ${englishPrompt.slice(0, 200)}`);
+        } catch (e) {
+          await say(`❌ 업로드 실패 (${path.basename(f)}): ${e.message}`);
+        }
+      }
+      imageCodex.cleanup(files);
+    } catch (err) {
+      await say(`❌ 이미지 생성 실패: ${err.message}`);
+    }
+    return;
   }
 
   // ── ultraplan 명령어 ──
@@ -696,6 +693,10 @@ ${topic}
       }, 120000);
     });
 
+    // 이미지 MCP가 IMAGE_DIR에 새 파일을 만들면 감지하여 업로드
+    const imagesBefore = new Set();
+    try { if (fs.existsSync(imageCodex.IMAGE_DIR)) fs.readdirSync(imageCodex.IMAGE_DIR).forEach(f => imagesBefore.add(f)); } catch {}
+
     const { promise, proc } = runClaude(finalPrompt, {
       resumeSessionId,
       isAdmin: true,
@@ -731,6 +732,24 @@ ${topic}
     try { await client.chat.update({ channel: channelId, ts: startMsg.ts, text: '✅ 작업 완료' }); } catch {}
 
     await sendLongMessage(say, responseText);
+
+    // MCP가 생성한 새 이미지 감지 → 업로드 → 정리
+    try {
+      if (fs.existsSync(imageCodex.IMAGE_DIR)) {
+        const after = fs.readdirSync(imageCodex.IMAGE_DIR);
+        const newFiles = after
+          .filter(f => !imagesBefore.has(f) && /\.(png|jpe?g|webp)$/i.test(f))
+          .map(f => path.join(imageCodex.IMAGE_DIR, f));
+        if (newFiles.length) {
+          await say(`🎨 이미지 ${newFiles.length}개 생성됨, 업로드 중...`);
+          for (const f of newFiles) {
+            try { await slackUploadImage(client, channelId, f, ''); }
+            catch (e) { await say(`❌ 업로드 실패 (${path.basename(f)}): ${e.message}`); }
+          }
+          imageCodex.cleanup(newFiles);
+        }
+      }
+    } catch (e) { console.error(`[SLACK] image snapshot error: ${e.message}`); }
 
     // 코드 변경이 있으면 자동 Codex 리뷰
     if (hasCodeChanges()) {
