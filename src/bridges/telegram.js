@@ -158,6 +158,9 @@ async function handleMessage(msg) {
   let text = msg.text?.trim() || '';
   const hasDocument = !!msg.document;
   const hasVoice = !!(msg.voice || msg.audio);
+  const hasPhoto = Array.isArray(msg.photo) && msg.photo.length > 0;
+  // msg.caption (사진/문서 동봉 텍스트)도 본문으로 취급
+  if (!text && msg.caption) text = msg.caption.trim();
   console.log(`[TG] 메시지 수신 | user=${userId} | ${text.slice(0, 80)}${text.length > 80 ? '...' : ''}`);
 
   // 음성 메시지 처리
@@ -180,7 +183,7 @@ async function handleMessage(msg) {
     }
   }
 
-  if (!text && !hasDocument) return;
+  if (!text && !hasDocument && !hasPhoto) return;
 
   // 권한 체크
   if (!isAllowed(userId)) {
@@ -576,6 +579,17 @@ ${topic}
         prompt = prompt ? `${prompt}\n\n--- 첨부파일 ---\n${info}\n\n위 첨부파일을 Read 도구로 직접 읽어줘.` : `첨부파일을 분석해줘:\n\n${info}`;
       }
     }
+
+    if (hasPhoto) {
+      // msg.photo는 다양한 해상도의 PhotoSize 배열 — 가장 큰 버전 사용
+      const largest = msg.photo[msg.photo.length - 1];
+      const dl = await downloadTelegramFile(largest.file_id);
+      if (dl) {
+        const info = `[첨부 이미지] 경로: ${dl.path}`;
+        const guidance = '이미지가 첨부되었습니다. 사용자 요청을 보고 판단하세요: (1) 분석/설명 요청이면 이미지 내용을 직접 설명 (2) 수정/편집/변형/스타일변경 요청이면 mcp__clawbrid-image__image_generate 도구를 호출하되 source_image에 위 경로를 전달.';
+        prompt = prompt ? `${prompt}\n\n${info}\n\n${guidance}` : `${info}\n\n이 이미지를 설명해줘.`;
+      }
+    }
     addToHistory(chatId, 'user', prompt);
 
     let finalPrompt = prompt;
@@ -612,7 +626,7 @@ ${topic}
       claudeOptions.appendSystemPrompt = `${memory.MEMORY_SYSTEM_PROMPT}\n${knowledgeGraph.GRAPH_SYSTEM_PROMPT}`;
     } else {
       claudeOptions.allowedTools = ['WebSearch', 'WebFetch', 'mcp__clawbrid-image__image_generate'];
-      claudeOptions.appendSystemPrompt = '너는 일반 사용자의 질문에 답변하는 AI입니다. 파일 시스템 접근, 코드 실행, 시스템 명령은 사용하지 마세요. 단, 이미지 생성 요청은 mcp__clawbrid-image__image_generate 도구로 처리 가능합니다.';
+      claudeOptions.appendSystemPrompt = '너는 일반 사용자의 질문에 답변하는 AI입니다. 파일 시스템 접근, 코드 실행, 시스템 명령은 사용하지 마세요. 이미지 생성/편집 요청은 mcp__clawbrid-image__image_generate 도구로 처리 가능합니다. 사용자가 이미지를 첨부하고 수정/편집/변형을 원하면 source_image 파라미터에 첨부 경로를 전달하세요. 단순히 이미지를 설명해달라는 요청이면 도구를 호출하지 말고 내용을 직접 설명해주세요.';
     }
 
     // 타임아웃 시 사용자에게 계속 진행 여부 확인

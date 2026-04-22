@@ -108,11 +108,13 @@ User request: ${userText}`;
   });
 }
 
-// codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox "prompt"
+// codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox [-i <file>] "prompt"
 // bypass 플래그는 비대화형 MCP 환경에서 필수 — 없으면 approval 프롬프트 대기로 hang
-function runCodex(prompt) {
+// sourceImage 전달 시 -i 옵션으로 원본 이미지 첨부 (수정/편집 모드)
+function runCodex(prompt, sourceImage = null) {
   return new Promise((resolve, reject) => {
-    const cmd = `codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox ${quoteArg(prompt)}`;
+    const imgArg = sourceImage ? `-i ${quoteArg(sourceImage)} ` : '';
+    const cmd = `codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox ${imgArg}${quoteArg(prompt)}`;
     // stdin='ignore' 필수 — pipe로 열어두면 codex가 stdin EOF 대기로 hang
     const proc = spawn(cmd, [], {
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -146,8 +148,9 @@ function runCodex(prompt) {
 // 메인 진입점
 // options.enhance: true(기본) = Claude CLI로 영문 상세 프롬프트 재생성
 //                  false = userText를 그대로 사용 (MCP 경로처럼 이미 Claude가 구성한 프롬프트일 때)
+// options.sourceImage: 원본 이미지 경로 — 전달되면 codex -i 로 첨부 (수정/편집 모드)
 async function generate(userText, progressFn, options = {}) {
-  const { enhance = true } = options;
+  const { enhance = true, sourceImage = null } = options;
   if (!isCodexReady()) {
     throw new Error('Codex CLI가 설치되지 않았습니다. 공식 설치 가이드를 확인해주세요.');
   }
@@ -169,12 +172,13 @@ async function generate(userText, progressFn, options = {}) {
   if (progressFn) await progressFn(`🎨 Codex 이미지 생성 중...\n📝 ${englishPrompt.slice(0, 300)}`);
 
   const saveDir = IMAGE_DIR.replace(/\\/g, '/');
-  const codexPrompt = `Generate an image from the following prompt and save it as a PNG file to: ${saveDir}
+  const verb = sourceImage ? 'Edit the attached image according to the following instructions, then save the result' : 'Generate an image from the following prompt and save it';
+  const codexPrompt = `${verb} as a PNG file to: ${saveDir}
 Use any descriptive filename ending in .png. Do not ask for confirmation — proceed directly and save the file.
 
 Prompt: ${englishPrompt}`;
 
-  await runCodex(codexPrompt);
+  await runCodex(codexPrompt, sourceImage);
 
   // 1. IMAGE_DIR에서 새 파일 탐지
   const afterLocal = fs.readdirSync(IMAGE_DIR);

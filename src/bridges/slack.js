@@ -605,10 +605,20 @@ ${topic}
     if (hasFiles) {
       const files = await handleFiles(event, cfg.slack.botToken);
       if (files.length > 0) {
-        const info = files.map(f => `[첨부파일] ${f.name} (${f.type}, ${(f.size/1024).toFixed(1)}KB)\n경로: ${f.path}`).join('\n');
-        prompt = prompt
-          ? `${prompt}\n\n--- 첨부파일 ---\n${info}\n\n위 첨부파일을 Read 도구로 직접 열어서 내용을 확인하고 분석해줘.`
-          : `다음 첨부파일을 Read 도구로 직접 열어서 내용을 확인하고 분석해줘:\n\n${info}`;
+        const imageExt = /\.(png|jpe?g|webp|gif)$/i;
+        const images = files.filter(f => imageExt.test(f.name) || /^(png|jpe?g|webp|gif|image\/)/i.test(f.type || ''));
+        const others = files.filter(f => !images.includes(f));
+        const parts = [];
+        if (others.length > 0) {
+          const info = others.map(f => `[첨부파일] ${f.name} (${f.type}, ${(f.size/1024).toFixed(1)}KB)\n경로: ${f.path}`).join('\n');
+          parts.push(`--- 첨부파일 ---\n${info}\n\n위 첨부파일을 Read 도구로 직접 열어서 내용을 확인하고 분석해줘.`);
+        }
+        if (images.length > 0) {
+          const info = images.map(f => `[첨부 이미지] 경로: ${f.path}`).join('\n');
+          parts.push(`${info}\n\n이미지가 첨부되었습니다. 사용자 요청을 보고 판단하세요: (1) 분석/설명 요청이면 이미지 내용을 직접 설명 (2) 수정/편집/변형/스타일변경 요청이면 mcp__clawbrid-image__image_generate 도구를 호출하되 source_image에 위 경로를 전달.`);
+        }
+        const joined = parts.join('\n\n');
+        prompt = prompt ? `${prompt}\n\n${joined}` : joined;
       }
     }
 
