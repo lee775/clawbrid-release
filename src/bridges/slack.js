@@ -15,6 +15,7 @@ const plugins = require('../core/plugin-manager');
 const webTools = require('../core/web-tools');
 const knowledgeGraph = require('../core/knowledge-graph');
 const videoAnalyzer = require('../core/video-analyzer');
+const imageCodex = require('../core/image-codex');
 
 let app = null;
 let status = null;
@@ -151,6 +152,47 @@ async function sendLongMessage(say, text) {
   }
 }
 
+// ── 이미지 업로드 (uploadV2 → 수동 3단계 fallback) ──
+async function slackUploadImage(client, channelId, filePath, comment = '') {
+  const fileName = path.basename(filePath);
+  try {
+    await client.files.uploadV2({
+      channel_id: channelId,
+      file: fs.createReadStream(filePath),
+      filename: fileName,
+      initial_comment: comment || undefined,
+    });
+    return;
+  } catch (err) {
+    console.error(`[SLACK] uploadV2 실패: ${err.message}, 수동 업로드 시도`);
+  }
+  const size = fs.statSync(filePath).size;
+  const urlRes = await client.files.getUploadURLExternal({ filename: fileName, length: size });
+  if (!urlRes.upload_url || !urlRes.file_id) throw new Error('Slack upload URL 획득 실패');
+  await new Promise((resolve, reject) => {
+    const u = new URL(urlRes.upload_url);
+    const req = https.request({
+      method: 'POST',
+      hostname: u.hostname,
+      path: u.pathname + u.search,
+      headers: { 'Content-Length': size },
+    }, (res) => {
+      res.on('data', () => {});
+      res.on('end', () => {
+        if (res.statusCode >= 200 && res.statusCode < 300) resolve();
+        else reject(new Error(`HTTP ${res.statusCode}`));
+      });
+    });
+    req.on('error', reject);
+    fs.createReadStream(filePath).pipe(req);
+  });
+  await client.files.completeUploadExternal({
+    files: [{ id: urlRes.file_id, title: fileName }],
+    channel_id: channelId,
+    initial_comment: comment || undefined,
+  });
+}
+
 // ── 메인 핸들러 ──
 const activeSessions = new Map();
 const messageQueue = new Map(); // 채널별 작업 큐 (최대 5개)
@@ -193,7 +235,7 @@ async function handleMessage({ event, say, client }) {
   if (text.toLowerCase() === '!help') {
     const pluginCmds = plugins.getList().flatMap(p => p.commands).filter(c => c.startsWith('!'));
     const pluginHelp = pluginCmds.length ? `\n• 플러그인: ${pluginCmds.join(', ')}` : '';
-    await say(`*ClawBrid 명령어*\n• \`!stop\` 작업 중단\n• \`!reset\` 세션 초기화\n• \`!queue\` 대기열 확인\n• \`!clear\` 대기열 비우기\n• \`!search [검색어]\` 웹 검색\n• \`!browse [URL] [질문]\` 웹페이지 분석\n• \`!ultraplan [주제]\` 심층 분석 + 실행 계획\n• \`!youtube [URL] [질문]\` 영상 분석 (프레임+음성)\n• \`!graph stats|add|link|find|del|list\` 지식 그래프\n• \`!memory list|add|del|search\` 장기 메모리\n• \`!plugins\` 플러그인 목록\n• \`!cron list|add|del|run|on|off\` 크론 관리\n• \`!help\` 도움말${pluginHelp}`); return;
+    await say(`*ClawBrid 명령어*\n• \`!stop\` 작업 중단\n• \`!reset\` 세션 초기화\n• \`!queue\` 대기열 확인\n• \`!clear\` 대기열 비우기\n• \`!search [검색어]\` 웹 검색\n• \`!browse [URL] [질문]\` 웹페이지 분석\n• \`!ultraplan [주제]\` 심층 분석 + 실행 계획\n• \`!youtube [URL] [질문]\` 영상 분석 (프레임+음성)\n• \`!image [요청]\` Codex 이미지 생성 (자연어로 "~그려줘"도 가능)\n• \`!graph stats|add|link|find|del|list\` 지식 그래프\n• \`!memory list|add|del|search\` 장기 메모리\n• \`!plugins\` 플러그인 목록\n• \`!cron list|add|del|run|on|off\` 크론 관리\n• \`!help\` 도움말${pluginHelp}`); return;
   }
   if (text.toLowerCase() === '!queue') {
     const queue = messageQueue.get(channelId) || [];
@@ -204,6 +246,35 @@ async function handleMessage({ event, say, client }) {
   if (text.toLowerCase() === '!clear') {
     messageQueue.delete(channelId);
     await say('🗑️ 대기열 비워짐'); return;
+  }
+
+  // ── 이미지 생성 (!image 명령어 또는 자연어 요청) ──
+  {
+    const isImageCmd = text.toLowerCase().startsWith('!image');
+    if (isImageCmd || (text && imageCodex.isImageRequest(text))) {
+      const imageReq = isImageCmd ? text.slice(6).trim() : text;
+      if (!imageReq) { await say('사용법: `!image [요청 내용]`\n예: `!image 푸른 바다 위의 노을`'); return; }
+      if (!imageCodex.isCodexReady()) {
+        await say('❌ Codex CLI가 설치되지 않았습니다. `npm install -g @anthropic-ai/codex` 등으로 설치해주세요.');
+        return;
+      }
+      try {
+        const progress = async (m) => { try { await say(m); } catch {} };
+        const { englishPrompt, files } = await imageCodex.generate(imageReq, progress);
+        await say(`✅ ${files.length}개 이미지 생성 완료, 업로드 중...`);
+        for (const f of files) {
+          try {
+            await slackUploadImage(client, channelId, f, `🎨 ${englishPrompt.slice(0, 200)}`);
+          } catch (e) {
+            await say(`❌ 업로드 실패 (${path.basename(f)}): ${e.message}`);
+          }
+        }
+        imageCodex.cleanup(files);
+      } catch (err) {
+        await say(`❌ 이미지 생성 실패: ${err.message}`);
+      }
+      return;
+    }
   }
 
   // ── ultraplan 명령어 ──

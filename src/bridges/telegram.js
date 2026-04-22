@@ -15,6 +15,7 @@ const voice = require('../core/voice-transcriber');
 const webTools = require('../core/web-tools');
 const knowledgeGraph = require('../core/knowledge-graph');
 const videoAnalyzer = require('../core/video-analyzer');
+const imageCodex = require('../core/image-codex');
 
 let bot = null;
 let status = null;
@@ -203,7 +204,7 @@ async function handleMessage(msg) {
     if (cmd === '/help') {
       const pluginCmds = plugins.getList().flatMap(p => p.commands).filter(c => c.startsWith('/'));
       const pluginHelp = pluginCmds.length ? `\n• 플러그인: ${pluginCmds.join(', ')}` : '';
-      await bot.sendMessage(chatId, `*ClawBrid 명령어*\n• /stop 작업 중단\n• /reset 세션 초기화\n• /queue 대기열 확인\n• /clear 대기열 비우기\n• /search [검색어] 웹 검색\n• /browse [URL] [질문] 웹페이지 분석\n• /ultraplan [주제] 심층 분석 + 실행 계획\n• /youtube [URL] [질문] 영상 분석 (프레임+음성)\n• /graph stats|add|link|find|del|list 지식 그래프\n• /memory list|add|del|search 장기 메모리\n• /plugins 플러그인 목록\n• /cron list|add|del|run|on|off 크론 관리\n• /help 도움말\n• 🎤 음성 메시지 → 자동 텍스트 변환${pluginHelp}`);
+      await bot.sendMessage(chatId, `*ClawBrid 명령어*\n• /stop 작업 중단\n• /reset 세션 초기화\n• /queue 대기열 확인\n• /clear 대기열 비우기\n• /search [검색어] 웹 검색\n• /browse [URL] [질문] 웹페이지 분석\n• /ultraplan [주제] 심층 분석 + 실행 계획\n• /youtube [URL] [질문] 영상 분석 (프레임+음성)\n• /image [요청] Codex 이미지 생성 (자연어 "~그려줘"도 가능)\n• /graph stats|add|link|find|del|list 지식 그래프\n• /memory list|add|del|search 장기 메모리\n• /plugins 플러그인 목록\n• /cron list|add|del|run|on|off 크론 관리\n• /help 도움말\n• 🎤 음성 메시지 → 자동 텍스트 변환${pluginHelp}`);
       return;
     }
     if (cmd === '/ultraplan') {
@@ -515,6 +516,39 @@ ${topic}
     // /browse+질문 → text 교체 후 Claude 호출로 진행
     if (browsePassthrough) {
       text = browsePassthrough;
+    }
+  }
+
+  // ── 이미지 생성 (/image 명령어 또는 자연어 요청) ──
+  {
+    const lower = text.toLowerCase();
+    const isImageCmd = lower.startsWith('/image');
+    if (isImageCmd || (text && imageCodex.isImageRequest(text))) {
+      const imageReq = isImageCmd ? text.replace(/^\/image(?:@\S+)?/i, '').trim() : text;
+      if (!imageReq) {
+        await bot.sendMessage(chatId, '사용법: /image [요청 내용]\n예: /image 푸른 바다 위의 노을');
+        return;
+      }
+      if (!imageCodex.isCodexReady()) {
+        await bot.sendMessage(chatId, '❌ Codex CLI가 설치되지 않았습니다. `npm install -g @anthropic-ai/codex` 등으로 설치해주세요.');
+        return;
+      }
+      try {
+        const progress = async (m) => { try { await bot.sendMessage(chatId, m); } catch {} };
+        const { englishPrompt, files } = await imageCodex.generate(imageReq, progress);
+        await bot.sendMessage(chatId, `✅ ${files.length}개 이미지 생성 완료, 전송 중...`);
+        for (const f of files) {
+          try {
+            await bot.sendPhoto(chatId, fs.createReadStream(f), { caption: `🎨 ${englishPrompt.slice(0, 900)}` });
+          } catch (e) {
+            await bot.sendMessage(chatId, `❌ 전송 실패 (${path.basename(f)}): ${e.message}`);
+          }
+        }
+        imageCodex.cleanup(files);
+      } catch (err) {
+        await bot.sendMessage(chatId, `❌ 이미지 생성 실패: ${err.message}`);
+      }
+      return;
     }
   }
 
