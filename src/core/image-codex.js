@@ -108,10 +108,11 @@ User request: ${userText}`;
   });
 }
 
-// codex exec --skip-git-repo-check "prompt"
+// codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox "prompt"
+// bypass 플래그는 비대화형 MCP 환경에서 필수 — 없으면 approval 프롬프트 대기로 hang
 function runCodex(prompt) {
   return new Promise((resolve, reject) => {
-    const cmd = `codex exec --skip-git-repo-check ${quoteArg(prompt)}`;
+    const cmd = `codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox ${quoteArg(prompt)}`;
     const proc = spawn(cmd, [], {
       stdio: ['pipe', 'pipe', 'pipe'],
       windowsHide: true,
