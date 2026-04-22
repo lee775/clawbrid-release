@@ -54,16 +54,23 @@ function registerMCPServers() {
     { name: 'clawbrid-image', file: 'image-mcp-server.js' },
   ];
 
+  let registered = 0;
+  let already = 0;
   for (const srv of servers) {
-    if (!existing.includes(srv.name)) {
-      const srvPath = path.join(MCP_BASE, srv.file).replace(/\\/g, '/');
-      try {
-        console.log(`  Registering MCP: ${srv.name}...`);
-        execSync(`claude mcp add --scope user ${srv.name} -- node "${srvPath}"`, { stdio: 'inherit', windowsHide: true, timeout: 15000 });
-      } catch {
-        console.log(`  ${srv.name} MCP 등록 실패 (수동 등록: claude mcp add --scope user ${srv.name} -- node "${srvPath}")`);
-      }
+    if (existing.includes(srv.name)) { already++; continue; }
+    const srvPath = path.join(MCP_BASE, srv.file).replace(/\\/g, '/');
+    try {
+      console.log(`  Registering MCP: ${srv.name}...`);
+      execSync(`claude mcp add --scope user ${srv.name} -- node "${srvPath}"`, { stdio: 'inherit', windowsHide: true, timeout: 15000 });
+      registered++;
+    } catch {
+      console.log(`  ${srv.name} MCP 등록 실패 (수동 등록: claude mcp add --scope user ${srv.name} -- node "${srvPath}")`);
     }
+  }
+  if (registered > 0) {
+    console.log(`  MCP: ${registered}개 신규 등록, ${already}개 기존 유지`);
+  } else if (already === servers.length) {
+    console.log(`  MCP: ${already}개 서버 이미 등록됨`);
   }
 }
 

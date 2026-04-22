@@ -134,6 +134,7 @@ const commands = {
   },
 
   restart() {
+    ensureMCP();
     const target = args[1];
     if (!target || target === 'all') {
       pm2Cmd('restart', 'clawbrid-slack');
@@ -257,6 +258,7 @@ const commands = {
   },
 
   async setup() {
+    ensureMCP();
     const exe = await ensureMonitorExe();
     if (fs.existsSync(CONFIG_FILE)) fs.unlinkSync(CONFIG_FILE);
     const proc = spawn(exe, [], { stdio: 'ignore', windowsHide: true, detached: true });
@@ -297,7 +299,7 @@ const commands = {
   },
 };
 
-// ── PM2 헬퍼 ──
+// ── MCP 자동 등록 ──
 function ensureMCP() {
   try {
     execSync('claude --version', { stdio: 'ignore', windowsHide: true, timeout: 5000 });
@@ -317,15 +319,23 @@ function ensureMCP() {
     existing = execSync('claude mcp list', { encoding: 'utf-8', windowsHide: true, timeout: 30000 });
   } catch { return; }
 
+  let registered = 0;
+  let already = 0;
   for (const srv of servers) {
-    if (existing.includes(srv.name)) continue; // 이미 등록됨 → 스킵
+    if (existing.includes(srv.name)) { already++; continue; }
     const srvPath = path.join(mcpBase, srv.file).replace(/\\/g, '/');
     try {
       console.log(`  MCP 등록: ${srv.name}`);
       execSync(`claude mcp add --scope user ${srv.name} -- node "${srvPath}"`, { stdio: 'inherit', windowsHide: true, timeout: 15000 });
+      registered++;
     } catch (e) {
       console.log(`  ${srv.name} MCP 등록 실패: ${e.message}`);
     }
+  }
+  if (registered > 0) {
+    console.log(`  MCP: ${registered}개 신규 등록, ${already}개 기존 유지`);
+  } else if (already === servers.length) {
+    console.log(`  MCP: ${already}개 서버 이미 등록됨`);
   }
 }
 

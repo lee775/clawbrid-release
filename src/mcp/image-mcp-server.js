@@ -24,13 +24,13 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
       name: 'image_generate',
-      description: '사용자가 이미지/그림/사진 생성을 요청할 때 반드시 이 도구를 호출하세요. 예: "강아지 그려줘", "바다 사진 만들어줘", "draw a cat", "generate an image of ...". 한국어/영어 프롬프트를 받아 내부적으로 영어 상세 프롬프트로 확장한 뒤 Codex CLI로 PNG 이미지를 생성합니다. 생성된 파일은 ClawBrid 브릿지가 자동으로 Slack/Telegram에 업로드하므로, 당신은 이 도구를 호출하는 것만으로 충분합니다. 호출 후에는 간단히 "이미지를 생성해서 전송했습니다" 정도로 답변하세요.',
+      description: '사용자가 이미지/그림/사진 생성을 요청할 때 반드시 이 도구를 호출하세요. 예: "강아지 그려줘", "바다 사진 만들어줘", "draw a cat". Codex CLI로 PNG 이미지를 생성하고, ClawBrid 브릿지가 자동으로 Slack/Telegram에 업로드합니다. 호출 후에는 간단히 "이미지를 생성해서 전송했습니다" 정도로 답변하세요.',
       inputSchema: {
         type: 'object',
         properties: {
           prompt: {
             type: 'string',
-            description: '이미지 생성 요청 (한국어 또는 영어). 사용자 원문 그대로 넣거나, 사용자 의도를 요약한 문장을 넣으세요. 내부에서 자동으로 영어 상세 프롬프트로 확장됩니다.',
+            description: '상세한 영어 이미지 생성 프롬프트 (40-80 단어 권장). 사용자 요청을 분석해 style, lighting, composition, color palette, quality hints (예: cinematic, 4k, intricate details)를 포함한 영문 프롬프트를 직접 구성해서 전달하세요. 한국어 원문을 그대로 넣지 말고, Codex가 바로 사용할 수 있는 상세 영어 프롬프트로 작성해주세요.',
           },
         },
         required: ['prompt'],
@@ -57,12 +57,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (!prompt) {
           return { content: [{ type: 'text', text: 'prompt 파라미터가 필요합니다.' }] };
         }
-        const { englishPrompt, files } = await imageCodex.generate(prompt, null);
+        const { englishPrompt, files } = await imageCodex.generate(prompt, null, { enhance: false });
         const list = files.map(f => path.basename(f)).join(', ');
         return {
           content: [{
             type: 'text',
-            text: `✅ 이미지 ${files.length}개 생성 완료.\n영문 프롬프트: ${englishPrompt}\n파일: ${list}\n\n브릿지가 메신저로 자동 전송할 예정입니다.`,
+            text: `✅ 이미지 ${files.length}개 생성 완료.\n프롬프트: ${englishPrompt}\n파일: ${list}\n\n브릿지가 메신저로 자동 전송할 예정입니다.`,
           }],
         };
       }

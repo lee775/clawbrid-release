@@ -120,7 +120,10 @@ function runCodex(prompt) {
 }
 
 // 메인 진입점
-async function generate(userText, progressFn) {
+// options.enhance: true(기본) = Claude CLI로 영문 상세 프롬프트 재생성
+//                  false = userText를 그대로 사용 (MCP 경로처럼 이미 Claude가 구성한 프롬프트일 때)
+async function generate(userText, progressFn, options = {}) {
+  const { enhance = true } = options;
   if (!isCodexReady()) {
     throw new Error('Codex CLI가 설치되지 않았습니다. 공식 설치 가이드를 확인해주세요.');
   }
@@ -128,8 +131,13 @@ async function generate(userText, progressFn) {
   fs.mkdirSync(IMAGE_DIR, { recursive: true });
   const before = new Set(fs.readdirSync(IMAGE_DIR));
 
-  if (progressFn) await progressFn('🌐 프롬프트 영문 상세화...');
-  const englishPrompt = await enhancePrompt(userText);
+  let englishPrompt;
+  if (enhance) {
+    if (progressFn) await progressFn('🌐 프롬프트 영문 상세화...');
+    englishPrompt = await enhancePrompt(userText);
+  } else {
+    englishPrompt = userText;
+  }
 
   if (progressFn) await progressFn(`🎨 Codex 이미지 생성 중...\n📝 ${englishPrompt.slice(0, 300)}`);
 
