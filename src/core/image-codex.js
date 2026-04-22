@@ -153,6 +153,8 @@ async function generate(userText, progressFn, options = {}) {
   }
 
   fs.mkdirSync(IMAGE_DIR, { recursive: true });
+  // 1시간 이상 남아있는 orphan 파일 먼저 청소
+  cleanupStale();
   const beforeLocal = new Set(fs.readdirSync(IMAGE_DIR));
   const beforeCodex = snapshotImages(CODEX_IMAGE_DIR);
 
@@ -199,4 +201,44 @@ function cleanup(files) {
   }
 }
 
-module.exports = { isImageRequest, isCodexReady, generate, cleanup, IMAGE_DIR };
+// 두 이미지 경로의 오래된 파일(기본 1시간 이상) 제거. 전송 실패·브릿지 크래시로 남은 orphan 처리용.
+// 빈 codex 세션 디렉토리도 함께 제거.
+function cleanupStale(maxAgeMs = 3600000) {
+  const now = Date.now();
+  const removeOld = (file) => {
+    try {
+      const st = fs.statSync(file);
+      if (now - st.mtimeMs > maxAgeMs) fs.unlinkSync(file);
+    } catch {}
+  };
+
+  try {
+    if (fs.existsSync(IMAGE_DIR)) {
+      for (const name of fs.readdirSync(IMAGE_DIR)) {
+        if (/\.(png|jpe?g|webp)$/i.test(name)) removeOld(path.join(IMAGE_DIR, name));
+      }
+    }
+  } catch {}
+
+  try {
+    if (fs.existsSync(CODEX_IMAGE_DIR)) {
+      for (const session of fs.readdirSync(CODEX_IMAGE_DIR)) {
+        const sdir = path.join(CODEX_IMAGE_DIR, session);
+        let stat;
+        try { stat = fs.statSync(sdir); } catch { continue; }
+        if (!stat.isDirectory()) continue;
+        let entries = [];
+        try { entries = fs.readdirSync(sdir); } catch {}
+        for (const name of entries) {
+          if (/\.(png|jpe?g|webp)$/i.test(name)) removeOld(path.join(sdir, name));
+        }
+        // 세션 디렉토리가 비었으면 제거
+        try {
+          if (!fs.readdirSync(sdir).length) fs.rmdirSync(sdir);
+        } catch {}
+      }
+    }
+  } catch {}
+}
+
+module.exports = { isImageRequest, isCodexReady, generate, cleanup, cleanupStale, IMAGE_DIR, CODEX_IMAGE_DIR };

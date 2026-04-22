@@ -831,6 +831,11 @@ async function start() {
 
   await app.start();
   console.log('[SLACK] Bridge started');
+
+  // orphan 이미지 파일 주기적 정리 (시작 시 1회 + 1시간마다)
+  try { imageCodex.cleanupStale(); } catch {}
+  setInterval(() => { try { imageCodex.cleanupStale(); } catch {} }, 3600000);
+
   return true;
 }
 
