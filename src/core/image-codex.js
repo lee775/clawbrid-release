@@ -113,7 +113,9 @@ User request: ${userText}`;
 // sourceImage 전달 시 -i 옵션으로 원본 이미지 첨부 (수정/편집 모드)
 function runCodex(prompt, sourceImage = null) {
   return new Promise((resolve, reject) => {
-    const imgArg = sourceImage ? `-i ${quoteArg(sourceImage)} ` : '';
+    // -i <FILE>... 는 multi-value 옵션이라 뒤 인자를 모두 이미지로 먹음.
+    // prompt를 positional로 분리하려면 `--` 구분자 필수.
+    const imgArg = sourceImage ? `-i ${quoteArg(sourceImage)} -- ` : '';
     const cmd = `codex exec --skip-git-repo-check --dangerously-bypass-approvals-and-sandbox ${imgArg}${quoteArg(prompt)}`;
     // stdin='ignore' 필수 — pipe로 열어두면 codex가 stdin EOF 대기로 hang
     const proc = spawn(cmd, [], {
