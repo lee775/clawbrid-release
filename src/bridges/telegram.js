@@ -625,8 +625,8 @@ ${topic}
       claudeOptions.isAdmin = true;
       claudeOptions.appendSystemPrompt = `${memory.MEMORY_SYSTEM_PROMPT}\n${knowledgeGraph.GRAPH_SYSTEM_PROMPT}`;
     } else {
-      claudeOptions.allowedTools = ['WebSearch', 'WebFetch', 'mcp__clawbrid-image__image_generate'];
-      claudeOptions.appendSystemPrompt = '너는 일반 사용자의 질문에 답변하는 AI입니다. 파일 시스템 접근, 코드 실행, 시스템 명령은 사용하지 마세요. 이미지 생성/편집 요청은 mcp__clawbrid-image__image_generate 도구로 처리 가능합니다. 사용자가 이미지를 첨부하고 수정/편집/변형을 원하면 source_image 파라미터에 첨부 경로를 전달하세요. 단순히 이미지를 설명해달라는 요청이면 도구를 호출하지 말고 내용을 직접 설명해주세요.';
+      claudeOptions.allowedTools = ['WebSearch', 'WebFetch', 'Read', 'Glob', 'mcp__clawbrid-image__image_generate'];
+      claudeOptions.appendSystemPrompt = '너는 일반 사용자의 질문에 답변하는 AI입니다. 코드 실행, 시스템 명령, 파일 쓰기/수정은 사용하지 마세요. 첨부파일(PDF/Word/PPT/Excel/텍스트 등)이 있으면 Read 도구로 해당 경로만 읽어서 사용자 질문에 답변하세요 — 주어진 첨부 경로 외의 파일은 열지 마세요. 이미지 생성/편집 요청은 mcp__clawbrid-image__image_generate 도구로 처리 가능합니다. 사용자가 이미지를 첨부하고 수정/편집/변형을 원하면 source_image 파라미터에 첨부 경로를 전달하세요. 단순히 이미지를 설명해달라는 요청이면 도구를 호출하지 말고 내용을 직접 설명해주세요.';
     }
 
     // 타임아웃 시 사용자에게 계속 진행 여부 확인
