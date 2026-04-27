@@ -26,6 +26,35 @@ const pendingTimeouts = new Map();
 // /admin 메뉴 force_reply 대기 (key=`${chatId}:${promptMessageId}` → { type, menuMessageId })
 const pendingAdminInputs = new Map();
 
+// 미디어그룹(앨범) 집계 — Telegram은 앨범의 사진/파일을 동일 media_group_id로 여러 메시지에 분할 전송함.
+// 짧은 디바운스 윈도우 동안 모아서 단일 합성 메시지로 처리한다. (사진+문서 혼합 앨범 지원)
+const mediaGroups = new Map(); // gid → { messages: [], timer }
+const MEDIA_GROUP_DEBOUNCE_MS = 1500;
+
+function flushMediaGroup(gid) {
+  const entry = mediaGroups.get(gid);
+  if (!entry) return;
+  mediaGroups.delete(gid);
+  const messages = entry.messages.sort((a, b) => a.message_id - b.message_id);
+  if (!messages.length) return;
+  const base = { ...messages[0] };
+  const photos = [];
+  const documents = [];
+  const captions = [];
+  for (const m of messages) {
+    if (Array.isArray(m.photo) && m.photo.length) photos.push(m.photo[m.photo.length - 1]);
+    if (m.document) documents.push(m.document);
+    if (m.caption) captions.push(m.caption.trim());
+  }
+  base._mediaGroup = true;
+  base._groupPhotos = photos;
+  base._groupDocuments = documents;
+  delete base.photo;
+  delete base.document;
+  base.caption = captions.join('\n').trim() || undefined;
+  handleMessage(base).catch((err) => console.error(`[TG] media group flush error: ${err.message}`));
+}
+
 // ── 권한 ──
 function isAdmin(userId) {
   const cfg = config.load();
@@ -320,15 +349,31 @@ const MAX_QUEUE_SIZE = 5;
 const chatSessions = loadSessions();
 
 async function handleMessage(msg) {
+  // 앨범(미디어그룹) 집계 — 동일 media_group_id 메시지들을 디바운스 윈도우 동안 모아 1회 처리
+  if (msg.media_group_id && !msg._mediaGroup) {
+    const gid = String(msg.media_group_id);
+    let entry = mediaGroups.get(gid);
+    if (!entry) {
+      entry = { messages: [], timer: null };
+      mediaGroups.set(gid, entry);
+    }
+    entry.messages.push(msg);
+    if (entry.timer) clearTimeout(entry.timer);
+    entry.timer = setTimeout(() => flushMediaGroup(gid), MEDIA_GROUP_DEBOUNCE_MS);
+    return;
+  }
+
   const chatId = String(msg.chat.id);
   const userId = String(msg.from.id);
   let text = msg.text?.trim() || '';
-  const hasDocument = !!msg.document;
+  const groupDocs = msg._mediaGroup ? (msg._groupDocuments || []) : [];
+  const groupPhotos = msg._mediaGroup ? (msg._groupPhotos || []) : [];
+  const hasDocument = !!msg.document || groupDocs.length > 0;
   const hasVoice = !!(msg.voice || msg.audio);
-  const hasPhoto = Array.isArray(msg.photo) && msg.photo.length > 0;
+  const hasPhoto = (Array.isArray(msg.photo) && msg.photo.length > 0) || groupPhotos.length > 0;
   // msg.caption (사진/문서 동봉 텍스트)도 본문으로 취급
   if (!text && msg.caption) text = msg.caption.trim();
-  console.log(`[TG] 메시지 수신 | user=${userId} | ${text.slice(0, 80)}${text.length > 80 ? '...' : ''}`);
+  console.log(`[TG] 메시지 수신 | user=${userId} | ${text.slice(0, 80)}${text.length > 80 ? '...' : ''}${msg._mediaGroup ? ` | 앨범(사진${groupPhotos.length}/문서${groupDocs.length})` : ''}`);
 
   // /admin 메뉴의 force_reply 입력 인터셉트 (Claude 호출보다 우선)
   if (msg.reply_to_message?.message_id) {
@@ -781,21 +826,41 @@ ${topic}
     let prompt = text;
 
     if (hasDocument) {
-      const dl = await downloadTelegramFile(msg.document.file_id);
-      if (dl) {
-        const info = `[첨부파일] ${msg.document.file_name || dl.name} (${(dl.size/1024).toFixed(1)}KB)\n경로: ${dl.path}`;
-        prompt = prompt ? `${prompt}\n\n--- 첨부파일 ---\n${info}\n\n위 첨부파일을 Read 도구로 직접 읽어줘.` : `첨부파일을 분석해줘:\n\n${info}`;
+      // 단일 문서 또는 앨범의 다중 문서 → 병렬 다운로드
+      const docs = groupDocs.length ? groupDocs : [msg.document];
+      const dls = await Promise.all(docs.map((d) => downloadTelegramFile(d.file_id)));
+      const valid = dls.map((dl, i) => ({ dl, src: docs[i] })).filter((x) => x.dl);
+      if (valid.length) {
+        const lines = valid.map(({ dl, src }, i) => {
+          const label = valid.length > 1 ? `[첨부파일 ${i + 1}/${valid.length}]` : '[첨부파일]';
+          return `${label} ${src.file_name || dl.name} (${(dl.size / 1024).toFixed(1)}KB)\n경로: ${dl.path}`;
+        });
+        const info = lines.join('\n\n');
+        const header = valid.length > 1 ? `--- 첨부파일 ${valid.length}개 ---` : '--- 첨부파일 ---';
+        prompt = prompt
+          ? `${prompt}\n\n${header}\n${info}\n\n위 첨부파일${valid.length > 1 ? '들' : ''}을 Read 도구로 직접 읽어줘.`
+          : `첨부파일${valid.length > 1 ? '들' : ''}을 분석해줘:\n\n${info}`;
       }
     }
 
     if (hasPhoto) {
-      // msg.photo는 다양한 해상도의 PhotoSize 배열 — 가장 큰 버전 사용
-      const largest = msg.photo[msg.photo.length - 1];
-      const dl = await downloadTelegramFile(largest.file_id);
-      if (dl) {
-        const info = `[첨부 이미지] 경로: ${dl.path}`;
-        const guidance = '이미지가 첨부되었습니다. 사용자 요청을 보고 판단하세요: (1) 분석/설명 요청이면 이미지 내용을 직접 설명 (2) 수정/편집/변형/스타일변경 요청이면 mcp__clawbrid-image__image_generate 도구를 호출하되 source_image에 위 경로를 전달.';
-        prompt = prompt ? `${prompt}\n\n${info}\n\n${guidance}` : `${info}\n\n이 이미지를 설명해줘.`;
+      // 단일 사진 또는 앨범의 다중 사진 → 각 PhotoSize 배열의 가장 큰 버전 사용, 병렬 다운로드
+      const photoSizes = groupPhotos.length
+        ? groupPhotos
+        : [msg.photo[msg.photo.length - 1]];
+      const dls = await Promise.all(photoSizes.map((p) => downloadTelegramFile(p.file_id)));
+      const valid = dls.filter(Boolean);
+      if (valid.length) {
+        const lines = valid.map((dl, i) => {
+          const label = valid.length > 1 ? `[첨부 이미지 ${i + 1}/${valid.length}]` : '[첨부 이미지]';
+          return `${label} 경로: ${dl.path}`;
+        });
+        const info = lines.join('\n');
+        const guidance = valid.length > 1
+          ? `${valid.length}개의 이미지가 첨부되었습니다. 사용자 요청을 보고 판단하세요: (1) 분석/설명 요청이면 각 이미지 내용을 직접 설명 (2) 수정/편집/변형/스타일변경 요청이면 mcp__clawbrid-image__image_generate 도구를 호출하되 source_image에 처리할 이미지 경로를 전달(여러 장이면 도구를 여러 번 호출).`
+          : '이미지가 첨부되었습니다. 사용자 요청을 보고 판단하세요: (1) 분석/설명 요청이면 이미지 내용을 직접 설명 (2) 수정/편집/변형/스타일변경 요청이면 mcp__clawbrid-image__image_generate 도구를 호출하되 source_image에 위 경로를 전달.';
+        const fallback = valid.length > 1 ? '이 이미지들을 설명해줘.' : '이 이미지를 설명해줘.';
+        prompt = prompt ? `${prompt}\n\n${info}\n\n${guidance}` : `${info}\n\n${fallback}`;
       }
     }
     addToHistory(chatId, 'user', prompt);
