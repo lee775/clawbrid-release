@@ -55,7 +55,10 @@ function buildUsersMenu() {
 
   const keyboard = [];
   for (const uid of users) {
-    keyboard.push([{ text: `❌ 삭제 — ${uid}`, callback_data: `admin:users:del:${uid}` }]);
+    keyboard.push([
+      { text: `❌ 삭제 — ${uid}`, callback_data: `admin:users:del:${uid}` },
+      { text: '👑 관리자로', callback_data: `admin:users:promote:${uid}` },
+    ]);
   }
   keyboard.push([
     { text: '➕ 추가', callback_data: 'admin:users:add' },
@@ -137,6 +140,58 @@ async function handleAdminCallback(query) {
         text: removed ? `✅ ${targetId} 제거됨` : `ℹ️ ${targetId}는 목록에 없음`,
       }).catch(() => {});
       await renderUsersMenu(chatId, messageId);
+      return;
+    }
+
+    // 관리자 변경 — 1단계: 확인 화면
+    const promoteMatch = data.match(/^admin:users:promote:(.+)$/);
+    if (promoteMatch) {
+      const targetId = promoteMatch[1];
+      const cfg = config.load();
+      const currentAdmin = String(cfg.telegram.adminUser || '');
+      const text = `⚠️ *관리자 변경 확인*\n\n새 관리자: \`${targetId}\`\n기존 관리자(\`${currentAdmin}\`)는 일반 허용 사용자로 강등됩니다.\n\n계속 진행하시겠습니까?`;
+      const keyboard = [[
+        { text: '✅ 변경', callback_data: `admin:users:confirm_promote:${targetId}` },
+        { text: '취소', callback_data: 'admin:users:refresh' },
+      ]];
+      try {
+        await bot.editMessageText(text, {
+          chat_id: chatId, message_id: messageId,
+          parse_mode: 'Markdown',
+          reply_markup: { inline_keyboard: keyboard },
+        });
+      } catch {}
+      bot.answerCallbackQuery(query.id).catch(() => {});
+      return;
+    }
+
+    // 관리자 변경 — 2단계: 실제 교체
+    const confirmMatch = data.match(/^admin:users:confirm_promote:(.+)$/);
+    if (confirmMatch) {
+      const targetId = String(confirmMatch[1]);
+      const cfg = config.load();
+      const previousAdmin = String(cfg.telegram.adminUser || '');
+      if (targetId === previousAdmin) {
+        bot.answerCallbackQuery(query.id, { text: '이미 관리자입니다.' }).catch(() => {});
+        await renderUsersMenu(chatId, messageId);
+        return;
+      }
+      cfg.telegram.allowedUsers = (cfg.telegram.allowedUsers || []).map(String)
+        .filter((id) => id !== targetId); // 새 관리자는 allowedUsers에서 제거
+      if (previousAdmin && !cfg.telegram.allowedUsers.includes(previousAdmin)) {
+        cfg.telegram.allowedUsers.push(previousAdmin); // 기존 관리자는 일반 허용으로 이동
+      }
+      cfg.telegram.adminUser = targetId;
+      config.save(cfg);
+      bot.answerCallbackQuery(query.id, { text: `✅ ${targetId} 관리자로 지정됨` }).catch(() => {});
+      // 호출자(이전 관리자)는 더 이상 관리자가 아니라 메뉴 갱신은 의미 없음 →
+      // 안내 메시지로 교체
+      try {
+        await bot.editMessageText(
+          `🔄 관리자가 \`${targetId}\` 로 변경되었습니다.\n현재 사용자(\`${previousAdmin}\`)는 일반 허용 사용자로 강등되어 더 이상 /admin 메뉴를 사용할 수 없습니다.`,
+          { chat_id: chatId, message_id: messageId, parse_mode: 'Markdown' }
+        );
+      } catch {}
       return;
     }
 
