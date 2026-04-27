@@ -25,9 +25,9 @@ function runClaude(prompt, options = {}) {
       '--max-turns', String(cfg.claude.maxTurns),
     ];
 
-    if (isAdmin) {
-      args.push('--dangerously-skip-permissions');
-    }
+    // 권한 프롬프트는 비대화형 stdin 모드에서 응답 불가 → 항상 자동 승인.
+    // 비관리자는 allowedTools로 도구 자체를 제한하므로 위험 도구는 호출 불가.
+    args.push('--dangerously-skip-permissions');
 
     // 디렉터리 접근 권한
     for (const dir of cfg.claude.addDirs) {
