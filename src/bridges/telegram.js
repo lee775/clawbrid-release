@@ -23,6 +23,9 @@ let status = null;
 // 타임아웃 버튼 디스패치 (ts → { resolve, resolved, chatId, messageId })
 const pendingTimeouts = new Map();
 
+// /admin 메뉴 force_reply 대기 (key=`${chatId}:${promptMessageId}` → { type, menuMessageId })
+const pendingAdminInputs = new Map();
+
 // ── 권한 ──
 function isAdmin(userId) {
   const cfg = config.load();
@@ -33,6 +36,115 @@ function isAllowed(userId) {
   if (isAdmin(userId)) return true;
   const cfg = config.load();
   return cfg.telegram.allowedUsers.map(id => String(id)).includes(String(userId));
+}
+
+// ── /admin 메뉴 렌더링 ──
+function buildUsersMenu() {
+  const cfg = config.load();
+  const adminId = String(cfg.telegram.adminUser || '');
+  const users = (cfg.telegram.allowedUsers || []).map(String);
+
+  const lines = ['👥 *사용자 관리*', ''];
+  lines.push(`👑 관리자: \`${adminId || '(미설정)'}\``);
+  if (users.length === 0) {
+    lines.push('');
+    lines.push('_허용된 사용자 없음_');
+  } else {
+    lines.push('', `✅ 허용된 사용자 (${users.length}명)`);
+  }
+
+  const keyboard = [];
+  for (const uid of users) {
+    keyboard.push([{ text: `❌ 삭제 — ${uid}`, callback_data: `admin:users:del:${uid}` }]);
+  }
+  keyboard.push([
+    { text: '➕ 추가', callback_data: 'admin:users:add' },
+    { text: '🔄 새로고침', callback_data: 'admin:users:refresh' },
+  ]);
+  keyboard.push([{ text: '닫기', callback_data: 'admin:close' }]);
+
+  return { text: lines.join('\n'), keyboard };
+}
+
+async function renderUsersMenu(chatId, messageId) {
+  const { text, keyboard } = buildUsersMenu();
+  const opts = { parse_mode: 'Markdown', reply_markup: { inline_keyboard: keyboard } };
+  if (messageId) {
+    try {
+      await bot.editMessageText(text, { chat_id: chatId, message_id: messageId, ...opts });
+      return messageId;
+    } catch (err) {
+      // 동일 내용으로 edit 시도 시 "message is not modified" 에러 → 무시
+      if (!/not modified/i.test(err.message || '')) {
+        console.error(`[TG ADMIN] edit failed: ${err.message}`);
+      }
+      return messageId;
+    }
+  }
+  const sent = await bot.sendMessage(chatId, text, opts);
+  return sent.message_id;
+}
+
+async function handleAdminCallback(query) {
+  const userId = String(query.from.id);
+  const chatId = String(query.message.chat.id);
+  const messageId = query.message.message_id;
+  const data = query.data;
+
+  // 매 콜백마다 권한 재검증 (오래된 버튼·관리자 변경 후 잔여 메뉴 차단)
+  if (!isAdmin(userId)) {
+    bot.answerCallbackQuery(query.id, { text: '🚫 관리자 전용', show_alert: true }).catch(() => {});
+    return;
+  }
+
+  try {
+    if (data === 'admin:close') {
+      bot.answerCallbackQuery(query.id, { text: '닫음' }).catch(() => {});
+      bot.editMessageText('🔒 관리자 메뉴를 닫았습니다.', {
+        chat_id: chatId, message_id: messageId,
+      }).catch(() => {});
+      return;
+    }
+
+    if (data === 'admin:users:refresh') {
+      await renderUsersMenu(chatId, messageId);
+      bot.answerCallbackQuery(query.id, { text: '새로고침됨' }).catch(() => {});
+      return;
+    }
+
+    if (data === 'admin:users:add') {
+      const prompt = await bot.sendMessage(chatId,
+        '➕ 추가할 사용자의 Telegram user_id를 *이 메시지에 답장*해주세요.\n(취소하려면 답장하지 않으면 됩니다)',
+        { parse_mode: 'Markdown', reply_markup: { force_reply: true, selective: true } }
+      );
+      pendingAdminInputs.set(`${chatId}:${prompt.message_id}`, {
+        type: 'add_user', menuMessageId: messageId, requesterId: userId,
+      });
+      bot.answerCallbackQuery(query.id).catch(() => {});
+      return;
+    }
+
+    const delMatch = data.match(/^admin:users:del:(.+)$/);
+    if (delMatch) {
+      const targetId = delMatch[1];
+      const cfg = config.load();
+      const before = (cfg.telegram.allowedUsers || []).length;
+      cfg.telegram.allowedUsers = (cfg.telegram.allowedUsers || [])
+        .filter((id) => String(id) !== String(targetId));
+      const removed = before !== cfg.telegram.allowedUsers.length;
+      if (removed) config.save(cfg);
+      bot.answerCallbackQuery(query.id, {
+        text: removed ? `✅ ${targetId} 제거됨` : `ℹ️ ${targetId}는 목록에 없음`,
+      }).catch(() => {});
+      await renderUsersMenu(chatId, messageId);
+      return;
+    }
+
+    bot.answerCallbackQuery(query.id, { text: `알 수 없는 액션: ${data}` }).catch(() => {});
+  } catch (err) {
+    console.error(`[TG ADMIN] callback error: ${err.message}`);
+    bot.answerCallbackQuery(query.id, { text: `오류: ${err.message}` }).catch(() => {});
+  }
 }
 
 // ── 세션 관리 ──
@@ -163,6 +275,39 @@ async function handleMessage(msg) {
   if (!text && msg.caption) text = msg.caption.trim();
   console.log(`[TG] 메시지 수신 | user=${userId} | ${text.slice(0, 80)}${text.length > 80 ? '...' : ''}`);
 
+  // /admin 메뉴의 force_reply 입력 인터셉트 (Claude 호출보다 우선)
+  if (msg.reply_to_message?.message_id) {
+    const key = `${chatId}:${msg.reply_to_message.message_id}`;
+    const pending = pendingAdminInputs.get(key);
+    if (pending) {
+      pendingAdminInputs.delete(key);
+      if (!isAdmin(userId) || String(userId) !== String(pending.requesterId)) {
+        await bot.sendMessage(chatId, '🚫 권한이 없습니다.');
+        return;
+      }
+      if (pending.type === 'add_user') {
+        const targetId = (text || '').replace(/[^0-9]/g, '');
+        if (!targetId) {
+          await bot.sendMessage(chatId, '❌ 숫자형 user_id가 아닙니다. 다시 시도해주세요.');
+          return;
+        }
+        const cfg = config.load();
+        cfg.telegram.allowedUsers = cfg.telegram.allowedUsers || [];
+        if (cfg.telegram.allowedUsers.map(String).includes(targetId)) {
+          await bot.sendMessage(chatId, `ℹ️ ${targetId}는 이미 등록되어 있습니다.`);
+        } else {
+          cfg.telegram.allowedUsers.push(targetId);
+          config.save(cfg);
+          await bot.sendMessage(chatId, `✅ 사용자 ${targetId} 추가됨`);
+        }
+        if (pending.menuMessageId) {
+          await renderUsersMenu(chatId, pending.menuMessageId);
+        }
+      }
+      return;
+    }
+  }
+
   // 음성 메시지 처리
   if (hasVoice && !text) {
     if (!voice.isAvailable()) {
@@ -207,7 +352,7 @@ async function handleMessage(msg) {
     if (cmd === '/help') {
       const pluginCmds = plugins.getList().flatMap(p => p.commands).filter(c => c.startsWith('/'));
       const pluginHelp = pluginCmds.length ? `\n• 플러그인: ${pluginCmds.join(', ')}` : '';
-      await bot.sendMessage(chatId, `*ClawBrid 명령어*\n• /stop 작업 중단\n• /reset 세션 초기화\n• /queue 대기열 확인\n• /clear 대기열 비우기\n• /search [검색어] 웹 검색\n• /browse [URL] [질문] 웹페이지 분석\n• /ultraplan [주제] 심층 분석 + 실행 계획\n• /youtube [URL] [질문] 영상 분석 (프레임+음성)\n• /image [요청] Codex 이미지 생성 (자연어로도 가능: "강아지 그려줘")\n• /graph stats|add|link|find|del|list 지식 그래프\n• /memory list|add|del|search 장기 메모리\n• /plugins 플러그인 목록\n• /cron list|add|del|run|on|off 크론 관리\n• /help 도움말\n• 🎤 음성 메시지 → 자동 텍스트 변환${pluginHelp}`);
+      await bot.sendMessage(chatId, `*ClawBrid 명령어*\n• /stop 작업 중단\n• /reset 세션 초기화\n• /queue 대기열 확인\n• /clear 대기열 비우기\n• /search [검색어] 웹 검색\n• /browse [URL] [질문] 웹페이지 분석\n• /ultraplan [주제] 심층 분석 + 실행 계획\n• /youtube [URL] [질문] 영상 분석 (프레임+음성)\n• /image [요청] Codex 이미지 생성 (자연어로도 가능: "강아지 그려줘")\n• /graph stats|add|link|find|del|list 지식 그래프\n• /memory list|add|del|search 장기 메모리\n• /plugins 플러그인 목록\n• /cron list|add|del|run|on|off 크론 관리\n• /admin 사용자 관리 메뉴 (관리자 전용)\n• /help 도움말\n• 🎤 음성 메시지 → 자동 텍스트 변환${pluginHelp}`);
       return;
     }
     if (cmd === '/ultraplan') {
@@ -492,6 +637,14 @@ ${topic}
       await bot.sendMessage(chatId, '사용법: /graph stats|add|link|find|del|list');
       return;
     }
+    if (!browsePassthrough && cmd === '/admin') {
+      if (!isAdmin(userId)) {
+        await bot.sendMessage(chatId, '🚫 관리자만 사용할 수 있습니다.');
+        return;
+      }
+      await renderUsersMenu(chatId, null);
+      return;
+    }
     if (!browsePassthrough && cmd === '/adduser' && isAdmin(userId)) {
       const targetId = text.split(' ')[1];
       if (targetId) {
@@ -772,6 +925,12 @@ async function start() {
 
   // 타임아웃 버튼 영구 핸들러 (answerCallbackQuery를 항상 실행)
   bot.on('callback_query', async (query) => {
+    // /admin 메뉴 콜백 디스패치
+    if (query.data?.startsWith('admin:')) {
+      await handleAdminCallback(query);
+      return;
+    }
+
     const m = query.data?.match(/^timeout_(continue|stop)_(\d+)$/);
     if (!m) return; // 다른 callback_query는 통과
     const [, choice, ts] = m;
