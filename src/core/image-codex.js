@@ -213,7 +213,9 @@ Prompt: ${englishPrompt}`;
     }
   }
 
-  const newFiles = [...newLocal, ...movedFromCodex];
+  // IMAGE_DIR에 저장됐으면 그것만 사용, 없으면 CODEX_IMAGE_DIR에서 옮겨온 것 사용.
+  // 둘 다 합치면 같은 이미지가 두 경로에 저장된 경우 중복 전송됨.
+  const newFiles = newLocal.length ? newLocal : movedFromCodex;
 
   if (!newFiles.length) {
     throw new Error('Codex가 이미지를 생성하지 않았습니다. (저장 경로 확인 필요)');
