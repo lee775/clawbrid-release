@@ -16,6 +16,7 @@ const webTools = require('../core/web-tools');
 const knowledgeGraph = require('../core/knowledge-graph');
 const videoAnalyzer = require('../core/video-analyzer');
 const imageCodex = require('../core/image-codex');
+const promptStructurer = require('../core/prompt-structurer');
 
 let bot = null;
 let status = null;
@@ -824,6 +825,17 @@ ${topic}
     if (status) status.start(text || '[파일 첨부]', userId, chatId);
 
     let prompt = text;
+
+    // 100자 이상 일반 질문은 Claude 1턴으로 MD 구조화 후 본 프롬프트로 사용
+    if (promptStructurer.shouldStructure(text)) {
+      try {
+        const structured = await promptStructurer.structurePrompt(text);
+        if (structured && structured !== text) {
+          console.log(`[TG] 질문 구조화 | ${text.length}자 → ${structured.length}자`);
+          prompt = structured;
+        }
+      } catch (e) { console.error(`[TG] 질문 구조화 실패: ${e.message}`); }
+    }
 
     if (hasDocument) {
       // 단일 문서 또는 앨범의 다중 문서 → 병렬 다운로드
