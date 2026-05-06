@@ -908,10 +908,10 @@ ${topic}
     const claudeOptions = { resumeSessionId };
     if (isAdmin(userId)) {
       claudeOptions.isAdmin = true;
-      claudeOptions.appendSystemPrompt = `${memory.MEMORY_SYSTEM_PROMPT}\n${knowledgeGraph.GRAPH_SYSTEM_PROMPT}\n${imageCodex.IMAGE_SYSTEM_PROMPT}`;
+      claudeOptions.appendSystemPrompt = `${memory.MEMORY_SYSTEM_PROMPT}\n${knowledgeGraph.GRAPH_SYSTEM_PROMPT}`;
     } else {
       claudeOptions.allowedTools = ['WebSearch', 'WebFetch', 'Read', 'Write', 'Edit', 'MultiEdit', 'Glob', 'mcp__clawbrid-image__image_generate'];
-      claudeOptions.appendSystemPrompt = `너는 일반 사용자의 질문에 답변하는 AI입니다. 코드 실행과 시스템 명령은 사용하지 마세요. 첨부파일(PDF/Word/PPT/Excel/텍스트 등)이 있으면 Read 도구로 해당 경로만 읽어서 사용자 질문에 답변하세요 — 주어진 첨부 경로 외의 파일은 열지 마세요. 파일 쓰기/수정(Write/Edit)은 허용됩니다.\n${imageCodex.IMAGE_SYSTEM_PROMPT}`;
+      claudeOptions.appendSystemPrompt = '너는 일반 사용자의 질문에 답변하는 AI입니다. 코드 실행과 시스템 명령은 사용하지 마세요. 첨부파일(PDF/Word/PPT/Excel/텍스트 등)이 있으면 Read 도구로 해당 경로만 읽어서 사용자 질문에 답변하세요 — 주어진 첨부 경로 외의 파일은 열지 마세요. 파일 쓰기/수정(Write/Edit)은 허용됩니다.';
     }
 
     // 타임아웃 시 사용자에게 계속 진행 여부 확인

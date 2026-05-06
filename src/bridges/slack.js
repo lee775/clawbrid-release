@@ -723,7 +723,7 @@ ${topic}
     const { promise, proc } = runClaude(finalPrompt, {
       resumeSessionId,
       isAdmin: true,
-      appendSystemPrompt: `${memory.MEMORY_SYSTEM_PROMPT}\n${knowledgeGraph.GRAPH_SYSTEM_PROMPT}\n${imageCodex.IMAGE_SYSTEM_PROMPT}`,
+      appendSystemPrompt: `${memory.MEMORY_SYSTEM_PROMPT}\n${knowledgeGraph.GRAPH_SYSTEM_PROMPT}`,
       onTimeout,
     });
     activeSessions.set(sessionKey, proc);
