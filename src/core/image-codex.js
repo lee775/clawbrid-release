@@ -274,4 +274,12 @@ function cleanupStale(maxAgeMs = 3600000) {
   } catch {}
 }
 
-module.exports = { isImageRequest, isCodexReady, generate, cleanup, cleanupStale, IMAGE_DIR, CODEX_IMAGE_DIR };
+// 모든 브릿지(슬랙/텔레그램, 관리자/일반)에 일관 적용해 ASCII 그림 fallback을 차단
+const IMAGE_SYSTEM_PROMPT = `[이미지 생성 절대 규칙]
+사용자가 그림/이미지/사진/일러스트/draw/picture/image 등을 그리거나 만들거나 편집해 달라고 요청하면 반드시 mcp__clawbrid-image__image_generate 도구를 호출하세요.
+- ASCII 아트, 텍스트 기반 그림, 이모지 그림, 코드 블록 그림으로 절대 대체하지 마세요.
+- 도구 호출이 실패하거나 Codex CLI 미설치라면 그 사실을 사용자에게 알리고 멈추세요. 텍스트로 그림을 흉내내지 마세요.
+- 사용자가 이미지를 첨부하고 수정/편집/변형을 원하면 source_image 파라미터에 첨부 경로를 전달하세요.
+- 단순히 이미지를 설명해달라는 요청이면 도구를 호출하지 말고 내용을 직접 설명해주세요.`;
+
+module.exports = { isImageRequest, isCodexReady, generate, cleanup, cleanupStale, IMAGE_DIR, CODEX_IMAGE_DIR, IMAGE_SYSTEM_PROMPT };
