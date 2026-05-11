@@ -17,6 +17,7 @@ const knowledgeGraph = require('../core/knowledge-graph');
 const videoAnalyzer = require('../core/video-analyzer');
 const imageCodex = require('../core/image-codex');
 const promptStructurer = require('../core/prompt-structurer');
+const tgMtproto = require('../core/telegram-mtproto');
 
 let bot = null;
 let status = null;
@@ -43,8 +44,10 @@ function flushMediaGroup(gid) {
   const documents = [];
   const captions = [];
   for (const m of messages) {
-    if (Array.isArray(m.photo) && m.photo.length) photos.push(m.photo[m.photo.length - 1]);
-    if (m.document) documents.push(m.document);
+    if (Array.isArray(m.photo) && m.photo.length) {
+      photos.push({ source: m.photo[m.photo.length - 1], messageId: m.message_id });
+    }
+    if (m.document) documents.push({ source: m.document, messageId: m.message_id });
     if (m.caption) captions.push(m.caption.trim());
   }
   base._mediaGroup = true;
@@ -311,22 +314,82 @@ function searchHistory(chatId, keyword) {
 }
 
 // ── 파일 다운로드 ──
-async function downloadTelegramFile(fileId) {
+// opts: { chatId, messageId, fallbackName } — fallbackName은 file_name(없을 수도 있음)
+// 반환: { ok: true, path, name, size } | { ok: false, reason, message, name }
+async function downloadTelegramFile(fileId, opts = {}) {
+  const { chatId, messageId, fallbackName } = opts;
   try {
     const file = await bot.getFile(fileId);
     const url = `https://api.telegram.org/file/bot${config.load().telegram.botToken}/${file.file_path}`;
     const destPath = path.join(config.DOWNLOADS_DIR, `${Date.now()}_${path.basename(file.file_path)}`);
-    return new Promise((resolve, reject) => {
+    return await new Promise((resolve, reject) => {
       https.get(url, (res) => {
         const ws = fs.createWriteStream(destPath);
         res.pipe(ws);
-        ws.on('finish', () => { ws.close(); resolve({ path: destPath, name: path.basename(file.file_path), size: fs.statSync(destPath).size }); });
+        ws.on('finish', () => {
+          ws.close();
+          resolve({ ok: true, path: destPath, name: path.basename(file.file_path), size: fs.statSync(destPath).size });
+        });
         ws.on('error', reject);
       }).on('error', reject);
     });
   } catch (err) {
-    console.error(`[TG FILE ERROR] ${err.message}`);
-    return null;
+    const msg = err.message || String(err);
+    const isTooBig = /file is too big|file_too_big/i.test(msg);
+    console.error(`[TG FILE ERROR] ${msg}${isTooBig ? ' (>20MB, MTProto fallback 시도)' : ''}`);
+
+    if (isTooBig && messageId != null) {
+      // MTProto fallback
+      if (!tgMtproto.isConfigured()) {
+        return {
+          ok: false,
+          reason: 'too_big_no_mtproto',
+          message: '파일이 20MB를 초과합니다. /admin → apiId/apiHash 등록 시 최대 2GB까지 받을 수 있습니다.',
+          name: fallbackName || `message_${messageId}`,
+        };
+      }
+      try {
+        const safeName = (fallbackName || `message_${messageId}.bin`).replace(/[\\/:*?"<>|]/g, '_');
+        const destPath = path.join(config.DOWNLOADS_DIR, `${Date.now()}_${safeName}`);
+        let lastReportedPct = -1;
+        let progressNotifier = null;
+        if (chatId && bot) {
+          // 진행률 메시지 생성 (10% 단위로만 갱신)
+          try {
+            const sent = await bot.sendMessage(chatId, `📥 큰 파일 다운로드 중 (MTProto)... 0%`);
+            progressNotifier = sent;
+          } catch {}
+        }
+        const onProgress = (downloaded, total) => {
+          if (!progressNotifier || !total) return;
+          const pct = Math.floor((downloaded / total) * 100);
+          if (pct === lastReportedPct || pct % 10 !== 0) return;
+          lastReportedPct = pct;
+          bot.editMessageText(`📥 큰 파일 다운로드 중 (MTProto)... ${pct}% (${(downloaded / 1024 / 1024).toFixed(1)}MB / ${(total / 1024 / 1024).toFixed(1)}MB)`, {
+            chat_id: chatId,
+            message_id: progressNotifier.message_id,
+          }).catch(() => {});
+        };
+        const out = await tgMtproto.downloadByMessageId(messageId, destPath, onProgress);
+        if (progressNotifier) {
+          bot.editMessageText(`✅ 다운로드 완료 (${(out.size / 1024 / 1024).toFixed(1)}MB)`, {
+            chat_id: chatId,
+            message_id: progressNotifier.message_id,
+          }).catch(() => {});
+        }
+        return { ok: true, path: out.path, name: safeName, size: out.size };
+      } catch (mtErr) {
+        console.error(`[TG MTPROTO ERROR] ${mtErr.message}`);
+        return {
+          ok: false,
+          reason: 'too_big_mtproto_failed',
+          message: `대용량 파일 다운로드 실패: ${mtErr.message}`,
+          name: fallbackName || `message_${messageId}`,
+        };
+      }
+    }
+
+    return { ok: false, reason: 'other', message: msg, name: fallbackName || '' };
   }
 }
 
@@ -374,7 +437,19 @@ async function handleMessage(msg) {
   const hasPhoto = (Array.isArray(msg.photo) && msg.photo.length > 0) || groupPhotos.length > 0;
   // msg.caption (사진/문서 동봉 텍스트)도 본문으로 취급
   if (!text && msg.caption) text = msg.caption.trim();
-  console.log(`[TG] 메시지 수신 | user=${userId} | ${text.slice(0, 80)}${text.length > 80 ? '...' : ''}${msg._mediaGroup ? ` | 앨범(사진${groupPhotos.length}/문서${groupDocs.length})` : ''}`);
+  // 첨부 정보 로깅 (앨범 외 단독 첨부도 표시 — 다운로드 실패 진단용)
+  let attachmentTag = '';
+  if (msg._mediaGroup) {
+    attachmentTag = ` | 앨범(사진${groupPhotos.length}/문서${groupDocs.length})`;
+  } else if (msg.document) {
+    const sz = msg.document.file_size ? `, ${(msg.document.file_size / 1024 / 1024).toFixed(1)}MB` : '';
+    attachmentTag = ` | 문서(${msg.document.file_name || msg.document.mime_type || 'unknown'}${sz})`;
+  } else if (hasPhoto) {
+    attachmentTag = ` | 사진`;
+  } else if (hasVoice) {
+    attachmentTag = ` | 음성`;
+  }
+  console.log(`[TG] 메시지 수신 | user=${userId} | ${text.slice(0, 80)}${text.length > 80 ? '...' : ''}${attachmentTag}`);
 
   // /admin 메뉴의 force_reply 입력 인터셉트 (Claude 호출보다 우선)
   if (msg.reply_to_message?.message_id) {
@@ -417,8 +492,8 @@ async function handleMessage(msg) {
     }
     try {
       const fileId = (msg.voice || msg.audio).file_id;
-      const dl = await downloadTelegramFile(fileId);
-      if (!dl) { await bot.sendMessage(chatId, '❌ 음성 파일 다운로드 실패'); return; }
+      const dl = await downloadTelegramFile(fileId, { chatId, messageId: msg.message_id });
+      if (!dl.ok) { await bot.sendMessage(chatId, `❌ 음성 파일 다운로드 실패: ${dl.message || dl.reason}`); return; }
       await bot.sendMessage(chatId, '🎤 음성 변환 중...');
       text = await voice.transcribe(dl.path);
       if (!text) { await bot.sendMessage(chatId, '❌ 음성에서 텍스트를 인식하지 못했습니다.'); return; }
@@ -839,9 +914,23 @@ ${topic}
 
     if (hasDocument) {
       // 단일 문서 또는 앨범의 다중 문서 → 병렬 다운로드
-      const docs = groupDocs.length ? groupDocs : [msg.document];
-      const dls = await Promise.all(docs.map((d) => downloadTelegramFile(d.file_id)));
-      const valid = dls.map((dl, i) => ({ dl, src: docs[i] })).filter((x) => x.dl);
+      // 앨범 케이스는 { source, messageId } 객체, 단독은 raw document → 정규화
+      const docItems = groupDocs.length
+        ? groupDocs
+        : [{ source: msg.document, messageId: msg.message_id }];
+      const dls = await Promise.all(docItems.map((it) =>
+        downloadTelegramFile(it.source.file_id, {
+          chatId,
+          messageId: it.messageId,
+          fallbackName: it.source.file_name,
+        })
+      ));
+      const valid = dls.map((dl, i) => ({ dl, src: docItems[i].source })).filter((x) => x.dl.ok);
+      const failed = dls.filter((dl) => !dl.ok);
+      // 실패한 다운로드는 사용자에게 별도 안내
+      for (const f of failed) {
+        try { await bot.sendMessage(chatId, `⚠️ 첨부 다운로드 실패: ${f.message || f.reason}`); } catch {}
+      }
       if (valid.length) {
         const lines = valid.map(({ dl, src }, i) => {
           const label = valid.length > 1 ? `[첨부파일 ${i + 1}/${valid.length}]` : '[첨부파일]';
@@ -857,11 +946,21 @@ ${topic}
 
     if (hasPhoto) {
       // 단일 사진 또는 앨범의 다중 사진 → 각 PhotoSize 배열의 가장 큰 버전 사용, 병렬 다운로드
-      const photoSizes = groupPhotos.length
+      const photoItems = groupPhotos.length
         ? groupPhotos
-        : [msg.photo[msg.photo.length - 1]];
-      const dls = await Promise.all(photoSizes.map((p) => downloadTelegramFile(p.file_id)));
-      const valid = dls.filter(Boolean);
+        : [{ source: msg.photo[msg.photo.length - 1], messageId: msg.message_id }];
+      const dls = await Promise.all(photoItems.map((it) =>
+        downloadTelegramFile(it.source.file_id, {
+          chatId,
+          messageId: it.messageId,
+          fallbackName: 'photo.jpg',
+        })
+      ));
+      const valid = dls.filter((dl) => dl.ok);
+      const failed = dls.filter((dl) => !dl.ok);
+      for (const f of failed) {
+        try { await bot.sendMessage(chatId, `⚠️ 이미지 다운로드 실패: ${f.message || f.reason}`); } catch {}
+      }
       if (valid.length) {
         const lines = valid.map((dl, i) => {
           const label = valid.length > 1 ? `[첨부 이미지 ${i + 1}/${valid.length}]` : '[첨부 이미지]';
@@ -1099,6 +1198,7 @@ async function start() {
 async function stop() {
   if (bot) { bot.stopPolling(); bot = null; }
   if (status) { status.destroy(); status = null; }
+  try { await tgMtproto.disconnect(); } catch {}
   console.log('[TELEGRAM] Bridge stopped');
 }
 

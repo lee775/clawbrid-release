@@ -36,6 +36,9 @@ const DEFAULT_CONFIG = {
     botToken: '',
     adminUser: '',
     allowedUsers: [],
+    // MTProto fallback (20MB 초과 파일 다운로드용, https://my.telegram.org/apps 에서 발급)
+    apiId: '',
+    apiHash: '',
   },
   // 모니터 설정
   monitor: {

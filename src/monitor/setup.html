@@ -174,6 +174,15 @@
         <input type="text" id="cfg-tg-admin" placeholder="숫자 ID (예: 8700817067)">
         <div class="hint">Telegram에서 @userinfobot에게 메시지 보내면 ID 확인 가능</div>
       </div>
+      <div class="field">
+        <label>API ID (선택, 20MB 초과 파일 다운로드용)</label>
+        <input type="text" id="cfg-tg-apiid" placeholder="예: 1234567">
+        <div class="hint"><a href="https://my.telegram.org/apps" target="_blank" style="color:#58a6ff;">my.telegram.org/apps</a>에서 발급. 비워두면 ≤20MB 파일만 받음.</div>
+      </div>
+      <div class="field">
+        <label>API Hash (선택)</label>
+        <input type="password" id="cfg-tg-apihash" placeholder="32자리 hex">
+      </div>
     </div>
   </div>
 
@@ -323,6 +332,8 @@ function finishSetup() {
       botToken: document.getElementById('cfg-tg-token').value,
       adminUser: document.getElementById('cfg-tg-admin').value,
       allowedUsers: [],
+      apiId: document.getElementById('cfg-tg-apiid').value.trim(),
+      apiHash: document.getElementById('cfg-tg-apihash').value.trim(),
     },
     monitor: { autoStart: true, minimizeToTray: true },
     cleanup: { maxAgeDays: 7, intervalHours: 24 },
@@ -350,6 +361,8 @@ async function loadExistingConfig() {
       if (cfg.telegram.enabled) { platforms.telegram = true; document.getElementById('toggle-telegram').classList.add('on'); }
       if (cfg.telegram.botToken) document.getElementById('cfg-tg-token').value = cfg.telegram.botToken;
       if (cfg.telegram.adminUser) document.getElementById('cfg-tg-admin').value = cfg.telegram.adminUser;
+      if (cfg.telegram.apiId) document.getElementById('cfg-tg-apiid').value = cfg.telegram.apiId;
+      if (cfg.telegram.apiHash) document.getElementById('cfg-tg-apihash').value = cfg.telegram.apiHash;
     }
     renderDots();
   } catch (e) {
