@@ -9,7 +9,8 @@ const fs = require('fs');
 const os = require('os');
 const config = require('../core/config');
 const StatusReporter = require('../core/status-reporter');
-const { runClaude, extractText, extractSessionId, runCodexReview, hasCodeChanges } = require('../core/claude-runner');
+const { runCodexReview, hasCodeChanges } = require('../core/claude-runner');
+const agentRouter = require('../core/agent-router');
 const memory = require('../core/memory-manager');
 const plugins = require('../core/plugin-manager');
 const webTools = require('../core/web-tools');
@@ -24,28 +25,8 @@ let status = null;
 // 타임아웃 버튼 디스패치 (ts → { resolve, resolved, channel, messageTs })
 const pendingTimeouts = new Map();
 
-// ── 세션 관리 ──
-function loadSessions() {
-  try {
-    const p = config.SESSIONS_FILE;
-    if (fs.existsSync(p)) {
-      const data = JSON.parse(fs.readFileSync(p, 'utf-8'));
-      return new Map(Object.entries(data.slack || {}));
-    }
-  } catch (err) { console.error(`[SLACK] loadSessions error: ${err.message}`); }
-  return new Map();
-}
-
-function saveSessions(sessions) {
-  try {
-    let data = {};
-    if (fs.existsSync(config.SESSIONS_FILE)) {
-      data = JSON.parse(fs.readFileSync(config.SESSIONS_FILE, 'utf-8'));
-    }
-    data.slack = Object.fromEntries(sessions);
-    fs.writeFileSync(config.SESSIONS_FILE, JSON.stringify(data, null, 2), 'utf-8');
-  } catch (err) { console.error(`[SLACK] saveSessions error: ${err.message}`); }
-}
+// ── 세션 관리는 agent-router로 위임 ──
+// (구버전 호환: agent-router가 sessions.json의 문자열 형식을 자동 마이그레이션)
 
 // ── 대화 기록 (일별 MD) ──
 function getHistoryDir(chatId) {
@@ -59,10 +40,13 @@ function getTodayPath(chatId) {
   return path.join(getHistoryDir(chatId), `${date}.md`);
 }
 
-function addToHistory(chatId, role, content) {
+function addToHistory(chatId, role, content, agent) {
   try {
     const now = new Date().toISOString().slice(0, 16).replace('T', ' ');
-    const label = role === 'user' ? '사용자' : 'Claude';
+    let label;
+    if (role === 'user') label = '사용자';
+    else if (agent === 'codex') label = 'Codex';
+    else label = 'Claude';
     const line = `### ${label} (${now})\n${content}\n\n`;
     fs.appendFileSync(getTodayPath(chatId), line, 'utf-8');
   } catch (err) { console.error(`[SLACK] addToHistory error: ${err.message}`); }
@@ -198,7 +182,6 @@ async function slackUploadImage(client, channelId, filePath, comment = '') {
 const activeSessions = new Map();
 const messageQueue = new Map(); // 채널별 작업 큐 (최대 5개)
 const MAX_QUEUE_SIZE = 5;
-const channelSessions = loadSessions();
 
 async function handleMessage({ event, say, client }) {
   if (event.bot_id) return;
@@ -230,13 +213,37 @@ async function handleMessage({ event, say, client }) {
     return;
   }
   if (text.toLowerCase() === '!reset') {
-    channelSessions.delete(channelId); saveSessions(channelSessions);
+    agentRouter.clearAll('slack', channelId);
     await say('🔄 세션 초기화됨'); return;
+  }
+  if (text.toLowerCase().startsWith('!agent')) {
+    const parts = text.split(/\s+/).slice(1);
+    const target = (parts[0] || '').toLowerCase();
+    const current = agentRouter.getActiveAgent('slack', channelId);
+    const globalDefault = agentRouter.getGlobalDefault();
+    if (!target) {
+      await say(`🤖 현재 Agent: *${current}*\n🌐 글로벌 기본: *${globalDefault}*\n\n전환: \`!agent claude\` 또는 \`!agent codex\``);
+      return;
+    }
+    if (!agentRouter.isValidAgent(target)) {
+      await say(`❌ 알 수 없는 agent: ${target}\n사용법: \`!agent claude|codex\``); return;
+    }
+    if (target === 'codex') {
+      const codexRunner = require('../core/codex-runner');
+      if (!codexRunner.isCodexReady()) {
+        await say('❌ Codex CLI가 설치되지 않았거나 인증이 필요합니다. (`codex login`)'); return;
+      }
+    }
+    agentRouter.setActiveAgent('slack', channelId, target);
+    const resumeId = agentRouter.getResumeSessionId('slack', channelId, target);
+    const resumeMsg = resumeId ? ' (이전 세션 이어감)' : ' (새 세션 시작)';
+    await say(`✅ 이 채널의 Agent → *${target}*${resumeMsg}`);
+    return;
   }
   if (text.toLowerCase() === '!help') {
     const pluginCmds = plugins.getList().flatMap(p => p.commands).filter(c => c.startsWith('!'));
     const pluginHelp = pluginCmds.length ? `\n• 플러그인: ${pluginCmds.join(', ')}` : '';
-    await say(`*ClawBrid 명령어*\n• \`!stop\` 작업 중단\n• \`!reset\` 세션 초기화\n• \`!queue\` 대기열 확인\n• \`!clear\` 대기열 비우기\n• \`!search [검색어]\` 웹 검색\n• \`!browse [URL] [질문]\` 웹페이지 분석\n• \`!ultraplan [주제]\` 심층 분석 + 실행 계획\n• \`!youtube [URL] [질문]\` 영상 분석 (프레임+음성)\n• \`!image [요청]\` Codex 이미지 생성 (자연어로도 가능: "강아지 그려줘")\n• \`!graph stats|add|link|find|del|list\` 지식 그래프\n• \`!memory list|add|del|search\` 장기 메모리\n• \`!plugins\` 플러그인 목록\n• \`!cron list|add|del|run|on|off\` 크론 관리\n• \`!help\` 도움말${pluginHelp}`); return;
+    await say(`*ClawBrid 명령어*\n• \`!agent [claude|codex]\` 이 채널의 AI 전환\n• \`!stop\` 작업 중단\n• \`!reset\` 세션 초기화\n• \`!queue\` 대기열 확인\n• \`!clear\` 대기열 비우기\n• \`!search [검색어]\` 웹 검색\n• \`!browse [URL] [질문]\` 웹페이지 분석\n• \`!ultraplan [주제]\` 심층 분석 + 실행 계획\n• \`!youtube [URL] [질문]\` 영상 분석 (프레임+음성)\n• \`!image [요청]\` Codex 이미지 생성 (자연어로도 가능: "강아지 그려줘")\n• \`!graph stats|add|link|find|del|list\` 지식 그래프\n• \`!memory list|add|del|search\` 장기 메모리\n• \`!plugins\` 플러그인 목록\n• \`!cron list|add|del|run|on|off\` 크론 관리\n• \`!help\` 도움말${pluginHelp}`); return;
   }
   if (text.toLowerCase() === '!queue') {
     const queue = messageQueue.get(channelId) || [];
@@ -310,8 +317,7 @@ ${topic}
 - 완료 확인 기준
 - 테스트 전략`;
     // ultraplan은 새 세션으로 (깊은 분석이므로)
-    channelSessions.delete(channelId);
-    saveSessions(channelSessions);
+    agentRouter.clearAll('slack', channelId);
     await say('🧠 *UltraPlan* 심층 분석을 시작합니다...');
     // fall through to Claude execution below
   }
@@ -339,8 +345,7 @@ ${topic}
       await say(`📹 *${result.title}* 분석 완료! Claude에게 전달 중...`);
 
       // 새 세션으로 (영상 분석은 독립적)
-      channelSessions.delete(channelId);
-      saveSessions(channelSessions);
+      agentRouter.clearAll('slack', channelId);
       text = result.prompt;
       // cleanup은 Claude 응답 후 처리
       const _tempDir = result.tempDir;
@@ -586,11 +591,12 @@ ${topic}
     await say(`📋 대기열에 추가됨 (${queue.length}번째). \`!queue\`로 확인`); return;
   }
 
-  const startMsg = await say('⏳ 작업 진행중');
+  const activeAgent = agentRouter.getActiveAgent('slack', channelId);
+  const startMsg = await say(`⏳ 작업 진행중 _(${activeAgent})_`);
   let dotCount = 0;
   let progressTimer = null;
 
-  const resumeSessionId = channelSessions.get(channelId) || null;
+  const resumeSessionId = agentRouter.getResumeSessionId('slack', channelId, activeAgent);
 
   try {
     progressTimer = setInterval(async () => {
@@ -635,7 +641,7 @@ ${topic}
       }
     }
 
-    addToHistory(channelId, 'user', prompt);
+    addToHistory(channelId, 'user', prompt, activeAgent);
 
     let finalPrompt = prompt;
     if (!resumeSessionId) {
@@ -720,19 +726,20 @@ ${topic}
     const imagesBefore = new Set();
     try { if (fs.existsSync(imageCodex.IMAGE_DIR)) fs.readdirSync(imageCodex.IMAGE_DIR).forEach(f => imagesBefore.add(f)); } catch {}
 
-    const { promise, proc } = runClaude(finalPrompt, {
+    const runOptions = {
       resumeSessionId,
-      isAdmin: true,
       appendSystemPrompt: `${memory.MEMORY_SYSTEM_PROMPT}\n${knowledgeGraph.GRAPH_SYSTEM_PROMPT}`,
       onTimeout,
-    });
+    };
+    if (activeAgent === 'claude') runOptions.isAdmin = true;
+    const { promise, proc } = agentRouter.runAgent(activeAgent, finalPrompt, runOptions);
     activeSessions.set(sessionKey, proc);
     const result = await promise;
 
-    const newSession = extractSessionId(result);
-    if (newSession) { channelSessions.set(channelId, newSession); saveSessions(channelSessions); }
+    const newSession = agentRouter.extractSessionId(activeAgent, result);
+    if (newSession) agentRouter.updateSessionId('slack', channelId, activeAgent, newSession);
 
-    let responseText = extractText(result);
+    let responseText = agentRouter.extractText(activeAgent, result);
 
     // 응답에서 메모리 자동 추출
     const { cleaned, saved } = memory.extractAndSave(responseText, 'slack-auto');
@@ -748,9 +755,9 @@ ${topic}
     // 플러그인 후처리 훅
     responseText = plugins.runAfterResponse(responseText, { userId, chatId: channelId, source: 'slack' });
 
-    addToHistory(channelId, 'assistant', responseText);
+    addToHistory(channelId, 'assistant', responseText, activeAgent);
     if (status) status.done(responseText);
-    console.log(`[SLACK] 응답 완료 | user=${userId} | ${responseText.slice(0, 100)}${responseText.length > 100 ? '...' : ''}`);
+    console.log(`[SLACK] 응답 완료 | agent=${activeAgent} | user=${userId} | ${responseText.slice(0, 100)}${responseText.length > 100 ? '...' : ''}`);
 
     try { await client.chat.update({ channel: channelId, ts: startMsg.ts, text: '✅ 작업 완료' }); } catch {}
 
@@ -785,8 +792,11 @@ ${topic}
     }
 
   } catch (err) {
-    console.error(`[SLACK] 에러 | user=${userId} | ${err.message}`);
+    console.error(`[SLACK] 에러 | agent=${activeAgent} | user=${userId} | ${err.message}`);
     if (status) status.error(err.message);
+    if (err.message.includes('session') || err.message.includes('resume')) {
+      agentRouter.clearSession('slack', channelId, activeAgent);
+    }
     try { await client.chat.update({ channel: channelId, ts: startMsg.ts, text: '❌ 작업 실패' }); } catch {}
     await say(`❌ 오류:\n\`\`\`\n${err.message}\n\`\`\``);
   } finally {

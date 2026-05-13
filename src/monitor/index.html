@@ -913,6 +913,35 @@
       </div>
     </div>
 
+    <!-- Agent Section -->
+    <div class="settings-section">
+      <div class="settings-header">
+        <div class="settings-title">🤖 AI Agent</div>
+      </div>
+      <div class="settings-fields">
+        <div class="settings-field">
+          <label>기본 Agent (신규 채팅에 적용)</label>
+          <select id="settings-agent-default" class="form-input" style="padding:8px 10px;">
+            <option value="claude">Claude</option>
+            <option value="codex">Codex</option>
+          </select>
+          <div style="font-size:11px;color:#8b949e;margin-top:6px;">채팅별 <code>/agent</code> 명령으로 개별 전환 가능. 변경 후엔 기존 채팅 설정은 유지됩니다.</div>
+        </div>
+        <div class="settings-field">
+          <label>Codex 샌드박스 모드</label>
+          <select id="settings-agent-codex-sandbox" class="form-input" style="padding:8px 10px;">
+            <option value="danger-full-access">danger-full-access (모든 명령 허용)</option>
+            <option value="workspace-write">workspace-write (작업 디렉터리만 쓰기)</option>
+            <option value="read-only">read-only (읽기 전용)</option>
+          </select>
+        </div>
+        <div class="settings-field">
+          <label>Codex 모델 (비워두면 기본)</label>
+          <input type="text" id="settings-agent-codex-model" class="form-input" placeholder="예: gpt-5-codex">
+        </div>
+      </div>
+    </div>
+
     <!-- Memory Section -->
     <div class="settings-section">
       <div class="settings-header">
@@ -1369,6 +1398,15 @@ async function loadSettings() {
       document.getElementById('settings-tg-token').value = cfg.telegram.botToken || '';
       document.getElementById('settings-tg-users').value = (cfg.telegram.allowedUsers || []).join(',');
     }
+    if (cfg.agent) {
+      const def = cfg.agent.default || 'claude';
+      const defEl = document.getElementById('settings-agent-default');
+      if (defEl) defEl.value = def;
+      const sandboxEl = document.getElementById('settings-agent-codex-sandbox');
+      if (sandboxEl) sandboxEl.value = cfg.agent.codex?.sandbox || 'danger-full-access';
+      const modelEl = document.getElementById('settings-agent-codex-model');
+      if (modelEl) modelEl.value = cfg.agent.codex?.model || '';
+    }
   } catch {}
 }
 
@@ -1385,6 +1423,15 @@ async function saveSettings() {
     cfg.telegram.enabled = document.getElementById('settings-tg-enabled').checked;
     cfg.telegram.botToken = document.getElementById('settings-tg-token').value.trim();
     cfg.telegram.allowedUsers = document.getElementById('settings-tg-users').value.split(',').map(s => s.trim()).filter(Boolean);
+
+    cfg.agent = cfg.agent || {};
+    const defEl = document.getElementById('settings-agent-default');
+    if (defEl) cfg.agent.default = defEl.value;
+    cfg.agent.codex = cfg.agent.codex || {};
+    const sandboxEl = document.getElementById('settings-agent-codex-sandbox');
+    if (sandboxEl) cfg.agent.codex.sandbox = sandboxEl.value;
+    const modelEl = document.getElementById('settings-agent-codex-model');
+    if (modelEl) cfg.agent.codex.model = modelEl.value.trim() || null;
 
     await bridge.saveConfig(cfg);
     alert('설정이 저장되었습니다.');

@@ -50,6 +50,14 @@ const DEFAULT_CONFIG = {
     maxAgeDays: 7,
     intervalHours: 24,
   },
+  // Agent 라우터 — 채팅별 /agent 명령으로 오버라이드 가능
+  agent: {
+    default: 'claude',         // 'claude' | 'codex' — 신규 채팅의 기본 agent
+    codex: {
+      sandbox: 'danger-full-access', // 'read-only' | 'workspace-write' | 'danger-full-access'
+      model: null,                    // null이면 codex 기본 모델
+    },
+  },
 };
 
 function ensureDirs() {
