@@ -197,7 +197,7 @@ const commands = {
 `);
   },
 
-  update() {
+  async update() {
     const pkg = require(path.join(CLAWBRID_ROOT, 'package.json'));
     console.log(`  Current version: ${pkg.version}`);
 
@@ -237,19 +237,38 @@ const commands = {
 
     // 3. 모니터 exe 갱신 (Tauri에 HTML이 번들링되므로 재다운로드 필요)
     const cachedExe = path.join(CONFIG_DIR, MONITOR_EXE);
+    // 모니터가 실행 중이면 종료해야 exe 교체 가능
+    try { execSync('taskkill /f /im clawbrid-monitor.exe', { stdio: 'ignore', windowsHide: true }); } catch {}
     if (fs.existsSync(cachedExe)) {
-      try { fs.unlinkSync(cachedExe); console.log('  Monitor exe removed (will re-download on next dashboard).'); } catch {}
+      try { fs.unlinkSync(cachedExe); console.log('  Monitor exe removed.'); } catch {}
     }
 
-    // 4. PM2 다시 등록
-    try { execSync(`pm2 start "${path.join(CLAWBRID_ROOT, 'src', 'bridges', 'slack-standalone.js')}" --name clawbrid-slack`, { stdio: 'ignore', windowsHide: true }); } catch {}
-    try { execSync(`pm2 start "${path.join(CLAWBRID_ROOT, 'src', 'bridges', 'telegram-standalone.js')}" --name clawbrid-telegram`, { stdio: 'ignore', windowsHide: true }); } catch {}
-    try { execSync(`pm2 start "${path.join(CLAWBRID_ROOT, 'src', 'cron-worker.js')}" --name clawbrid-cron`, { stdio: 'ignore', windowsHide: true }); } catch {}
+    // 4. PM2 재시작 (delete + start 로 새 코드 확실히 반영)
+    const procs = [
+      ['clawbrid-slack', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'slack-standalone.js')],
+      ['clawbrid-telegram', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'telegram-standalone.js')],
+      ['clawbrid-cron', path.join(CLAWBRID_ROOT, 'src', 'cron-worker.js')],
+    ];
+    for (const [name, script] of procs) {
+      try { execSync(`pm2 delete ${name}`, { stdio: 'ignore', windowsHide: true }); } catch {}
+      try { execSync(`pm2 start "${script}" --name ${name}`, { stdio: 'ignore', windowsHide: true }); } catch {}
+    }
     try { execSync('pm2 save', { stdio: 'ignore', windowsHide: true }); } catch {}
     console.log('  PM2 processes restarted.');
 
     // 5. MCP 서버 자동 등록/갱신
     ensureMCP();
+
+    // 6. 모니터 자동 실행 (새 exe 다운로드 후 띄움)
+    try {
+      const exe = await ensureMonitorExe();
+      ensureDesktopShortcut(exe);
+      const proc = spawn(exe, [], { stdio: 'ignore', windowsHide: true, detached: true });
+      proc.unref();
+      console.log('  ClawBrid Monitor launched.');
+    } catch (e) {
+      console.error(`  Monitor launch failed: ${e.message}`);
+    }
   },
 
   version() {
