@@ -704,6 +704,38 @@
       </div>
     </div>
 
+    <!-- Agent Card -->
+    <div class="card" style="padding:14px 20px; margin-bottom:16px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
+        <div>
+          <div style="font-size:14px; font-weight:600; color:#c9d1d9;">🤖 AI Agent</div>
+          <div style="font-size:11px; color:#8b949e; margin-top:2px;">신규 채팅에 적용 · 채팅별 <code>/agent claude|codex</code> 로 개별 전환</div>
+        </div>
+        <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
+          <div style="display:flex; gap:8px; align-items:center;">
+            <label style="font-size:12px;color:#8b949e;">기본</label>
+            <select id="dash-agent-default" class="form-input" style="padding:6px 10px;font-size:12px;" onchange="saveDashAgent()">
+              <option value="claude">Claude</option>
+              <option value="codex">Codex</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <label style="font-size:12px;color:#8b949e;">Codex 샌드박스</label>
+            <select id="dash-agent-sandbox" class="form-input" style="padding:6px 10px;font-size:12px;" onchange="saveDashAgent()">
+              <option value="danger-full-access">danger-full-access</option>
+              <option value="workspace-write">workspace-write</option>
+              <option value="read-only">read-only</option>
+            </select>
+          </div>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <label style="font-size:12px;color:#8b949e;">Codex 모델</label>
+            <input type="text" id="dash-agent-model" class="form-input" placeholder="(기본)" style="padding:6px 10px;font-size:12px;width:130px;" onchange="saveDashAgent()">
+          </div>
+          <span id="dash-agent-status" style="font-size:11px;color:#3fb950;display:none;">✓ 저장됨</span>
+        </div>
+      </div>
+    </div>
+
     <!-- Bridge Cards -->
     <div class="bridge-cards" id="bridge-cards"></div>
 
@@ -909,35 +941,6 @@
             <input type="text" id="settings-tg-users" placeholder="123456789,987654321" readonly>
             <button class="users-edit-btn" onclick="toggleUsersEdit('settings-tg-users', this)">수정</button>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Agent Section -->
-    <div class="settings-section">
-      <div class="settings-header">
-        <div class="settings-title">🤖 AI Agent</div>
-      </div>
-      <div class="settings-fields">
-        <div class="settings-field">
-          <label>기본 Agent (신규 채팅에 적용)</label>
-          <select id="settings-agent-default" class="form-input" style="padding:8px 10px;">
-            <option value="claude">Claude</option>
-            <option value="codex">Codex</option>
-          </select>
-          <div style="font-size:11px;color:#8b949e;margin-top:6px;">채팅별 <code>/agent</code> 명령으로 개별 전환 가능. 변경 후엔 기존 채팅 설정은 유지됩니다.</div>
-        </div>
-        <div class="settings-field">
-          <label>Codex 샌드박스 모드</label>
-          <select id="settings-agent-codex-sandbox" class="form-input" style="padding:8px 10px;">
-            <option value="danger-full-access">danger-full-access (모든 명령 허용)</option>
-            <option value="workspace-write">workspace-write (작업 디렉터리만 쓰기)</option>
-            <option value="read-only">read-only (읽기 전용)</option>
-          </select>
-        </div>
-        <div class="settings-field">
-          <label>Codex 모델 (비워두면 기본)</label>
-          <input type="text" id="settings-agent-codex-model" class="form-input" placeholder="예: gpt-5-codex">
         </div>
       </div>
     </div>
@@ -1398,16 +1401,44 @@ async function loadSettings() {
       document.getElementById('settings-tg-token').value = cfg.telegram.botToken || '';
       document.getElementById('settings-tg-users').value = (cfg.telegram.allowedUsers || []).join(',');
     }
-    if (cfg.agent) {
-      const def = cfg.agent.default || 'claude';
-      const defEl = document.getElementById('settings-agent-default');
-      if (defEl) defEl.value = def;
-      const sandboxEl = document.getElementById('settings-agent-codex-sandbox');
-      if (sandboxEl) sandboxEl.value = cfg.agent.codex?.sandbox || 'danger-full-access';
-      const modelEl = document.getElementById('settings-agent-codex-model');
-      if (modelEl) modelEl.value = cfg.agent.codex?.model || '';
-    }
   } catch {}
+}
+
+async function loadDashAgent() {
+  try {
+    const cfg = await bridge.loadConfig();
+    const a = cfg.agent || {};
+    const defEl = document.getElementById('dash-agent-default');
+    const sbEl = document.getElementById('dash-agent-sandbox');
+    const modEl = document.getElementById('dash-agent-model');
+    if (defEl) defEl.value = a.default || 'claude';
+    if (sbEl) sbEl.value = a.codex?.sandbox || 'danger-full-access';
+    if (modEl) modEl.value = a.codex?.model || '';
+  } catch {}
+}
+
+let _dashAgentSaveTimer = null;
+async function saveDashAgent() {
+  try {
+    const cfg = await bridge.loadConfig();
+    cfg.agent = cfg.agent || {};
+    cfg.agent.codex = cfg.agent.codex || {};
+    const defEl = document.getElementById('dash-agent-default');
+    const sbEl = document.getElementById('dash-agent-sandbox');
+    const modEl = document.getElementById('dash-agent-model');
+    if (defEl) cfg.agent.default = defEl.value;
+    if (sbEl) cfg.agent.codex.sandbox = sbEl.value;
+    if (modEl) cfg.agent.codex.model = modEl.value.trim() || null;
+    await bridge.saveConfig(cfg);
+    const status = document.getElementById('dash-agent-status');
+    if (status) {
+      status.style.display = 'inline';
+      if (_dashAgentSaveTimer) clearTimeout(_dashAgentSaveTimer);
+      _dashAgentSaveTimer = setTimeout(() => { status.style.display = 'none'; }, 2000);
+    }
+  } catch (e) {
+    alert('Agent 설정 저장 실패: ' + e.message);
+  }
 }
 
 async function saveSettings() {
@@ -1423,15 +1454,6 @@ async function saveSettings() {
     cfg.telegram.enabled = document.getElementById('settings-tg-enabled').checked;
     cfg.telegram.botToken = document.getElementById('settings-tg-token').value.trim();
     cfg.telegram.allowedUsers = document.getElementById('settings-tg-users').value.split(',').map(s => s.trim()).filter(Boolean);
-
-    cfg.agent = cfg.agent || {};
-    const defEl = document.getElementById('settings-agent-default');
-    if (defEl) cfg.agent.default = defEl.value;
-    cfg.agent.codex = cfg.agent.codex || {};
-    const sandboxEl = document.getElementById('settings-agent-codex-sandbox');
-    if (sandboxEl) cfg.agent.codex.sandbox = sandboxEl.value;
-    const modelEl = document.getElementById('settings-agent-codex-model');
-    if (modelEl) cfg.agent.codex.model = modelEl.value.trim() || null;
 
     await bridge.saveConfig(cfg);
     alert('설정이 저장되었습니다.');
@@ -1659,6 +1681,7 @@ async function safeUpdateAll() {
   if (window.bridgeReady) await window.bridgeReady;
   safeUpdateAll();
   loadSettings();
+  loadDashAgent();
   setInterval(safeUpdateAll, 2000);
   await loadMonitorSession();
   await loadChatHistory();
