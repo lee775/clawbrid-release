@@ -69,20 +69,29 @@ function runCodex(prompt, options = {}) {
   // shell:true에서는 인자가 쉘에 그대로 노출되므로 경로/값을 따옴표로 감싼다.
   // prompt는 stdin으로 전달하므로 명령줄에 노출되지 않음 (안전).
   const q = (s) => `"${String(s).replace(/"/g, '\\"')}"`;
+  const isResume = !!resumeSessionId;
   const parts = ['codex', 'exec'];
-  if (resumeSessionId) parts.push('resume', q(resumeSessionId));
+  if (isResume) parts.push('resume', q(resumeSessionId));
+
+  // 공통 옵션 (codex exec / exec resume 둘 다 지원)
   parts.push('--json');
   parts.push('--output-last-message', q(tmpOut));
   parts.push('--skip-git-repo-check');
   if (sandbox === 'danger-full-access') {
     parts.push('--dangerously-bypass-approvals-and-sandbox');
-  } else {
+  } else if (!isResume) {
+    // --sandbox 는 새 세션(codex exec)에서만 지원. resume은 원래 세션 설정을 이어받음.
     parts.push('--sandbox', q(sandbox));
   }
   if (model) parts.push('--model', q(model));
-  parts.push('-C', q(cfg.claude.workDir));
-  for (const d of (cfg.claude.addDirs || [])) {
-    parts.push('--add-dir', q(d));
+
+  // -C / --add-dir 는 새 세션에서만 지원. resume은 원래 세션의 cwd를 따름
+  // (spawn의 cwd 옵션으로도 workDir이 설정되므로 동작에 문제 없음).
+  if (!isResume) {
+    parts.push('-C', q(cfg.claude.workDir));
+    for (const d of (cfg.claude.addDirs || [])) {
+      parts.push('--add-dir', q(d));
+    }
   }
   // prompt는 stdin으로 ('-' = stdin에서 읽기)
   parts.push('-');
