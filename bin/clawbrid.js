@@ -108,17 +108,20 @@ const commands = {
 
   start() {
     ensureMCP();
-    const target = args[1]; // slack, telegram, or undefined (=all)
+    const target = args[1]; // slack, telegram, googlechat, or undefined (=all)
     if (!target || target === 'all') {
       tryPM2('clawbrid-slack', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'slack-standalone.js'));
       tryPM2('clawbrid-telegram', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'telegram-standalone.js'));
+      tryPM2('clawbrid-googlechat', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'google-chat-standalone.js'));
       tryPM2('clawbrid-cron', path.join(CLAWBRID_ROOT, 'src', 'cron-worker.js'));
     } else if (target === 'slack') {
       tryPM2('clawbrid-slack', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'slack-standalone.js'));
     } else if (target === 'telegram') {
       tryPM2('clawbrid-telegram', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'telegram-standalone.js'));
+    } else if (target === 'googlechat') {
+      tryPM2('clawbrid-googlechat', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'google-chat-standalone.js'));
     } else {
-      console.log(`Unknown target: ${target}. Use: slack, telegram, or all`);
+      console.log(`Unknown target: ${target}. Use: slack, telegram, googlechat, or all`);
     }
   },
 
@@ -127,6 +130,7 @@ const commands = {
     if (!target || target === 'all') {
       pm2Cmd('stop', 'clawbrid-slack');
       pm2Cmd('stop', 'clawbrid-telegram');
+      pm2Cmd('stop', 'clawbrid-googlechat');
       pm2Cmd('stop', 'clawbrid-cron');
     } else {
       pm2Cmd('stop', `clawbrid-${target}`);
@@ -139,6 +143,7 @@ const commands = {
     if (!target || target === 'all') {
       pm2Cmd('restart', 'clawbrid-slack');
       pm2Cmd('restart', 'clawbrid-telegram');
+      pm2Cmd('restart', 'clawbrid-googlechat');
       pm2Cmd('restart', 'clawbrid-cron');
     } else {
       pm2Cmd('restart', `clawbrid-${target}`);
@@ -247,6 +252,7 @@ const commands = {
     const procs = [
       ['clawbrid-slack', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'slack-standalone.js')],
       ['clawbrid-telegram', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'telegram-standalone.js')],
+      ['clawbrid-googlechat', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'google-chat-standalone.js')],
       ['clawbrid-cron', path.join(CLAWBRID_ROOT, 'src', 'cron-worker.js')],
     ];
     for (const [name, script] of procs) {

@@ -40,6 +40,15 @@ const DEFAULT_CONFIG = {
     apiId: '',
     apiHash: '',
   },
+  // Google Chat 설정 (Pub/Sub 기반)
+  googlechat: {
+    enabled: false,
+    projectId: '',                    // GCP project ID
+    subscriptionName: '',             // Pub/Sub pull subscription 이름 (예: clawbrid-chat-sub)
+    serviceAccountKeyPath: '',        // Service account JSON 키 절대 경로
+    adminUser: '',                    // "users/123456789" 형태 (Chat sender.name)
+    allowedUsers: [],                 // 동일 형태
+  },
   // 모니터 설정
   monitor: {
     autoStart: true,

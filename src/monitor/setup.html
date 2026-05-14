@@ -130,6 +130,10 @@
         <div class="toggle-label"><span>📱</span> Telegram</div>
         <div class="toggle" id="toggle-telegram"></div>
       </div>
+      <div class="toggle-row" onclick="togglePlatform('googlechat')">
+        <div class="toggle-label"><span>💼</span> Google Chat</div>
+        <div class="toggle" id="toggle-googlechat"></div>
+      </div>
     </div>
   </div>
 
@@ -186,6 +190,40 @@
     </div>
   </div>
 
+  <!-- Step 4-2: Google Chat 설정 -->
+  <div class="step-panel" data-step="5">
+    <div class="section">
+      <div class="section-title">5. Google Chat 설정</div>
+      <div class="section-desc">
+        <strong>사전 준비</strong> (한 번만):<br>
+        ① <a href="https://console.cloud.google.com/apis/library/chat.googleapis.com" target="_blank" style="color:#58a6ff;">Google Chat API</a> 활성화<br>
+        ② IAM → Service Account 생성 → JSON 키 다운로드<br>
+        ③ Pub/Sub 토픽 생성 (예: <code>clawbrid-chat-events</code>)<br>
+        ④ 토픽 IAM에 <code>chat-api-push@system.gserviceaccount.com</code> → <strong>Pub/Sub Publisher</strong> 부여<br>
+        ⑤ Pull subscription 생성 (예: <code>clawbrid-chat-sub</code>)<br>
+        ⑥ <a href="https://console.cloud.google.com/apis/api/chat.googleapis.com/hangouts-chat" target="_blank" style="color:#58a6ff;">Chat API → Configuration</a>에서 봇 등록 + Connection: Pub/Sub topic 지정
+      </div>
+      <div class="field">
+        <label>GCP Project ID</label>
+        <input type="text" id="cfg-gc-project" placeholder="my-gcp-project">
+      </div>
+      <div class="field">
+        <label>Pull Subscription 이름</label>
+        <input type="text" id="cfg-gc-sub" placeholder="clawbrid-chat-sub">
+      </div>
+      <div class="field">
+        <label>Service Account 키 파일 절대 경로</label>
+        <input type="text" id="cfg-gc-key" placeholder="C:/secrets/clawbrid-key.json">
+        <div class="hint">키 파일은 절대 깃에 커밋하지 마세요.</div>
+      </div>
+      <div class="field">
+        <label>관리자 user resource (users/숫자ID)</label>
+        <input type="text" id="cfg-gc-admin" placeholder="users/123456789012345">
+        <div class="hint">Chat에서 본인 ID 확인: 봇과 1:1 메시지 후 Pub/Sub 메시지의 sender.name 확인</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Step 5: 완료 -->
   <div class="step-panel" data-step="4">
     <div class="section" style="text-align:center; padding-top: 40px;">
@@ -210,13 +248,14 @@
 <script>
 
 let currentStep = 0;
-const platforms = { slack: false, telegram: false };
+const platforms = { slack: false, telegram: false, googlechat: false };
 
 // 총 스텝 계산 (동적)
 function getSteps() {
   const steps = ['claude', 'platform'];
   if (platforms.slack) steps.push('slack');
   if (platforms.telegram) steps.push('telegram');
+  if (platforms.googlechat) steps.push('googlechat');
   steps.push('done');
   return steps;
 }
@@ -234,7 +273,7 @@ function renderDots() {
 function showStep(idx) {
   const steps = getSteps();
   // 스텝 매핑: 실제 panel data-step과 매칭
-  const panelMap = { claude: 0, platform: 1, slack: 2, telegram: 3, done: 4 };
+  const panelMap = { claude: 0, platform: 1, slack: 2, telegram: 3, done: 4, googlechat: 5 };
   document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
   const targetPanel = panelMap[steps[idx]];
   document.querySelector(`[data-step="${targetPanel}"]`).classList.add('active');
@@ -335,6 +374,14 @@ function finishSetup() {
       apiId: document.getElementById('cfg-tg-apiid').value.trim(),
       apiHash: document.getElementById('cfg-tg-apihash').value.trim(),
     },
+    googlechat: {
+      enabled: platforms.googlechat,
+      projectId: (document.getElementById('cfg-gc-project')?.value || '').trim(),
+      subscriptionName: (document.getElementById('cfg-gc-sub')?.value || '').trim(),
+      serviceAccountKeyPath: (document.getElementById('cfg-gc-key')?.value || '').trim(),
+      adminUser: (document.getElementById('cfg-gc-admin')?.value || '').trim(),
+      allowedUsers: [],
+    },
     monitor: { autoStart: true, minimizeToTray: true },
     cleanup: { maxAgeDays: 7, intervalHours: 24 },
   };
@@ -363,6 +410,14 @@ async function loadExistingConfig() {
       if (cfg.telegram.adminUser) document.getElementById('cfg-tg-admin').value = cfg.telegram.adminUser;
       if (cfg.telegram.apiId) document.getElementById('cfg-tg-apiid').value = cfg.telegram.apiId;
       if (cfg.telegram.apiHash) document.getElementById('cfg-tg-apihash').value = cfg.telegram.apiHash;
+    }
+    if (cfg.googlechat) {
+      if (cfg.googlechat.enabled) { platforms.googlechat = true; document.getElementById('toggle-googlechat').classList.add('on'); }
+      const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
+      set('cfg-gc-project', cfg.googlechat.projectId);
+      set('cfg-gc-sub', cfg.googlechat.subscriptionName);
+      set('cfg-gc-key', cfg.googlechat.serviceAccountKeyPath);
+      set('cfg-gc-admin', cfg.googlechat.adminUser);
     }
     renderDots();
   } catch (e) {

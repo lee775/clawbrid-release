@@ -1,3 +1,10 @@
 node_modules/
+dist/
 .env
 *.log
+status/
+.telegram-mtproto-session
+# Google Cloud service account key (don't commit ANY service account JSON)
+*-service-account*.json
+*-credentials*.json
+*-key.json

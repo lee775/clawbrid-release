@@ -870,6 +870,7 @@
     <div class="log-tabs">
       <div class="log-tab active" data-log="slack">Slack</div>
       <div class="log-tab" data-log="telegram">Telegram</div>
+      <div class="log-tab" data-log="googlechat">Google Chat</div>
     </div>
 
     <div class="log-box" id="log-content"></div>
@@ -1090,6 +1091,7 @@ async function renderCards() {
   const bridges = [
     { name: 'slack', label: 'Slack Bridge', icon: '💬' },
     { name: 'telegram', label: 'Telegram Bridge', icon: '📱' },
+    { name: 'googlechat', label: 'Google Chat Bridge', icon: '💼' },
   ];
 
   // PM2 실제 프로세스 상태 조회
@@ -1178,7 +1180,7 @@ async function renderStatCards() {
 function renderActivity() {
   const container = document.getElementById('activity-list');
   const all = [];
-  ['slack', 'telegram'].forEach(name => {
+  ['slack', 'telegram', 'googlechat'].forEach(name => {
     const s = bridge.readStatusSync(name);
     if (s && s.history) {
       s.history.forEach(h => all.push({ ...h, source: name }));
@@ -1193,7 +1195,7 @@ function renderActivity() {
 
   container.innerHTML = all.slice(0, 15).map(h => `
     <div class="activity-item">
-      <span class="activity-icon">${h.source === 'slack' ? '💬' : '📱'}</span>
+      <span class="activity-icon">${h.source === 'slack' ? '💬' : h.source === 'googlechat' ? '💼' : '📱'}</span>
       <div style="flex:1;min-width:0;">
         <div class="activity-text" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(h.message || '')}</div>
         <div class="activity-sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(h.response || '')}</div>
@@ -1292,7 +1294,7 @@ async function renderCrons() {
       <td><strong>${escapeHtml(c.name)}</strong></td>
       <td>${c.type === 'claude' ? '🤖 Claude' : '💻 Shell'}</td>
       <td style="font-size:12px;color:var(--accent);" title="${escapeHtml(c.schedule || '')}">${cronToHuman(c.schedule)}</td>
-      <td>${c.target === 'slack' ? '💬 Slack' : c.target === 'telegram' ? '📱 Telegram' : '-'}</td>
+      <td>${c.target === 'slack' ? '💬 Slack' : c.target === 'telegram' ? '📱 Telegram' : c.target === 'googlechat' ? '💼 Google Chat' : '-'}</td>
       <td style="font-family:'Geist Mono',monospace;font-size:12px;">${c.lastRun ? formatTime(c.lastRun) : '-'}</td>
       <td>
         <span class="badge ${c.enabled ? 'badge-online' : 'badge-stopped'}" style="cursor:pointer;" onclick="toggleCron('${c.id}')">
