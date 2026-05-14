@@ -65,40 +65,38 @@ function runCodex(prompt, options = {}) {
   const sandbox = cfg.agent?.codex?.sandbox || 'danger-full-access';
   const model = cfg.agent?.codex?.model || null;
 
-  const args = [];
-  if (resumeSessionId) {
-    args.push('exec', 'resume', resumeSessionId);
-  } else {
-    args.push('exec');
-  }
-
-  // 공통 옵션
-  args.push('--json');
-  args.push('--output-last-message', tmpOut);
-  args.push('--skip-git-repo-check');
-  // danger-full-access 외의 모드도 지원하되, 항상 bypass 플래그로 비대화형 보장
+  // codex는 Windows에서 codex.cmd 래퍼 → shell:true 필수.
+  // shell:true에서는 인자가 쉘에 그대로 노출되므로 경로/값을 따옴표로 감싼다.
+  // prompt는 stdin으로 전달하므로 명령줄에 노출되지 않음 (안전).
+  const q = (s) => `"${String(s).replace(/"/g, '\\"')}"`;
+  const parts = ['codex', 'exec'];
+  if (resumeSessionId) parts.push('resume', q(resumeSessionId));
+  parts.push('--json');
+  parts.push('--output-last-message', q(tmpOut));
+  parts.push('--skip-git-repo-check');
   if (sandbox === 'danger-full-access') {
-    args.push('--dangerously-bypass-approvals-and-sandbox');
+    parts.push('--dangerously-bypass-approvals-and-sandbox');
   } else {
-    args.push('--sandbox', sandbox);
+    parts.push('--sandbox', q(sandbox));
   }
-  if (model) args.push('--model', model);
-  args.push('-C', cfg.claude.workDir);
+  if (model) parts.push('--model', q(model));
+  parts.push('-C', q(cfg.claude.workDir));
   for (const d of (cfg.claude.addDirs || [])) {
-    args.push('--add-dir', d);
+    parts.push('--add-dir', q(d));
   }
-  // prompt는 stdin으로
-  args.push('-');
+  // prompt는 stdin으로 ('-' = stdin에서 읽기)
+  parts.push('-');
+  const cmdStr = parts.join(' ');
 
   let _proc = null;
   const promise = new Promise((resolve, reject) => {
     let settled = false;
-    const proc = spawn('codex', args, {
+    const proc = spawn(cmdStr, [], {
       cwd: cfg.claude.workDir,
       env: { ...process.env, FORCE_COLOR: '0', NO_COLOR: '1' },
       stdio: ['pipe', 'pipe', 'pipe'],
       windowsHide: true,
-      shell: false,
+      shell: true,
     });
     _proc = proc;
 
