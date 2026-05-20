@@ -763,15 +763,15 @@ ${topic}
 
     await sendLongMessage(say, responseText);
 
-    // MCP가 생성한 새 이미지 감지 → 업로드 → 정리
+    // codex/MCP가 생성한 새 결과물(이미지·영상) 감지 → 업로드 → 정리
     try {
       if (fs.existsSync(imageCodex.IMAGE_DIR)) {
         const after = fs.readdirSync(imageCodex.IMAGE_DIR);
         const newFiles = after
-          .filter(f => !imagesBefore.has(f) && /\.(png|jpe?g|webp)$/i.test(f))
+          .filter(f => !imagesBefore.has(f) && /\.(png|jpe?g|webp|gif|mp4|mov|webm|mkv|m4v)$/i.test(f))
           .map(f => path.join(imageCodex.IMAGE_DIR, f));
         if (newFiles.length) {
-          await say(`🎨 이미지 ${newFiles.length}개 생성됨, 업로드 중...`);
+          await say(`📎 결과물 ${newFiles.length}개 생성됨, 업로드 중...`);
           for (const f of newFiles) {
             try { await slackUploadImage(client, channelId, f, ''); }
             catch (e) { await say(`❌ 업로드 실패 (${path.basename(f)}): ${e.message}`); }
@@ -779,7 +779,7 @@ ${topic}
           imageCodex.cleanup(newFiles);
         }
       }
-    } catch (e) { console.error(`[SLACK] image snapshot error: ${e.message}`); }
+    } catch (e) { console.error(`[SLACK] media snapshot error: ${e.message}`); }
 
     // 코드 변경이 있으면 자동 Codex 리뷰
     if (hasCodeChanges()) {

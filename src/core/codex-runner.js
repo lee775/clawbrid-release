@@ -51,10 +51,16 @@ function runCodex(prompt, options = {}) {
     onTimeout = null,
   } = options;
 
+  // codex가 생성한 이미지/영상을 ClawBrid가 감지·전송하려면 이 경로에 저장해야 함
+  // (codex 기본 경로 ~/.codex/generated_images 는 브릿지가 스캔하지 않음)
+  const MEDIA_OUT_DIR = path.join(os.homedir(), '.clawbrid', 'temp', 'images');
+  try { fs.mkdirSync(MEDIA_OUT_DIR, { recursive: true }); } catch {}
+  const mediaRule = `[출력 규칙] 이미지나 영상 등 미디어 파일을 생성하는 경우, 반드시 다음 디렉터리에 저장하라(다른 경로 사용 금지): ${MEDIA_OUT_DIR.replace(/\\/g, '/')}\n이 경로에 저장된 파일만 사용자에게 자동 전송된다.`;
+
   // 시스템 프롬프트는 codex CLI에 직접 옵션 없음 → prompt 앞에 합성
-  let finalPrompt = prompt;
+  let finalPrompt = `${mediaRule}\n\n${prompt}`;
   if (appendSystemPrompt) {
-    finalPrompt = `[시스템 지침]\n${appendSystemPrompt}\n\n[사용자 메시지]\n${prompt}`;
+    finalPrompt = `[시스템 지침]\n${appendSystemPrompt}\n\n${mediaRule}\n\n[사용자 메시지]\n${prompt}`;
   }
   if (cfg.claude.confirmBeforeEdit) {
     finalPrompt = `[시스템 지침] 파일을 수정(Edit/Write)하거나 삭제하기 전에 반드시 사용자에게 어떤 파일을 어떻게 변경할지 먼저 설명하고 확인을 받아줘. 확인 없이 파일을 수정하지 마.\n\n${finalPrompt}`;
