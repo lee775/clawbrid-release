@@ -384,6 +384,19 @@ function oneLine(s, max = 300) {
   return t.length > max ? `${t.slice(0, max)}…(${t.length}자)` : t;
 }
 
+// ── Q&A 전용 로그 (질문/답변만 기록) ──
+const QA_LOG_FILE = path.join(__dirname, '..', '..', 'telelog.txt');
+function logQA(userId, question, answer, agent) {
+  try {
+    const ts = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const block =
+      `[${ts}] ▶ 질문 (user=${userId})\n${question}\n\n` +
+      `[${ts}] ◀ 답변 (agent=${agent})\n${answer}\n\n` +
+      `${'─'.repeat(70)}\n\n`;
+    fs.appendFileSync(QA_LOG_FILE, block, 'utf-8');
+  } catch (e) { console.error(`[TG] QA log error: ${e.message}`); }
+}
+
 // ── 메시지 분할 ──
 async function sendLongMessage(chatId, text) {
   const MAX = 4000;
@@ -440,6 +453,8 @@ async function handleMessage(msg) {
     attachmentTag = ` | 음성`;
   }
   console.log(`[TG] ▶ 질문 | user=${userId}${attachmentTag} | ${oneLine(text) || '(빈 메시지)'}`);
+  // Q&A 로그용 사용자 원본 질문 (명령어 가공 전 캡처)
+  const userQuestion = text || (hasDocument ? '[파일 첨부]' : hasPhoto ? '[이미지 첨부]' : hasVoice ? '[음성]' : '');
 
   // /admin 메뉴의 force_reply 입력 인터셉트 (Claude 호출보다 우선)
   if (msg.reply_to_message?.message_id) {
@@ -1105,6 +1120,7 @@ ${topic}
     addToHistory(chatId, 'assistant', responseText, activeAgent);
     if (status) status.done(responseText);
     console.log(`[TG] ◀ 답변 | user=${userId} | agent=${activeAgent} | ${oneLine(responseText)}`);
+    logQA(userId, userQuestion, responseText, activeAgent);
 
     try { await bot.editMessageText('✅ 작업 완료', { chat_id: chatId, message_id: startMsg.message_id }); } catch {}
 

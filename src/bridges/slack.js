@@ -136,6 +136,19 @@ function oneLine(s, max = 300) {
   return t.length > max ? `${t.slice(0, max)}…(${t.length}자)` : t;
 }
 
+// ── Q&A 전용 로그 (질문/답변만 기록) ──
+const QA_LOG_FILE = path.join(__dirname, '..', '..', 'slacklog.txt');
+function logQA(userId, question, answer, agent) {
+  try {
+    const ts = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const block =
+      `[${ts}] ▶ 질문 (user=${userId})\n${question}\n\n` +
+      `[${ts}] ◀ 답변 (agent=${agent})\n${answer}\n\n` +
+      `${'─'.repeat(70)}\n\n`;
+    fs.appendFileSync(QA_LOG_FILE, block, 'utf-8');
+  } catch (e) { console.error(`[SLACK] QA log error: ${e.message}`); }
+}
+
 // ── 메시지 분할 ──
 async function sendLongMessage(say, text) {
   const MAX = 3900;
@@ -206,6 +219,8 @@ async function handleMessage({ event, say, client }) {
   let text = event.text?.trim() || '';
   const hasFiles = event.files && event.files.length > 0;
   console.log(`[SLACK] ▶ 질문 | user=${userId} | ${oneLine(text) || '(빈 메시지)'}`);
+  // Q&A 로그용 사용자 원본 질문 (명령어 가공 전 캡처)
+  const userQuestion = text || (hasFiles ? '[파일 첨부]' : '');
 
   if (!text && !hasFiles) return;
 
@@ -773,6 +788,7 @@ ${topic}
     addToHistory(channelId, 'assistant', responseText, activeAgent);
     if (status) status.done(responseText);
     console.log(`[SLACK] ◀ 답변 | user=${userId} | agent=${activeAgent} | ${oneLine(responseText)}`);
+    logQA(userId, userQuestion, responseText, activeAgent);
 
     try { await client.chat.update({ channel: channelId, ts: startMsg.ts, text: '✅ 작업 완료' }); } catch {}
 
