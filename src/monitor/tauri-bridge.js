@@ -37,10 +37,16 @@ function _buildPaths() {
     slack: {
       out: joinPath(HOMEDIR, '.pm2', 'logs', 'clawbrid-slack-out.log'),
       err: joinPath(HOMEDIR, '.pm2', 'logs', 'clawbrid-slack-error.log'),
+      qa: joinPath(CLAWBRID_DIR, 'slacklog.txt'),
     },
     telegram: {
       out: joinPath(HOMEDIR, '.pm2', 'logs', 'clawbrid-telegram-out.log'),
       err: joinPath(HOMEDIR, '.pm2', 'logs', 'clawbrid-telegram-error.log'),
+      qa: joinPath(CLAWBRID_DIR, 'telelog.txt'),
+    },
+    googlechat: {
+      out: joinPath(HOMEDIR, '.pm2', 'logs', 'clawbrid-googlechat-out.log'),
+      err: joinPath(HOMEDIR, '.pm2', 'logs', 'clawbrid-googlechat-error.log'),
     },
   };
 }
@@ -272,9 +278,24 @@ const bridge = {
   },
 
   // ── 로그 ──
-  async readLogContent(name) {
+  // mode: 'qa'(대화 로그, 기본) | 'system'(PM2 out+err)
+  async readLogContent(name, mode = 'qa') {
     const paths = LOG_PATHS[name];
+    if (!paths) return '';
     let content = '';
+
+    if (mode === 'qa') {
+      if (!paths.qa) return '(이 브릿지는 대화 로그를 지원하지 않습니다 — 시스템 로그를 확인하세요)';
+      if (IS_TAURI) {
+        try { content = await this.readFile(paths.qa); } catch {}
+      } else {
+        const fs = require('fs');
+        if (fs.existsSync(paths.qa)) content = fs.readFileSync(paths.qa, 'utf-8');
+      }
+      return content || '(아직 대화 기록이 없습니다)';
+    }
+
+    // system 로그 (PM2 out + err)
     if (IS_TAURI) {
       try { content += await this.readFile(paths.out); } catch {}
       try { content += await this.readFile(paths.err); } catch {}

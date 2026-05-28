@@ -137,7 +137,8 @@ function oneLine(s, max = 300) {
 }
 
 // ── Q&A 전용 로그 (질문/답변만 기록) ──
-const QA_LOG_FILE = path.join(__dirname, '..', '..', 'slacklog.txt');
+// ~/.clawbrid 아래에 둬야 모니터(Tauri)가 같은 경로로 읽을 수 있음
+const QA_LOG_FILE = path.join(config.CONFIG_DIR, 'slacklog.txt');
 function logQA(userId, question, answer, agent) {
   try {
     const ts = new Date().toISOString().slice(0, 19).replace('T', ' ');

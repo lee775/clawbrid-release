@@ -863,8 +863,12 @@
 
   <!-- ════ Logs ════ -->
   <div class="tab-panel" id="panel-logs">
-    <div class="page-header">
+    <div class="page-header" style="display:flex;justify-content:space-between;align-items:center;">
       <div class="page-title">로그</div>
+      <div style="display:flex;gap:6px;">
+        <button id="logmode-qa" onclick="setLogMode('qa')" style="padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;font-size:13px;">💬 대화</button>
+        <button id="logmode-system" onclick="setLogMode('system')" style="padding:6px 14px;border:1px solid var(--border);border-radius:6px;background:transparent;color:var(--text-muted);cursor:pointer;font-size:13px;">⚙️ 시스템</button>
+      </div>
     </div>
 
     <div class="log-tabs">
@@ -994,6 +998,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
 
 // ── 로그 서브탭 ──
 let activeLogTab = 'slack';
+let activeLogMode = 'qa'; // 'qa'(대화) | 'system'(PM2)
 document.querySelectorAll('.log-tab').forEach(tab => {
   tab.addEventListener('click', () => {
     document.querySelectorAll('.log-tab').forEach(t => t.classList.remove('active'));
@@ -1002,6 +1007,16 @@ document.querySelectorAll('.log-tab').forEach(tab => {
     renderLog(activeLogTab);
   });
 });
+
+function setLogMode(mode) {
+  activeLogMode = mode;
+  const qa = document.getElementById('logmode-qa');
+  const sys = document.getElementById('logmode-system');
+  const on = (b) => { b.style.background = 'var(--accent)'; b.style.color = '#fff'; };
+  const off = (b) => { b.style.background = 'transparent'; b.style.color = 'var(--text-muted)'; };
+  if (mode === 'qa') { on(qa); off(sys); } else { on(sys); off(qa); }
+  renderLog(activeLogTab);
+}
 
 // ── 유틸 ──
 function escapeHtml(str) {
@@ -1342,12 +1357,14 @@ async function runCronNow(id) {
 async function renderLog(name) {
   const el = document.getElementById('log-content');
   try {
-    const content = await bridge.readLogContent(name);
+    const content = await bridge.readLogContent(name, activeLogMode);
     if (!content) { el.textContent = '로그 파일 없음'; return; }
-    const lines = content.split('\n').slice(-200);
+    const lines = content.split('\n').slice(-300);
     el.innerHTML = lines.map(line => {
       let cls = '';
-      if (line.includes('[ERROR]') || line.includes('❌')) cls = 'log-error';
+      if (line.includes('▶ 질문')) cls = 'log-msg';
+      else if (line.includes('◀ 답변')) cls = 'log-claude';
+      else if (line.includes('[ERROR]') || line.includes('❌')) cls = 'log-error';
       else if (line.includes('[WARN]') || line.includes('⚠')) cls = 'log-warn';
       else if (line.includes('[CLAUDE]')) cls = 'log-claude';
       else if (line.includes('[CRON]')) cls = 'log-cron';
