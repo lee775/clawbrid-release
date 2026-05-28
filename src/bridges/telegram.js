@@ -378,6 +378,12 @@ async function downloadTelegramFile(fileId, opts = {}) {
   }
 }
 
+// ── 로그용: 멀티라인을 한 줄로 정리 ──
+function oneLine(s, max = 300) {
+  const t = String(s || '').replace(/\s+/g, ' ').trim();
+  return t.length > max ? `${t.slice(0, max)}…(${t.length}자)` : t;
+}
+
 // ── 메시지 분할 ──
 async function sendLongMessage(chatId, text) {
   const MAX = 4000;
@@ -433,7 +439,7 @@ async function handleMessage(msg) {
   } else if (hasVoice) {
     attachmentTag = ` | 음성`;
   }
-  console.log(`[TG] 메시지 수신 | user=${userId} | ${text.slice(0, 80)}${text.length > 80 ? '...' : ''}${attachmentTag}`);
+  console.log(`[TG] ▶ 질문 | user=${userId}${attachmentTag} | ${oneLine(text) || '(빈 메시지)'}`);
 
   // /admin 메뉴의 force_reply 입력 인터셉트 (Claude 호출보다 우선)
   if (msg.reply_to_message?.message_id) {
@@ -1098,7 +1104,7 @@ ${topic}
 
     addToHistory(chatId, 'assistant', responseText, activeAgent);
     if (status) status.done(responseText);
-    console.log(`[TG] 응답 완료 | agent=${activeAgent} | user=${userId} | ${responseText.slice(0, 100)}${responseText.length > 100 ? '...' : ''}`);
+    console.log(`[TG] ◀ 답변 | user=${userId} | agent=${activeAgent} | ${oneLine(responseText)}`);
 
     try { await bot.editMessageText('✅ 작업 완료', { chat_id: chatId, message_id: startMsg.message_id }); } catch {}
 

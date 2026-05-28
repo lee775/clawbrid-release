@@ -126,6 +126,12 @@ async function sendMessage(spaceName, text, threadName) {
   return chatRequest('POST', `/v1/${spaceName}/messages`, body);
 }
 
+// ── 로그용: 멀티라인을 한 줄로 정리 ──
+function oneLine(s, max = 300) {
+  const t = String(s || '').replace(/\s+/g, ' ').trim();
+  return t.length > max ? `${t.slice(0, max)}…(${t.length}자)` : t;
+}
+
 async function sendLongMessage(spaceName, text, threadName) {
   const MAX = 3900; // 4096 - 안전마진
   let remaining = String(text || '');
@@ -199,7 +205,7 @@ async function handleMessage(event) {
   let text = stripMention(msg.text || msg.argumentText || '');
   const attachments = msg.attachment || msg.attachments || [];
 
-  console.log(`[GCHAT] 메시지 수신 | user=${sender} | ${text.slice(0, 80)}${text.length > 80 ? '...' : ''}${attachments.length ? ` | 첨부${attachments.length}` : ''}`);
+  console.log(`[GCHAT] ▶ 질문 | user=${sender}${attachments.length ? ` | 첨부${attachments.length}` : ''} | ${oneLine(text) || '(빈 메시지)'}`);
 
   if (!text && attachments.length === 0) return;
 
@@ -345,7 +351,7 @@ async function handleMessage(event) {
 
     addToHistory(spaceId, 'assistant', responseText, activeAgent);
     if (status) status.done(responseText);
-    console.log(`[GCHAT] 응답 완료 | agent=${activeAgent} | user=${sender} | ${responseText.slice(0, 100)}`);
+    console.log(`[GCHAT] ◀ 답변 | user=${sender} | agent=${activeAgent} | ${oneLine(responseText)}`);
 
     await sendLongMessage(space, responseText, threadName);
 

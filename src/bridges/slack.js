@@ -130,6 +130,12 @@ async function handleFiles(event, token) {
   return downloaded;
 }
 
+// ── 로그용: 멀티라인을 한 줄로 정리 ──
+function oneLine(s, max = 300) {
+  const t = String(s || '').replace(/\s+/g, ' ').trim();
+  return t.length > max ? `${t.slice(0, max)}…(${t.length}자)` : t;
+}
+
 // ── 메시지 분할 ──
 async function sendLongMessage(say, text) {
   const MAX = 3900;
@@ -199,7 +205,7 @@ async function handleMessage({ event, say, client }) {
   const threadTs = event.thread_ts || event.ts;
   let text = event.text?.trim() || '';
   const hasFiles = event.files && event.files.length > 0;
-  console.log(`[SLACK] 메시지 수신 | user=${userId} | ${text.slice(0, 80)}${text.length > 80 ? '...' : ''}`);
+  console.log(`[SLACK] ▶ 질문 | user=${userId} | ${oneLine(text) || '(빈 메시지)'}`);
 
   if (!text && !hasFiles) return;
 
@@ -766,7 +772,7 @@ ${topic}
 
     addToHistory(channelId, 'assistant', responseText, activeAgent);
     if (status) status.done(responseText);
-    console.log(`[SLACK] 응답 완료 | agent=${activeAgent} | user=${userId} | ${responseText.slice(0, 100)}${responseText.length > 100 ? '...' : ''}`);
+    console.log(`[SLACK] ◀ 답변 | user=${userId} | agent=${activeAgent} | ${oneLine(responseText)}`);
 
     try { await client.chat.update({ channel: channelId, ts: startMsg.ts, text: '✅ 작업 완료' }); } catch {}
 
