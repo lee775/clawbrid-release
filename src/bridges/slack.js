@@ -28,6 +28,12 @@ const pendingTimeouts = new Map();
 // ── 세션 관리는 agent-router로 위임 ──
 // (구버전 호환: agent-router가 sessions.json의 문자열 형식을 자동 마이그레이션)
 
+// ── 권한 ──
+function isAdmin(userId) {
+  const cfg = config.load();
+  return !!cfg.slack.adminUser && String(userId) === String(cfg.slack.adminUser);
+}
+
 // ── 대화 기록 (일별 MD) ──
 function getHistoryDir(chatId) {
   const dir = path.join(config.HISTORY_DIR, `slack_${chatId}`);
@@ -224,6 +230,9 @@ async function handleMessage({ event, say, client }) {
     if (!target) {
       await say(`🤖 현재 Agent: *${current}*\n🌐 글로벌 기본: *${globalDefault}*\n\n전환: \`!agent claude\` 또는 \`!agent codex\``);
       return;
+    }
+    if (!isAdmin(userId)) {
+      await say('🚫 Agent 전환은 관리자만 가능합니다.'); return;
     }
     if (!agentRouter.isValidAgent(target)) {
       await say(`❌ 알 수 없는 agent: ${target}\n사용법: \`!agent claude|codex\``); return;

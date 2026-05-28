@@ -518,6 +518,9 @@ async function handleMessage(msg) {
         await bot.sendMessage(chatId, `🤖 현재 Agent: *${current}*\n🌐 글로벌 기본: *${globalDefault}*\n\n전환: \`/agent claude\` 또는 \`/agent codex\``, { parse_mode: 'Markdown' });
         return;
       }
+      if (!isAdmin(userId)) {
+        await bot.sendMessage(chatId, '🚫 Agent 전환은 관리자만 가능합니다.'); return;
+      }
       if (!agentRouter.isValidAgent(target)) {
         await bot.sendMessage(chatId, `❌ 알 수 없는 agent: ${target}\n사용법: /agent claude|codex`); return;
       }

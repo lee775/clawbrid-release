@@ -29,6 +29,7 @@ const DEFAULT_CONFIG = {
     botToken: '',
     signingSecret: '',
     appToken: '',
+    adminUser: '',      // Slack user ID (예: U12345) — Agent 전환 등 관리자 전용 기능
   },
   // Telegram 설정
   telegram: {

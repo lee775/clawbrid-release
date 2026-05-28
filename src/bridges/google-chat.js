@@ -229,6 +229,9 @@ async function handleMessage(event) {
         await sendMessage(space, `🤖 현재 Agent: *${current}*\n🌐 글로벌 기본: *${globalDefault}*\n전환: /agent claude  또는  /agent codex`, threadName);
         return;
       }
+      if (!isAdmin(sender)) {
+        await sendMessage(space, '🚫 Agent 전환은 관리자만 가능합니다.', threadName); return;
+      }
       if (!agentRouter.isValidAgent(target)) {
         await sendMessage(space, `❌ 알 수 없는 agent: ${target}`, threadName); return;
       }
