@@ -383,4 +383,4 @@ function isVideoUrl(text) {
   return /(?:youtube\.com\/watch|youtu\.be\/|youtube\.com\/shorts\/|vimeo\.com\/|dailymotion\.com|twitch\.tv\/videos)/.test(text);
 }
 
-module.exports = { analyzeVideo, cleanup, checkTools, isVideoUrl };
+module.exports = { analyzeVideo, cleanup, checkTools, isVideoUrl, getFFmpegPath };

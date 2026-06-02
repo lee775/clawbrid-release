@@ -656,8 +656,10 @@ ${topic}
       const files = await handleFiles(event, cfg.slack.botToken);
       if (files.length > 0) {
         const imageExt = /\.(png|jpe?g|webp|gif)$/i;
+        const videoExt = /\.(mp4|mov|webm|mkv|m4v|avi)$/i;
         const images = files.filter(f => imageExt.test(f.name) || /^(png|jpe?g|webp|gif|image\/)/i.test(f.type || ''));
-        const others = files.filter(f => !images.includes(f));
+        const videos = files.filter(f => !images.includes(f) && (videoExt.test(f.name) || /^(mp4|mov|webm|mkv|m4v|avi|video\/)/i.test(f.type || '')));
+        const others = files.filter(f => !images.includes(f) && !videos.includes(f));
         const parts = [];
         if (others.length > 0) {
           const info = others.map(f => `[첨부파일] ${f.name} (${f.type}, ${(f.size/1024).toFixed(1)}KB)\n경로: ${f.path}`).join('\n');
@@ -666,6 +668,16 @@ ${topic}
         if (images.length > 0) {
           const info = images.map(f => `[첨부 이미지] 경로: ${f.path}`).join('\n');
           parts.push(`${info}\n\n이미지가 첨부되었습니다. 사용자 요청을 보고 판단하세요: (1) 분석/설명 요청이면 이미지 내용을 직접 설명 (2) 수정/편집/변형/스타일변경 요청이면 mcp__clawbrid-image__image_generate 도구를 호출하되 source_image에 위 경로를 전달.`);
+        }
+        if (videos.length > 0) {
+          const outDir = imageCodex.IMAGE_DIR.replace(/\\/g, '/');
+          let ffmpegPath = 'ffmpeg';
+          try { ffmpegPath = videoAnalyzer.getFFmpegPath(); } catch {}
+          const ffmpegHint = ffmpegPath && ffmpegPath !== 'ffmpeg'
+            ? `ffmpeg 실행 파일 경로: "${ffmpegPath.replace(/\\/g, '/')}" (PATH에 ffmpeg가 없으면 이 절대경로로 실행)`
+            : 'ffmpeg가 설치되어 있습니다.';
+          const info = videos.map(f => `[첨부 영상] 경로: ${f.path}`).join('\n');
+          parts.push(`${info}\n\n영상이 첨부되었습니다. 사용자 요청을 보고 판단하세요:\n(1) 편집/변환 요청(자르기·자막·속도·필터·해상도/포맷 변환·gif 변환·합치기·워터마크·오디오 추출 등)이면 ffmpeg로 처리하고, 결과 파일을 반드시 "${outDir}" 폴더에 저장하세요. 거기에 저장된 파일은 자동으로 사용자에게 전송됩니다. ${ffmpegHint} 확인을 묻지 말고 바로 실행하세요.\n(2) 내용 분석/설명 요청이면 ffmpeg로 프레임 캡처나 음성 추출 후 설명하세요.`);
         }
         const joined = parts.join('\n\n');
         prompt = prompt ? `${prompt}\n\n${joined}` : joined;

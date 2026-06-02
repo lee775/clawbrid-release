@@ -436,7 +436,10 @@ async function handleMessage(msg) {
   let text = msg.text?.trim() || '';
   const groupDocs = msg._mediaGroup ? (msg._groupDocuments || []) : [];
   const groupPhotos = msg._mediaGroup ? (msg._groupPhotos || []) : [];
-  const hasDocument = !!msg.document || groupDocs.length > 0;
+  // 영상: "동영상으로 전송"(msg.video), gif/애니(msg.animation), "파일로 전송"한 영상 문서
+  const isVideoDoc = !!msg.document && /^video\//i.test(msg.document.mime_type || '');
+  const hasVideo = !!(msg.video || msg.animation) || isVideoDoc;
+  const hasDocument = (!!msg.document && !isVideoDoc) || groupDocs.length > 0;
   const hasVoice = !!(msg.voice || msg.audio);
   const hasPhoto = (Array.isArray(msg.photo) && msg.photo.length > 0) || groupPhotos.length > 0;
   // msg.caption (사진/문서 동봉 텍스트)도 본문으로 취급
@@ -445,6 +448,10 @@ async function handleMessage(msg) {
   let attachmentTag = '';
   if (msg._mediaGroup) {
     attachmentTag = ` | 앨범(사진${groupPhotos.length}/문서${groupDocs.length})`;
+  } else if (hasVideo) {
+    const v = msg.video || msg.animation || msg.document;
+    const sz = v && v.file_size ? `, ${(v.file_size / 1024 / 1024).toFixed(1)}MB` : '';
+    attachmentTag = ` | 영상${sz}`;
   } else if (msg.document) {
     const sz = msg.document.file_size ? `, ${(msg.document.file_size / 1024 / 1024).toFixed(1)}MB` : '';
     attachmentTag = ` | 문서(${msg.document.file_name || msg.document.mime_type || 'unknown'}${sz})`;
@@ -455,7 +462,7 @@ async function handleMessage(msg) {
   }
   console.log(`[TG] ▶ 질문 | user=${userId}${attachmentTag} | ${oneLine(text) || '(빈 메시지)'}`);
   // Q&A 로그용 사용자 원본 질문 (명령어 가공 전 캡처)
-  const userQuestion = text || (hasDocument ? '[파일 첨부]' : hasPhoto ? '[이미지 첨부]' : hasVoice ? '[음성]' : '');
+  const userQuestion = text || (hasVideo ? '[영상 첨부]' : hasDocument ? '[파일 첨부]' : hasPhoto ? '[이미지 첨부]' : hasVoice ? '[음성]' : '');
 
   // /admin 메뉴의 force_reply 입력 인터셉트 (Claude 호출보다 우선)
   if (msg.reply_to_message?.message_id) {
@@ -510,7 +517,7 @@ async function handleMessage(msg) {
     }
   }
 
-  if (!text && !hasDocument && !hasPhoto) return;
+  if (!text && !hasDocument && !hasPhoto && !hasVideo) return;
 
   // 권한 체크
   if (!isAllowed(userId)) {
@@ -1006,6 +1013,31 @@ ${topic}
         prompt = prompt ? `${prompt}\n\n${info}\n\n${guidance}` : `${info}\n\n${fallback}`;
       }
     }
+
+    if (hasVideo) {
+      // 영상 첨부 → 다운로드 후 ffmpeg 편집 안내 (결과물은 감시폴더에 저장 → 자동 전송)
+      const vsrc = msg.video || msg.animation || msg.document;
+      const dl = await downloadTelegramFile(vsrc.file_id, {
+        chatId,
+        messageId: msg.message_id,
+        fallbackName: vsrc.file_name || 'video.mp4',
+      });
+      if (!dl.ok) {
+        await bot.sendMessage(chatId, `⚠️ 영상 다운로드 실패: ${dl.message || dl.reason}`);
+      } else {
+        const outDir = imageCodex.IMAGE_DIR.replace(/\\/g, '/');
+        let ffmpegPath = 'ffmpeg';
+        try { ffmpegPath = videoAnalyzer.getFFmpegPath(); } catch {}
+        const ffmpegHint = ffmpegPath && ffmpegPath !== 'ffmpeg'
+          ? `ffmpeg 실행 파일 경로: "${ffmpegPath.replace(/\\/g, '/')}" (PATH에 ffmpeg가 없으면 이 절대경로로 실행)`
+          : 'ffmpeg가 설치되어 있습니다.';
+        const info = `[첨부 영상] 경로: ${dl.path}`;
+        const guidance = `영상이 첨부되었습니다. 사용자 요청을 보고 판단하세요:\n(1) 편집/변환 요청(자르기·자막·속도·필터·해상도/포맷 변환·gif 변환·합치기·워터마크·오디오 추출 등)이면 ffmpeg로 처리하고, 결과 파일을 반드시 "${outDir}" 폴더에 저장하세요. 거기에 저장된 파일은 자동으로 사용자에게 전송됩니다. ${ffmpegHint} 확인을 묻지 말고 바로 실행하세요.\n(2) 내용 분석/설명 요청이면 ffmpeg로 프레임 캡처나 음성 추출 후 설명하세요.`;
+        const fallback = '이 영상을 어떻게 처리할지 알려줘 (예: 앞 5초 자르기 / 자막 넣기 / gif로 변환 / 속도 2배).';
+        prompt = prompt ? `${prompt}\n\n${info}\n\n${guidance}` : `${info}\n\n${fallback}`;
+      }
+    }
+
     addToHistory(chatId, 'user', prompt, activeAgent);
 
     let finalPrompt = prompt;
