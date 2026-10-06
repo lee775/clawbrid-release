@@ -1,12 +1,12 @@
 # ClawBrid
 
-> Claude Code Bridge - Connect Claude Code to Slack & Telegram with a real-time monitoring dashboard.
+> Claude Code Bridge - Connect Claude Code to Telegram with a real-time monitoring dashboard.
 
-ClawBrid는 [Claude Code](https://claude.ai/code) CLI를 Slack과 Telegram 메신저에 연결하는 브릿지 서버입니다. 메신저로 메시지를 보내면 Claude Code가 작업을 수행하고 결과를 돌려줍니다.
+ClawBrid는 [Claude Code](https://claude.ai/code) CLI를 Telegram 메신저에 연결하는 브릿지 서버입니다. 메신저로 메시지를 보내면 Claude Code가 작업을 수행하고 결과를 돌려줍니다.
 
 ## Features
 
-- **Slack & Telegram Bridge** - 메신저에서 Claude Code와 실시간 대화
+- **Telegram Bridge** - 메신저에서 Claude Code / Codex와 실시간 대화
 - **Real-time Monitor** - Tauri 기반 경량 대시보드 (~12MB), Deep Space Neon 테마
 - **Video Analysis** - YouTube/영상 URL 분석 (프레임 캡처 + 음성 변환 → AI 종합 분석)
 - **MCP Servers** - Claude Code와 직접 연동되는 크론/영상 분석 MCP 서버
@@ -17,11 +17,11 @@ ClawBrid는 [Claude Code](https://claude.ai/code) CLI를 Slack과 Telegram 메�
 - **Long-term Memory** - JSON 키워드 기반 장기 메모리 시스템
 - **Voice Recognition** - faster-whisper 기반 음성 메시지 → 텍스트 자동 변환
 - **File Support** - PDF, 문서 파일 첨부 시 Claude Code가 직접 읽고 분석
+- **File Sending** - 에이전트가 만든 파일(문서·압축파일·이미지·영상 등 형식 무관)을 텔레그램으로 자동 전송 (봇 한도 50MB)
 - **Session Persistence** - 대화 세션이 유지되어 이전 대화 맥락을 기억
 - **Plugin System** - `~/.clawbrid/plugins/` JS 플러그인으로 기능 확장
-- **Permission System** - Telegram 관리자/일반 사용자 권한 분리
-- **Edit Confirmation** - 파일 수정/삭제 전 반드시 사용자 확인 요청
-- **PM2 Integration** - 각 Bridge를 독립 PM2 프로세스로 관리
+- **Access Control** - 관리자가 승인한 사용자만 사용 가능, 승인된 사용자는 모두 같은 권한 (사용자 관리만 관리자 전용)
+- **PM2 Integration** - Bridge를 독립 PM2 프로세스로 관리
 
 ## Prerequisites
 
@@ -61,16 +61,16 @@ clawbrid update         # 최신 버전으로 업데이트
 |------|------|
 | `clawbrid dashboard` | 모니터 대시보드 |
 | `clawbrid setup` | 설정 마법사 |
-| `clawbrid start [slack\|telegram]` | 브릿지 시작 |
-| `clawbrid stop [slack\|telegram]` | 브릿지 중지 |
-| `clawbrid restart [slack\|telegram]` | 브릿지 재시작 |
+| `clawbrid start [telegram\|cron]` | 브릿지 / 크론 워커 시작 |
+| `clawbrid stop [telegram\|cron]` | 브릿지 / 크론 워커 중지 |
+| `clawbrid restart [telegram\|cron]` | 브릿지 / 크론 워커 재시작 |
 | `clawbrid status` | PM2 프로세스 상태 |
-| `clawbrid logs [slack\|telegram]` | 로그 확인 |
+| `clawbrid logs [telegram\|cron]` | 로그 확인 |
 | `clawbrid config` | 현재 설정 보기 |
 | `clawbrid update` | 업데이트 |
 | `clawbrid version` | 버전 확인 |
 
-### Bridge Commands (Slack: `!`, Telegram: `/`)
+### Bridge Commands (Telegram: `/`)
 
 | 명령어 | 설명 |
 |--------|------|
@@ -93,8 +93,7 @@ clawbrid update         # 최신 버전으로 업데이트
 YouTube나 영상 URL을 보내면 자동으로 다운로드 → 프레임 캡처 → 음성 텍스트 변환 → Claude 종합 분석을 수행합니다.
 
 ```
-# 메신저에서
-!youtube https://youtube.com/watch?v=xxx 핵심 내용 요약해줘
+# 텔레그램에서
 /youtube https://youtu.be/xxx 이 영상의 기술 스택 분석해줘
 
 # Claude Code에서 (MCP 자동 호출)
@@ -146,17 +145,6 @@ claude mcp add --scope user clawbrid-cron -- node <path>/src/mcp/cron-mcp-server
 claude mcp add --scope user clawbrid-video -- node <path>/src/mcp/video-mcp-server.js
 ```
 
-## Slack Setup
-
-1. [api.slack.com/apps](https://api.slack.com/apps)에서 앱 생성
-2. **Socket Mode** 활성화 → App-Level Token 생성
-3. **OAuth & Permissions** → Bot Token Scopes 추가:
-   - `chat:write`, `files:read`, `files:write`, `app_mentions:read`
-   - `im:history`, `im:read`, `im:write`
-4. **Event Subscriptions** → Bot Events 추가:
-   - `message.im`, `app_mention`
-5. 앱 설치 후 Bot Token, Signing Secret, App Token을 ClawBrid에 입력
-
 ## Telegram Setup
 
 1. [@BotFather](https://t.me/BotFather)에게 `/newbot` 명령으로 봇 생성
@@ -174,10 +162,9 @@ claude mcp add --scope user clawbrid-video -- node <path>/src/mcp/video-mcp-serv
     "addDirs": ["C:/", "D:/"],
     "maxTurns": 50,
     "timeout": 600000,
-    "confirmBeforeEdit": true
+    "confirmBeforeEdit": false
   },
-  "slack": { "enabled": true, "botToken": "xoxb-...", "appToken": "xapp-..." },
-  "telegram": { "enabled": true, "botToken": "123:ABC...", "adminUser": "12345" }
+  "telegram": { "enabled": true, "botToken": "123:ABC...", "adminUser": "12345", "allowedUsers": [] }
 }
 ```
 
@@ -185,7 +172,6 @@ claude mcp add --scope user clawbrid-video -- node <path>/src/mcp/video-mcp-serv
 
 ```
 clawbrid dashboard → Tauri Monitor (Rust + WebView2)
-                      ├── PM2: clawbrid-slack     (Node.js)
                       ├── PM2: clawbrid-telegram   (Node.js)
                       └── PM2: clawbrid-cron       (Node.js)
 

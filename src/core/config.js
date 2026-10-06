@@ -21,15 +21,7 @@ const DEFAULT_CONFIG = {
     addDirs: ['C:/', 'D:/'],
     maxTurns: 100,
     timeout: 600000, // 10분
-    confirmBeforeEdit: true, // 파일 수정/삭제 전 확인
-  },
-  // Slack 설정
-  slack: {
-    enabled: false,
-    botToken: '',
-    signingSecret: '',
-    appToken: '',
-    adminUser: '',      // Slack user ID (예: U12345) — Agent 전환 등 관리자 전용 기능
+    confirmBeforeEdit: false, // true면 파일 수정/삭제 전 사용자 확인을 받도록 지시
   },
   // Telegram 설정
   telegram: {
@@ -40,15 +32,6 @@ const DEFAULT_CONFIG = {
     // MTProto fallback (20MB 초과 파일 다운로드용, https://my.telegram.org/apps 에서 발급)
     apiId: '',
     apiHash: '',
-  },
-  // Google Chat 설정 (Pub/Sub 기반)
-  googlechat: {
-    enabled: false,
-    projectId: '',                    // GCP project ID
-    subscriptionName: '',             // Pub/Sub pull subscription 이름 (예: clawbrid-chat-sub)
-    serviceAccountKeyPath: '',        // Service account JSON 키 절대 경로
-    adminUser: '',                    // "users/123456789" 형태 (Chat sender.name)
-    allowedUsers: [],                 // 동일 형태
   },
   // 모니터 설정
   monitor: {

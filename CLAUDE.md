@@ -9,27 +9,28 @@
 # ClawBrid - Claude Code Bridge
 
 ## 프로젝트 개요
-Slack/Telegram을 Claude Code CLI에 연결하는 멀티채널 AI 브릿지. Tauri 데스크톱 대시보드 포함.
+Telegram을 Claude Code CLI / Codex CLI에 연결하는 AI 브릿지. Tauri 데스크톱 대시보드 포함. (Slack·Google Chat 브릿지는 v1.1.0에서 제거)
 
-**기술 스택**: Node.js ≥18, Tauri 2.x (Rust), @slack/bolt, node-telegram-bot-api, node-cron, MCP SDK
+**기술 스택**: Node.js ≥18, Tauri 2.x (Rust), node-telegram-bot-api, node-cron, MCP SDK
 
 ## 아키텍처
 
 ```
 bin/clawbrid.js (CLI 엔트리)
 ├── src/bridges/           # 메시징 브릿지 (PM2로 실행)
-│   ├── slack.js           # Slack Socket Mode (25KB)
-│   ├── telegram.js        # Telegram Bot API (28KB)
-│   ├── slack-standalone.js
+│   ├── telegram.js        # Telegram Bot API
 │   └── telegram-standalone.js
 ├── src/core/              # 핵심 모듈
+│   ├── agent-router.js    # claude/codex 선택, 세션 관리, 결과 파일 전송 규칙 주입
 │   ├── claude-runner.js   # Claude CLI 실행, 프롬프트 빌드
+│   ├── codex-runner.js    # Codex CLI 실행
 │   ├── config.js          # ~/.clawbrid/config.json 관리
 │   ├── cron-manager.js    # node-cron 스케줄러
 │   ├── knowledge-graph.js # Knowledge Graph 캐싱 (500노드/1000엣지)
 │   ├── memory-manager.js  # JSON 키워드 기반 장기 메모리
 │   ├── plugin-manager.js  # ~/.clawbrid/plugins/ JS 플러그인
 │   ├── status-reporter.js # 프로세스 상태 모니터링
+│   ├── telegram-polling.js # getUpdates 단일 폴링 루프 (라이브러리 내장 폴링 사용 금지)
 │   ├── video-analyzer.js  # yt-dlp + ffmpeg + whisper 영상 분석
 │   ├── voice-transcriber.js # faster-whisper STT (Python)
 │   └── web-tools.js       # DuckDuckGo 검색, URL 브라우징
@@ -80,11 +81,11 @@ cargo tauri build
 ```bash
 clawbrid dashboard      # Tauri 모니터 실행
 clawbrid setup          # 설정 마법사
-clawbrid start [slack|telegram]   # PM2 브릿지 시작
-clawbrid stop [slack|telegram]    # PM2 브릿지 중지
-clawbrid restart [slack|telegram] # PM2 브릿지 재시작
+clawbrid start [telegram|cron]   # PM2 브릿지/크론 워커 시작 (생략 시 둘 다)
+clawbrid stop [telegram|cron]    # PM2 브릿지/크론 워커 중지
+clawbrid restart [telegram|cron] # PM2 브릿지/크론 워커 재시작
 clawbrid status         # PM2 프로세스 상태
-clawbrid logs [slack|telegram]    # 최근 로그
+clawbrid logs [telegram|cron]    # 최근 로그
 clawbrid config         # 현재 설정 출력
 clawbrid update         # 업데이트 (개발자: git pull + 재링크, 일반: npm install)
 clawbrid version        # 버전 출력
@@ -98,7 +99,7 @@ clawbrid version        # 버전 출력
 
 **주의**: 개발자 환경에서 `npm install -g lee775/clawbrid-release`를 직접 실행하면 심링크가 깨져서 MODULE_NOT_FOUND 발생. 반드시 `clawbrid update` 또는 `npm install -g C:\ClawBrid --force` 사용.
 
-## 브릿지 명령어 (Slack: `!`, Telegram: `/`)
+## 브릿지 명령어 (Telegram: `/`)
 
 | 명령어 | 설명 |
 |--------|------|
@@ -113,7 +114,9 @@ clawbrid version        # 버전 출력
 | `plugin list/reload/toggle` | 플러그인 관리 |
 | `cron add/list/del/toggle/run` | 크론 작업 관리 |
 | `system [prompt]` | 시스템 프롬프트 설정 |
-| `adduser/removeuser` | 사용자 권한 관리 (관리자 전용) |
+| `adduser/removeuser`, `/admin` | 사용자 승인 관리 (관리자 전용 — 승인된 사용자는 그 외 모든 기능을 동일 권한으로 사용) |
+
+**결과 파일 전송**: 작업마다 `~/.clawbrid/temp/outbox/<chatId>_<ts>/` 폴더를 만들어 `runAgent`의 `outboxDir`로 넘기면, agent-router가 에이전트에 저장 규칙을 주입하고 작업 후 telegram.js가 그 폴더의 모든 파일을 해당 채팅으로 전송한다 (50MB 초과·실패 파일은 보존 + 경로 안내).
 
 ## 설정 파일 위치
 
@@ -133,10 +136,10 @@ clawbrid version        # 버전 출력
 ```json
 {
   "@modelcontextprotocol/sdk": "^1.29.0",
-  "@slack/bolt": "^4.1.0",
   "dotenv": "^16.4.0",
   "node-cron": "^4.2.1",
-  "node-telegram-bot-api": "^0.66.0"
+  "node-telegram-bot-api": "^0.66.0",
+  "telegram": "^2.26.22"
 }
 ```
 
@@ -144,7 +147,6 @@ clawbrid version        # 버전 출력
 
 ## 포트/프로토콜
 
-- Slack: Socket Mode (WebSocket, 포트 불필요)
 - Telegram: Bot API polling (HTTPS)
 - Tauri 대시보드: 로컬 WebView (네트워크 포트 없음)
 - MCP: stdio (Claude CLI와 직접 통신)
@@ -155,6 +157,6 @@ clawbrid version        # 버전 출력
 2. **nvm4w 경로**: `C:\nvm4w\nodejs` → `C:\Users\pc_09\AppData\Local\nvm\v24.13.0` 심링크
 3. **Knowledge Graph I/O**: `_addNodeToGraph`/`_addEdgeToGraph`로 배치 처리 후 1회 save (다중 save 금지)
 4. **browse 명령어 제어흐름**: `browsePassthrough` 변수로 질문 있을 때 Claude 호출로 분기
-5. **Slack text 변수**: `let text` (not `const`) — browse passthrough에서 재할당 필요
+5. **text 변수**: `let text` (not `const`) — browse passthrough에서 재할당 필요
 6. **DuckDuckGo 파싱**: `class="result results_links"` 기준으로 split
 7. **httpGet 리다이렉트**: MAX_REDIRECTS=5, `rejectUnauthorized: false`

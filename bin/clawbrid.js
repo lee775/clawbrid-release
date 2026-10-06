@@ -108,29 +108,23 @@ const commands = {
 
   start() {
     ensureMCP();
-    const target = args[1]; // slack, telegram, googlechat, or undefined (=all)
+    const target = args[1]; // telegram, cron, or undefined (=all)
     if (!target || target === 'all') {
-      tryPM2('clawbrid-slack', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'slack-standalone.js'));
       tryPM2('clawbrid-telegram', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'telegram-standalone.js'));
-      tryPM2('clawbrid-googlechat', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'google-chat-standalone.js'));
       tryPM2('clawbrid-cron', path.join(CLAWBRID_ROOT, 'src', 'cron-worker.js'));
-    } else if (target === 'slack') {
-      tryPM2('clawbrid-slack', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'slack-standalone.js'));
     } else if (target === 'telegram') {
       tryPM2('clawbrid-telegram', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'telegram-standalone.js'));
-    } else if (target === 'googlechat') {
-      tryPM2('clawbrid-googlechat', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'google-chat-standalone.js'));
+    } else if (target === 'cron') {
+      tryPM2('clawbrid-cron', path.join(CLAWBRID_ROOT, 'src', 'cron-worker.js'));
     } else {
-      console.log(`Unknown target: ${target}. Use: slack, telegram, googlechat, or all`);
+      console.log(`Unknown target: ${target}. Use: telegram, cron, or all`);
     }
   },
 
   stop() {
     const target = args[1];
     if (!target || target === 'all') {
-      pm2Cmd('stop', 'clawbrid-slack');
       pm2Cmd('stop', 'clawbrid-telegram');
-      pm2Cmd('stop', 'clawbrid-googlechat');
       pm2Cmd('stop', 'clawbrid-cron');
     } else {
       pm2Cmd('stop', `clawbrid-${target}`);
@@ -141,9 +135,7 @@ const commands = {
     ensureMCP();
     const target = args[1];
     if (!target || target === 'all') {
-      pm2Cmd('restart', 'clawbrid-slack');
       pm2Cmd('restart', 'clawbrid-telegram');
-      pm2Cmd('restart', 'clawbrid-googlechat');
       pm2Cmd('restart', 'clawbrid-cron');
     } else {
       pm2Cmd('restart', `clawbrid-${target}`);
@@ -186,10 +178,6 @@ const commands = {
     Timeout      : ${(cfg.claude?.timeout || 600000) / 1000}s
     Confirm Edit : ${cfg.claude?.confirmBeforeEdit ? 'Yes' : 'No'}
 
-  Slack          : ${cfg.slack?.enabled ? 'Enabled' : 'Disabled'}
-    Bot Token    : ${mask(cfg.slack?.botToken)}
-    App Token    : ${mask(cfg.slack?.appToken)}
-
   Telegram       : ${cfg.telegram?.enabled ? 'Enabled' : 'Disabled'}
     Bot Token    : ${mask(cfg.telegram?.botToken)}
     Admin User   : ${cfg.telegram?.adminUser || '(not set)'}
@@ -213,7 +201,7 @@ const commands = {
     console.log('  Stopping processes...');
     try { execSync('taskkill /f /im clawbrid-monitor.exe', { stdio: 'ignore', windowsHide: true }); } catch {}
     try { execSync('taskkill /f /im electron.exe', { stdio: 'ignore', windowsHide: true }); } catch {}
-    try { execSync('pm2 delete clawbrid-slack clawbrid-telegram clawbrid-cron', { stdio: 'ignore', windowsHide: true }); } catch {}
+    try { execSync('pm2 delete clawbrid-telegram clawbrid-cron', { stdio: 'ignore', windowsHide: true }); } catch {}
     execSync('ping 127.0.0.1 -n 3 >nul', { stdio: 'ignore', windowsHide: true });
 
     // 2. 업데이트 (개발자 모드 vs 일반 사용자 구분)
@@ -250,9 +238,7 @@ const commands = {
 
     // 4. PM2 재시작 (delete + start 로 새 코드 확실히 반영)
     const procs = [
-      ['clawbrid-slack', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'slack-standalone.js')],
       ['clawbrid-telegram', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'telegram-standalone.js')],
-      ['clawbrid-googlechat', path.join(CLAWBRID_ROOT, 'src', 'bridges', 'google-chat-standalone.js')],
       ['clawbrid-cron', path.join(CLAWBRID_ROOT, 'src', 'cron-worker.js')],
     ];
     for (const [name, script] of procs) {
@@ -293,33 +279,31 @@ const commands = {
 
   help() {
     console.log(`
-  ClawBrid - Claude Code Bridge for Slack & Telegram
+  ClawBrid - Claude Code Bridge for Telegram
 
   Usage: clawbrid <command> [options]
 
   Commands:
-    dashboard              Open monitor dashboard
-    setup                  Open setup wizard (reconfigure Slack/Telegram)
-    start [slack|telegram]  Start bridge server (default: all)
-    stop [slack|telegram]   Stop bridge server (default: all)
-    restart [slack|telegram] Restart bridge server (default: all)
-    status                  Show PM2 process status
-    logs [slack|telegram]   Show recent logs (default: all)
-    config                  Show current config
-    update                  Update to latest version
-    version                 Show current version
-    help                    Show this help
+    dashboard                Open monitor dashboard
+    setup                    Open setup wizard (reconfigure Telegram)
+    start [telegram|cron]    Start bridge / cron worker (default: all)
+    stop [telegram|cron]     Stop bridge / cron worker (default: all)
+    restart [telegram|cron]  Restart bridge / cron worker (default: all)
+    status                   Show PM2 process status
+    logs [telegram|cron]     Show recent logs (default: all)
+    config                   Show current config
+    update                   Update to latest version
+    version                  Show current version
+    help                     Show this help
 
   Examples:
-    clawbrid dashboard      # Open monitoring UI
-    clawbrid setup          # Reconfigure Slack/Telegram tokens
-    clawbrid update         # Update to latest version
-    clawbrid start          # Start all bridges
-    clawbrid start slack    # Start Slack bridge only
-    clawbrid stop telegram  # Stop Telegram bridge only
-    clawbrid restart slack  # Restart Slack bridge
-    clawbrid logs telegram  # Show Telegram logs
-    clawbrid status         # Show all process status
+    clawbrid dashboard         # Open monitoring UI
+    clawbrid setup             # Reconfigure Telegram token
+    clawbrid update            # Update to latest version
+    clawbrid start             # Start Telegram bridge + cron worker
+    clawbrid restart telegram  # Restart Telegram bridge
+    clawbrid logs telegram     # Show Telegram logs
+    clawbrid status            # Show all process status
 `);
   },
 };

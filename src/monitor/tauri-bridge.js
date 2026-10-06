@@ -34,19 +34,10 @@ function _buildPaths() {
   CLAWBRID_DIR = joinPath(HOMEDIR, '.clawbrid');
   STATUS_DIR = joinPath(CLAWBRID_DIR, 'status');
   LOG_PATHS = {
-    slack: {
-      out: joinPath(HOMEDIR, '.pm2', 'logs', 'clawbrid-slack-out.log'),
-      err: joinPath(HOMEDIR, '.pm2', 'logs', 'clawbrid-slack-error.log'),
-      qa: joinPath(CLAWBRID_DIR, 'slacklog.txt'),
-    },
     telegram: {
       out: joinPath(HOMEDIR, '.pm2', 'logs', 'clawbrid-telegram-out.log'),
       err: joinPath(HOMEDIR, '.pm2', 'logs', 'clawbrid-telegram-error.log'),
       qa: joinPath(CLAWBRID_DIR, 'telelog.txt'),
-    },
-    googlechat: {
-      out: joinPath(HOMEDIR, '.pm2', 'logs', 'clawbrid-googlechat-out.log'),
-      err: joinPath(HOMEDIR, '.pm2', 'logs', 'clawbrid-googlechat-error.log'),
     },
   };
 }
@@ -269,7 +260,7 @@ const bridge = {
 
   async refreshStatusCache() {
     if (!IS_TAURI) return;
-    for (const name of ['slack', 'telegram']) {
+    for (const name of ['telegram']) {
       try {
         const content = await this.readFile(joinPath(STATUS_DIR, name + '.json'));
         this._statusCache[name] = JSON.parse(content);

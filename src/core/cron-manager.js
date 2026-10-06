@@ -40,7 +40,7 @@ function addCron({ name, type, command, schedule, target, agent }) {
     agent: agent || null, // 'claude' | 'codex' | null(=글로벌 기본값 따름). AI 타입에서만 의미
     command,         // 프롬프트 또는 쉘 명령
     schedule,        // cron expression (예: "*/30 * * * *", "0 9 * * *", "50 18 * * 1-5")
-    target,          // 'slack' | 'telegram' | 'none'
+    target,          // 'telegram' | 'none'
     enabled: true,
     lastRun: null,
     lastResult: null,
@@ -150,25 +150,7 @@ async function executeCron(entry) {
 
 function sendToTarget(target, message) {
   const cfg = require('./config').load();
-  if (target === 'slack' && cfg.slack.botToken) {
-    const https = require('https');
-    const postData = JSON.stringify({
-      channel: cfg.slack.cronChannel || cfg.slack.defaultChannel || 'D0ANB4ED28L',
-      text: message,
-    });
-    const options = {
-      hostname: 'slack.com', path: '/api/chat.postMessage', method: 'POST',
-      headers: {
-        'Content-Type': 'application/json; charset=utf-8',
-        'Authorization': `Bearer ${cfg.slack.botToken}`,
-        'Content-Length': Buffer.byteLength(postData),
-      },
-    };
-    const req = https.request(options, () => {});
-    req.on('error', (e) => console.error(`[CRON] Slack send error: ${e.message}`));
-    req.write(postData);
-    req.end();
-  } else if (target === 'telegram' && cfg.telegram.botToken) {
+  if (target === 'telegram' && cfg.telegram.botToken) {
     const https = require('https');
     const chatId = cfg.telegram.adminUser;
     if (!chatId) return;

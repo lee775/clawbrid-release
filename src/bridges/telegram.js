@@ -19,9 +19,11 @@ const videoAnalyzer = require('../core/video-analyzer');
 const imageCodex = require('../core/image-codex');
 const promptStructurer = require('../core/prompt-structurer');
 const tgMtproto = require('../core/telegram-mtproto');
+const telegramPolling = require('../core/telegram-polling');
 
 let bot = null;
 let status = null;
+let poller = null;
 
 // 타임아웃 버튼 디스패치 (ts → { resolve, resolved, chatId, messageId })
 const pendingTimeouts = new Map();
@@ -399,20 +401,78 @@ function logQA(userId, question, answer, agent) {
 }
 
 // ── 메시지 분할 ──
+// 429(Too Many Requests) 시 텔레그램이 알려주는 retry_after만큼 기다렸다 1회 재시도.
+// 플러드 제한 중에 곧바로 재전송하면 제한 시간이 계속 늘어나므로 반드시 대기해야 한다.
+async function sendWithFloodRetry(chatId, text, opts) {
+  try {
+    return await bot.sendMessage(chatId, text, opts);
+  } catch (err) {
+    const retryAfter = err.response?.body?.parameters?.retry_after;
+    if (!retryAfter || retryAfter > 600) throw err;
+    console.error(`[TELEGRAM] 전송 플러드 제한 — ${retryAfter}초 대기 후 재시도`);
+    await new Promise(r => setTimeout(r, (retryAfter + 1) * 1000));
+    return await bot.sendMessage(chatId, text, opts);
+  }
+}
+
 async function sendLongMessage(chatId, text) {
   const MAX = 4000;
   let remaining = text;
+  let first = true;
   while (remaining.length > 0) {
-    if (remaining.length <= MAX) { await bot.sendMessage(chatId, remaining); break; }
+    if (!first) await new Promise(r => setTimeout(r, 300)); // 청크 연속 전송 시 플러드 제한 방지 간격
+    first = false;
+    if (remaining.length <= MAX) { await sendWithFloodRetry(chatId, remaining); break; }
     let cut = remaining.lastIndexOf('\n', MAX);
     if (cut === -1 || cut < MAX * 0.5) cut = MAX;
-    await bot.sendMessage(chatId, remaining.slice(0, cut));
+    await sendWithFloodRetry(chatId, remaining.slice(0, cut));
     remaining = remaining.slice(cut);
   }
 }
 
+// ── 결과 파일 전송 ──
+// 작업마다 전용 폴더를 만들어 에이전트가 거기 저장한 파일만 해당 채팅으로 보낸다
+// (공용 폴더를 쓰면 동시에 작업한 다른 사용자에게 파일이 갈 수 있음)
+const OUTBOX_ROOT = path.join(config.CONFIG_DIR, 'temp', 'outbox');
+const BOT_UPLOAD_LIMIT = 50 * 1024 * 1024; // Bot API 파일 전송 한도
+const PHOTO_LIMIT = 10 * 1024 * 1024;      // 이보다 큰 이미지는 사진이 아닌 파일로 전송
+
+function listFilesRecursive(dir) {
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir, { recursive: true })
+    .map((rel) => path.join(dir, String(rel)))
+    .filter((f) => { try { return fs.statSync(f).isFile(); } catch { return false; } });
+}
+
+// 전송하지 못한 파일 목록을 돌려준다 — 호출부는 이 파일들을 지우지 말 것
+async function sendFiles(chatId, files) {
+  const unsent = [];
+  for (const f of files) {
+    const name = path.basename(f);
+    try {
+      const size = fs.statSync(f).size;
+      if (size > BOT_UPLOAD_LIMIT) {
+        unsent.push(f);
+        await bot.sendMessage(chatId, `⚠️ ${name} (${(size / 1024 / 1024).toFixed(1)}MB)은 텔레그램 봇 전송 한도(50MB)를 넘어 보낼 수 없습니다.\nPC 경로: ${f}`);
+        continue;
+      }
+      const stream = fs.createReadStream(f);
+      if (/\.(png|jpe?g|webp)$/i.test(f) && size <= PHOTO_LIMIT) await bot.sendPhoto(chatId, stream);
+      else if (/\.(mp4|mov|webm|mkv|m4v)$/i.test(f)) await bot.sendVideo(chatId, stream);
+      else if (/\.gif$/i.test(f)) await bot.sendAnimation(chatId, stream);
+      else await bot.sendDocument(chatId, stream);
+    } catch (e) {
+      unsent.push(f);
+      await bot.sendMessage(chatId, `❌ 전송 실패 (${name}): ${e.message}\nPC 경로: ${f}`).catch(() => {});
+    }
+  }
+  return unsent;
+}
+
 // ── 메인 핸들러 ──
-const activeSessions = new Map();
+const activeSessions = new Map(); // chatId → 실행 중인 에이전트 프로세스 (/stop용)
+// 작업 중인 채팅. 확인과 같은 동기 구간에서 표시해야 첫 await 사이에 들어온 메시지가 동시 실행되지 않는다
+const busyChats = new Set();
 const messageQueue = new Map(); // 채팅별 작업 큐 (최대 5개)
 const MAX_QUEUE_SIZE = 5;
 
@@ -546,9 +606,6 @@ async function handleMessage(msg) {
       if (!target) {
         await bot.sendMessage(chatId, `🤖 현재 Agent: *${current}*\n🌐 글로벌 기본: *${globalDefault}*\n\n전환: \`/agent claude\` 또는 \`/agent codex\``, { parse_mode: 'Markdown' });
         return;
-      }
-      if (!isAdmin(userId)) {
-        await bot.sendMessage(chatId, '🚫 Agent 전환은 관리자만 가능합니다.'); return;
       }
       if (!agentRouter.isValidAgent(target)) {
         await bot.sendMessage(chatId, `❌ 알 수 없는 agent: ${target}\n사용법: /agent claude|codex`); return;
@@ -720,9 +777,6 @@ ${topic}
         const name = parts[1]; const interval = parseInt(parts[2]); const command = parts.slice(3).join(' ');
         if (!name || !interval || !command) { await bot.sendMessage(chatId, '사용법: /cron add [이름] [간격(분)] [명령]'); return; }
         const isShell = command.startsWith('!');
-        if (isShell && !isAdmin(userId)) {
-          await bot.sendMessage(chatId, '🚫 쉘 명령 크론은 관리자만 등록할 수 있습니다.'); return;
-        }
         const cron = cronManager.addCron({ name, type: isShell ? 'shell' : 'claude', command: isShell ? command.slice(1) : command, schedule: `*/${interval} * * * *`, target: 'telegram' });
         cronManager.startCron(cron);
         await bot.sendMessage(chatId, `✅ 크론 추가: *${name}* (${interval}분 간격)`, { parse_mode: 'Markdown' }); return;
@@ -918,7 +972,7 @@ ${topic}
     return;
   }
 
-  if (activeSessions.has(chatId)) {
+  if (busyChats.has(chatId)) {
     // 큐에 추가
     const queue = messageQueue.get(chatId) || [];
     if (queue.length >= MAX_QUEUE_SIZE) {
@@ -930,12 +984,16 @@ ${topic}
     await bot.sendMessage(chatId, `📋 대기열에 추가됨 (${queue.length}번째). /queue로 확인`);
     return;
   }
+  busyChats.add(chatId);
 
   const activeAgent = agentRouter.getActiveAgent('telegram', chatId);
-  const startMsg = await bot.sendMessage(chatId, `⏳ 작업 진행중... _(${activeAgent})_`, { parse_mode: 'Markdown' });
   const resumeSessionId = agentRouter.getResumeSessionId('telegram', chatId, activeAgent);
+  let startMsg = null;
+  const outboxDir = path.join(OUTBOX_ROOT, `${chatId}_${Date.now()}`);
 
   try {
+    startMsg = await sendWithFloodRetry(chatId, `⏳ 작업 진행중... _(${activeAgent})_`, { parse_mode: 'Markdown' });
+    fs.mkdirSync(outboxDir, { recursive: true });
     if (status) status.start(text || '[파일 첨부]', userId, chatId);
 
     let prompt = text;
@@ -1025,7 +1083,7 @@ ${topic}
       if (!dl.ok) {
         await bot.sendMessage(chatId, `⚠️ 영상 다운로드 실패: ${dl.message || dl.reason}`);
       } else {
-        const outDir = imageCodex.IMAGE_DIR.replace(/\\/g, '/');
+        const outDir = outboxDir.replace(/\\/g, '/');
         let ffmpegPath = 'ffmpeg';
         try { ffmpegPath = videoAnalyzer.getFFmpegPath(); } catch {}
         const ffmpegHint = ffmpegPath && ffmpegPath !== 'ffmpeg'
@@ -1067,20 +1125,12 @@ ${topic}
     // 플러그인 전처리 훅
     finalPrompt = plugins.runBeforePrompt(finalPrompt, { userId, chatId, source: 'telegram' });
 
-    // 관리자/비관리자 권한 분리 (Claude만 allowedTools 적용, Codex는 sandbox 모드로 제어)
-    const runOptions = { resumeSessionId };
-    if (activeAgent === 'claude') {
-      if (isAdmin(userId)) {
-        runOptions.isAdmin = true;
-        runOptions.appendSystemPrompt = `${memory.MEMORY_SYSTEM_PROMPT}\n${knowledgeGraph.GRAPH_SYSTEM_PROMPT}`;
-      } else {
-        runOptions.allowedTools = ['WebSearch', 'WebFetch', 'Read', 'Write', 'Edit', 'MultiEdit', 'Glob', 'mcp__clawbrid-image__image_generate'];
-        runOptions.appendSystemPrompt = '너는 일반 사용자의 질문에 답변하는 AI입니다. 코드 실행과 시스템 명령은 사용하지 마세요. 첨부파일(PDF/Word/PPT/Excel/텍스트 등)이 있으면 Read 도구로 해당 경로만 읽어서 사용자 질문에 답변하세요 — 주어진 첨부 경로 외의 파일은 열지 마세요. 파일 쓰기/수정(Write/Edit)은 허용됩니다.';
-      }
-    } else {
-      // Codex는 시스템 프롬프트만 전달 (메모리/그래프 컨텍스트). sandbox는 config 기반.
-      runOptions.appendSystemPrompt = `${memory.MEMORY_SYSTEM_PROMPT}\n${knowledgeGraph.GRAPH_SYSTEM_PROMPT}`;
-    }
+    // 승인된 사용자는 모두 도구 제한 없이 같은 권한으로 실행 (사용자 관리만 관리자 전용)
+    const runOptions = {
+      resumeSessionId,
+      outboxDir,
+      appendSystemPrompt: `${memory.MEMORY_SYSTEM_PROMPT}\n${knowledgeGraph.GRAPH_SYSTEM_PROMPT}`,
+    };
 
     // 타임아웃 시 사용자에게 계속 진행 여부 확인
     runOptions.onTimeout = () => new Promise((resolve) => {
@@ -1159,28 +1209,21 @@ ${topic}
 
     await sendLongMessage(chatId, responseText);
 
-    // codex/MCP가 생성한 새 결과물(이미지·영상) 감지 → 전송 → 정리
+    // 결과 파일 전송: 이 작업 전용 폴더의 모든 파일 + 이미지 MCP가 공용 폴더에 만든 새 미디어
     try {
-      if (fs.existsSync(imageCodex.IMAGE_DIR)) {
-        const after = fs.readdirSync(imageCodex.IMAGE_DIR);
-        const newFiles = after
+      const outboxFiles = listFilesRecursive(outboxDir);
+      const mcpMedia = fs.existsSync(imageCodex.IMAGE_DIR)
+        ? fs.readdirSync(imageCodex.IMAGE_DIR)
           .filter(f => !imagesBefore.has(f) && /\.(png|jpe?g|webp|gif|mp4|mov|webm|mkv|m4v)$/i.test(f))
-          .map(f => path.join(imageCodex.IMAGE_DIR, f));
-        if (newFiles.length) {
-          await bot.sendMessage(chatId, `📎 결과물 ${newFiles.length}개 생성됨, 전송 중...`);
-          for (const f of newFiles) {
-            try {
-              const stream = fs.createReadStream(f);
-              if (/\.(png|jpe?g|webp)$/i.test(f)) await bot.sendPhoto(chatId, stream);
-              else if (/\.(mp4|mov|webm|mkv|m4v)$/i.test(f)) await bot.sendVideo(chatId, stream);
-              else if (/\.gif$/i.test(f)) await bot.sendAnimation(chatId, stream);
-              else await bot.sendDocument(chatId, stream);
-            } catch (e) { await bot.sendMessage(chatId, `❌ 전송 실패 (${path.basename(f)}): ${e.message}`); }
-          }
-          imageCodex.cleanup(newFiles);
-        }
+          .map(f => path.join(imageCodex.IMAGE_DIR, f))
+        : [];
+      const files = [...outboxFiles, ...mcpMedia];
+      if (files.length) {
+        await bot.sendMessage(chatId, `📎 결과물 ${files.length}개 전송 중...`);
+        const unsent = await sendFiles(chatId, files);
+        imageCodex.cleanup(files.filter(f => !unsent.includes(f)));
       }
-    } catch (e) { console.error(`[TG] media snapshot error: ${e.message}`); }
+    } catch (e) { console.error(`[TG] 결과 파일 전송 오류: ${e.message}`); }
 
     // 코드 변경이 있으면 자동 Codex 리뷰
     if (hasCodeChanges()) {
@@ -1198,10 +1241,15 @@ ${topic}
     if (err.message.includes('session') || err.message.includes('resume')) {
       agentRouter.clearSession('telegram', chatId, activeAgent);
     }
-    try { await bot.editMessageText('❌ 작업 실패', { chat_id: chatId, message_id: startMsg.message_id }); } catch {}
+    if (startMsg) {
+      try { await bot.editMessageText('❌ 작업 실패', { chat_id: chatId, message_id: startMsg.message_id }); } catch {}
+    }
     await bot.sendMessage(chatId, `❌ 오류:\n${err.message}`);
   } finally {
+    busyChats.delete(chatId);
     activeSessions.delete(chatId);
+    // 남은 파일(전송 실패·한도 초과)이 없으면 작업 폴더 삭제
+    try { if (!listFilesRecursive(outboxDir).length) fs.rmSync(outboxDir, { recursive: true, force: true }); } catch {}
 
     // 큐에 다음 작업이 있으면 자동 실행
     const queue = messageQueue.get(chatId) || [];
@@ -1226,7 +1274,8 @@ async function start() {
   plugins.loadAll();
   voice.ensureInstalled();
 
-  bot = new TelegramBot(cfg.telegram.botToken, { polling: true });
+  // 폴링은 telegram-polling 단일 루프가 담당 (내장 폴링은 루프 중복 버그로 사용 안 함)
+  bot = new TelegramBot(cfg.telegram.botToken, { polling: false });
   bot.on('message', handleMessage);
 
   // 타임아웃 버튼 영구 핸들러 (answerCallbackQuery를 항상 실행)
@@ -1261,6 +1310,7 @@ async function start() {
     entry.resolve(isContinue);
   });
 
+  poller = telegramPolling.startPolling(bot);
   console.log('[TELEGRAM] Bridge started');
 
   // orphan 이미지 파일 주기적 정리 (시작 시 1회 + 1시간마다)
@@ -1271,7 +1321,8 @@ async function start() {
 }
 
 async function stop() {
-  if (bot) { bot.stopPolling(); bot = null; }
+  if (poller) { poller.stop(); poller = null; }
+  bot = null;
   if (status) { status.destroy(); status = null; }
   try { await tgMtproto.disconnect(); } catch {}
   console.log('[TELEGRAM] Bridge stopped');

@@ -109,12 +109,25 @@ function clearAll(source, chatId) {
   }
 }
 
+function outboxRule(dir) {
+  return `[파일 전송] 사용자에게 보낼 파일(이미지·영상·문서·압축파일 등 형식 무관)은 반드시 다음 폴더에 저장하거나 복사하라: ${dir.replace(/\\/g, '/')}\n`
+    + '작업이 끝나면 이 폴더의 모든 파일이 사용자에게 자동 전송되고 폴더에서 삭제된다. '
+    + 'PC에도 남겨야 하는 파일은 원하는 위치에 저장한 뒤 이 폴더에는 복사본을 넣어라. 파일을 보냈다고 말만 하지 말고 실제로 이 폴더에 넣어라.';
+}
+
 /**
  * Agent 별 runner 호출. claude-runner.runClaude와 동형 인터페이스.
+ * options.outboxDir: 작업 후 이 폴더의 파일을 사용자에게 보낸다 (에이전트에 저장 규칙 안내)
  * @returns {{ promise: Promise<{result, session_id}>, proc, agent }}
  */
 function runAgent(agent, prompt, options = {}) {
   if (!isValidAgent(agent)) throw new Error(`unknown agent: ${agent}`);
+  if (options.outboxDir) {
+    options = {
+      ...options,
+      appendSystemPrompt: [options.appendSystemPrompt, outboxRule(options.outboxDir)].filter(Boolean).join('\n'),
+    };
+  }
   if (agent === 'codex') {
     if (!codexRunner.isCodexReady()) {
       const err = new Error('Codex CLI가 설치되지 않았거나 인증이 필요합니다. (codex login 확인)');

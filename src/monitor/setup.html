@@ -45,26 +45,6 @@
     .field textarea { resize: vertical; min-height: 60px; }
     .field .hint { font-size: 11px; color: #484f58; margin-top: 4px; }
 
-    .toggle-row {
-      display: flex; align-items: center; justify-content: space-between;
-      padding: 14px 16px; background: #161b22; border: 1px solid #30363d;
-      border-radius: 8px; margin-bottom: 12px; cursor: pointer;
-    }
-    .toggle-row:hover { border-color: #484f58; }
-    .toggle-label { font-size: 14px; font-weight: 500; }
-    .toggle-label span { font-size: 20px; margin-right: 10px; }
-    .toggle {
-      width: 44px; height: 24px; border-radius: 12px; background: #30363d;
-      position: relative; transition: background 0.2s; flex-shrink: 0;
-    }
-    .toggle.on { background: #58a6ff; }
-    .toggle::after {
-      content: ''; position: absolute; top: 3px; left: 3px;
-      width: 18px; height: 18px; border-radius: 50%; background: #fff;
-      transition: transform 0.2s;
-    }
-    .toggle.on::after { transform: translateX(20px); }
-
     .btn-row { display: flex; justify-content: space-between; padding: 20px 32px; border-top: 1px solid #30363d; background: #161b22; }
     .btn {
       padding: 10px 28px; border-radius: 6px; font-size: 14px; font-weight: 500;
@@ -116,56 +96,10 @@
     </div>
   </div>
 
-  <!-- Step 2: 플랫폼 선택 -->
+  <!-- Step 2: Telegram 설정 -->
   <div class="step-panel" data-step="1">
     <div class="section">
-      <div class="section-title">2. 연결할 플랫폼 선택</div>
-      <div class="section-desc">Slack, Telegram 또는 둘 다 연결할 수 있습니다.</div>
-
-      <div class="toggle-row" onclick="togglePlatform('slack')">
-        <div class="toggle-label"><span>💬</span> Slack</div>
-        <div class="toggle" id="toggle-slack"></div>
-      </div>
-      <div class="toggle-row" onclick="togglePlatform('telegram')">
-        <div class="toggle-label"><span>📱</span> Telegram</div>
-        <div class="toggle" id="toggle-telegram"></div>
-      </div>
-      <div class="toggle-row" onclick="togglePlatform('googlechat')">
-        <div class="toggle-label"><span>💼</span> Google Chat</div>
-        <div class="toggle" id="toggle-googlechat"></div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Step 3: Slack 설정 -->
-  <div class="step-panel" data-step="2">
-    <div class="section">
-      <div class="section-title">3. Slack 설정</div>
-      <div class="section-desc">
-        <a href="https://api.slack.com/apps" style="color:#58a6ff;">api.slack.com/apps</a>에서 앱을 생성하고 토큰을 입력하세요.<br>
-        필요 권한: chat:write, files:read, app_mentions:read, im:history, im:read, im:write<br>
-        Socket Mode를 활성화하고 App-Level Token을 생성하세요.
-      </div>
-      <div class="field">
-        <label>Bot Token (xoxb-...)</label>
-        <input type="password" id="cfg-slack-bot" placeholder="xoxb-...">
-      </div>
-      <div class="field">
-        <label>Signing Secret</label>
-        <input type="password" id="cfg-slack-secret" placeholder="Signing Secret">
-      </div>
-      <div class="field">
-        <label>App Token (xapp-...)</label>
-        <input type="password" id="cfg-slack-app" placeholder="xapp-...">
-        <div class="hint">Socket Mode 활성화 후 생성되는 앱 레벨 토큰</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Step 4: Telegram 설정 -->
-  <div class="step-panel" data-step="3">
-    <div class="section">
-      <div class="section-title">4. Telegram 설정</div>
+      <div class="section-title">2. Telegram 설정</div>
       <div class="section-desc">
         <a href="https://t.me/BotFather" style="color:#58a6ff;">@BotFather</a>에서 봇을 생성하고 토큰을 입력하세요.
       </div>
@@ -190,42 +124,8 @@
     </div>
   </div>
 
-  <!-- Step 4-2: Google Chat 설정 -->
-  <div class="step-panel" data-step="5">
-    <div class="section">
-      <div class="section-title">5. Google Chat 설정</div>
-      <div class="section-desc">
-        <strong>사전 준비</strong> (한 번만):<br>
-        ① <a href="https://console.cloud.google.com/apis/library/chat.googleapis.com" target="_blank" style="color:#58a6ff;">Google Chat API</a> 활성화<br>
-        ② IAM → Service Account 생성 → JSON 키 다운로드<br>
-        ③ Pub/Sub 토픽 생성 (예: <code>clawbrid-chat-events</code>)<br>
-        ④ 토픽 IAM에 <code>chat-api-push@system.gserviceaccount.com</code> → <strong>Pub/Sub Publisher</strong> 부여<br>
-        ⑤ Pull subscription 생성 (예: <code>clawbrid-chat-sub</code>)<br>
-        ⑥ <a href="https://console.cloud.google.com/apis/api/chat.googleapis.com/hangouts-chat" target="_blank" style="color:#58a6ff;">Chat API → Configuration</a>에서 봇 등록 + Connection: Pub/Sub topic 지정
-      </div>
-      <div class="field">
-        <label>GCP Project ID</label>
-        <input type="text" id="cfg-gc-project" placeholder="my-gcp-project">
-      </div>
-      <div class="field">
-        <label>Pull Subscription 이름</label>
-        <input type="text" id="cfg-gc-sub" placeholder="clawbrid-chat-sub">
-      </div>
-      <div class="field">
-        <label>Service Account 키 파일 절대 경로</label>
-        <input type="text" id="cfg-gc-key" placeholder="C:/secrets/clawbrid-key.json">
-        <div class="hint">키 파일은 절대 깃에 커밋하지 마세요.</div>
-      </div>
-      <div class="field">
-        <label>관리자 user resource (users/숫자ID)</label>
-        <input type="text" id="cfg-gc-admin" placeholder="users/123456789012345">
-        <div class="hint">Chat에서 본인 ID 확인: 봇과 1:1 메시지 후 Pub/Sub 메시지의 sender.name 확인</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Step 5: 완료 -->
-  <div class="step-panel" data-step="4">
+  <!-- Step 3: 완료 -->
+  <div class="step-panel" data-step="2">
     <div class="section" style="text-align:center; padding-top: 40px;">
       <div style="font-size:48px; margin-bottom:20px;">🎉</div>
       <div class="section-title" style="font-size:20px;">설정 완료!</div>
@@ -248,16 +148,9 @@
 <script>
 
 let currentStep = 0;
-const platforms = { slack: false, telegram: false, googlechat: false };
 
-// 총 스텝 계산 (동적)
 function getSteps() {
-  const steps = ['claude', 'platform'];
-  if (platforms.slack) steps.push('slack');
-  if (platforms.telegram) steps.push('telegram');
-  if (platforms.googlechat) steps.push('googlechat');
-  steps.push('done');
-  return steps;
+  return ['claude', 'telegram', 'done'];
 }
 
 function renderDots() {
@@ -273,7 +166,7 @@ function renderDots() {
 function showStep(idx) {
   const steps = getSteps();
   // 스텝 매핑: 실제 panel data-step과 매칭
-  const panelMap = { claude: 0, platform: 1, slack: 2, telegram: 3, done: 4, googlechat: 5 };
+  const panelMap = { claude: 0, telegram: 1, done: 2 };
   document.querySelectorAll('.step-panel').forEach(p => p.classList.remove('active'));
   const targetPanel = panelMap[steps[idx]];
   document.querySelector(`[data-step="${targetPanel}"]`).classList.add('active');
@@ -298,12 +191,6 @@ function nextStep() {
 
 function prevStep() {
   if (currentStep > 0) { currentStep--; showStep(currentStep); }
-}
-
-function togglePlatform(name) {
-  platforms[name] = !platforms[name];
-  document.getElementById(`toggle-${name}`).classList.toggle('on', platforms[name]);
-  renderDots();
 }
 
 function checkAll() {
@@ -345,9 +232,8 @@ function checkAll() {
 function showSummary() {
   const parts = [];
   parts.push(`<strong>작업 디렉터리:</strong> ${document.getElementById('cfg-workdir').value}`);
-  if (platforms.slack) parts.push('💬 <strong>Slack</strong> 연결됨');
-  if (platforms.telegram) parts.push('📱 <strong>Telegram</strong> 연결됨');
-  if (!platforms.slack && !platforms.telegram) parts.push('⚠️ 플랫폼 미선택 (나중에 설정 가능)');
+  if (document.getElementById('cfg-tg-token').value.trim()) parts.push('📱 <strong>Telegram</strong> 연결됨');
+  else parts.push('⚠️ Telegram 봇 토큰 미입력 (나중에 설정 가능)');
   document.getElementById('summary').innerHTML = parts.join('<br>');
 }
 
@@ -358,29 +244,15 @@ function finishSetup() {
       addDirs: document.getElementById('cfg-adddirs').value.split(',').map(s => s.trim()).filter(Boolean),
       maxTurns: 50,
       timeout: 600000,
-      confirmBeforeEdit: true,
-    },
-    slack: {
-      enabled: platforms.slack,
-      botToken: document.getElementById('cfg-slack-bot').value,
-      signingSecret: document.getElementById('cfg-slack-secret').value,
-      appToken: document.getElementById('cfg-slack-app').value,
+      confirmBeforeEdit: false,
     },
     telegram: {
-      enabled: platforms.telegram,
+      enabled: !!document.getElementById('cfg-tg-token').value.trim(),
       botToken: document.getElementById('cfg-tg-token').value,
       adminUser: document.getElementById('cfg-tg-admin').value,
       allowedUsers: [],
       apiId: document.getElementById('cfg-tg-apiid').value.trim(),
       apiHash: document.getElementById('cfg-tg-apihash').value.trim(),
-    },
-    googlechat: {
-      enabled: platforms.googlechat,
-      projectId: (document.getElementById('cfg-gc-project')?.value || '').trim(),
-      subscriptionName: (document.getElementById('cfg-gc-sub')?.value || '').trim(),
-      serviceAccountKeyPath: (document.getElementById('cfg-gc-key')?.value || '').trim(),
-      adminUser: (document.getElementById('cfg-gc-admin')?.value || '').trim(),
-      allowedUsers: [],
     },
     monitor: { autoStart: true, minimizeToTray: true },
     cleanup: { maxAgeDays: 7, intervalHours: 24 },
@@ -398,26 +270,11 @@ async function loadExistingConfig() {
       if (cfg.claude.workDir) document.getElementById('cfg-workdir').value = cfg.claude.workDir;
       if (cfg.claude.addDirs) document.getElementById('cfg-adddirs').value = cfg.claude.addDirs.join(', ');
     }
-    if (cfg.slack) {
-      if (cfg.slack.enabled) { platforms.slack = true; document.getElementById('toggle-slack').classList.add('on'); }
-      if (cfg.slack.botToken) document.getElementById('cfg-slack-bot').value = cfg.slack.botToken;
-      if (cfg.slack.signingSecret) document.getElementById('cfg-slack-secret').value = cfg.slack.signingSecret;
-      if (cfg.slack.appToken) document.getElementById('cfg-slack-app').value = cfg.slack.appToken;
-    }
     if (cfg.telegram) {
-      if (cfg.telegram.enabled) { platforms.telegram = true; document.getElementById('toggle-telegram').classList.add('on'); }
       if (cfg.telegram.botToken) document.getElementById('cfg-tg-token').value = cfg.telegram.botToken;
       if (cfg.telegram.adminUser) document.getElementById('cfg-tg-admin').value = cfg.telegram.adminUser;
       if (cfg.telegram.apiId) document.getElementById('cfg-tg-apiid').value = cfg.telegram.apiId;
       if (cfg.telegram.apiHash) document.getElementById('cfg-tg-apihash').value = cfg.telegram.apiHash;
-    }
-    if (cfg.googlechat) {
-      if (cfg.googlechat.enabled) { platforms.googlechat = true; document.getElementById('toggle-googlechat').classList.add('on'); }
-      const set = (id, v) => { const el = document.getElementById(id); if (el && v) el.value = v; };
-      set('cfg-gc-project', cfg.googlechat.projectId);
-      set('cfg-gc-sub', cfg.googlechat.subscriptionName);
-      set('cfg-gc-key', cfg.googlechat.serviceAccountKeyPath);
-      set('cfg-gc-admin', cfg.googlechat.adminUser);
     }
     renderDots();
   } catch (e) {

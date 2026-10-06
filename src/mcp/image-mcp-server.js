@@ -3,7 +3,7 @@
  * ClawBrid Image MCP Server
  * 사용자가 이미지 생성(그려줘, draw 등)을 요청하면 Claude가 이 도구를 자동 호출한다.
  * 내부적으로 codex exec --skip-git-repo-check로 이미지를 만들고 ~/.clawbrid/temp/images/에 저장.
- * 브릿지는 세션 완료 후 해당 폴더를 스냅샷 비교하여 새 파일을 Slack/Telegram으로 전송한다.
+ * 브릿지는 세션 완료 후 해당 폴더를 스냅샷 비교하여 새 파일을 Telegram으로 전송한다.
  */
 const { Server } = require('@modelcontextprotocol/sdk/server/index.js');
 const { StdioServerTransport } = require('@modelcontextprotocol/sdk/server/stdio.js');
@@ -24,7 +24,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
   tools: [
     {
       name: 'image_generate',
-      description: `사용자가 이미지/그림/사진 생성·편집·수정을 요청할 때 호출하세요. Codex CLI로 PNG 이미지를 생성/편집하고 ClawBrid 브릿지가 자동으로 Slack/Telegram에 업로드합니다.
+      description: `사용자가 이미지/그림/사진 생성·편집·수정을 요청할 때 호출하세요. Codex CLI로 PNG 이미지를 생성/편집하고 ClawBrid 브릿지가 자동으로 Telegram에 업로드합니다.
 
 [신규 생성] 예: "강아지 그려줘", "draw a cat" → prompt만 전달.
 

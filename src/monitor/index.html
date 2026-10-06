@@ -834,7 +834,6 @@
           <label class="form-label">결과 전송</label>
           <select id="cron-target" class="form-input">
             <option value="none">없음</option>
-            <option value="slack">Slack</option>
             <option value="telegram">Telegram</option>
           </select>
         </div>
@@ -872,9 +871,7 @@
     </div>
 
     <div class="log-tabs">
-      <div class="log-tab active" data-log="slack">Slack</div>
-      <div class="log-tab" data-log="telegram">Telegram</div>
-      <div class="log-tab" data-log="googlechat">Google Chat</div>
+      <div class="log-tab active" data-log="telegram">Telegram</div>
     </div>
 
     <div class="log-box" id="log-content"></div>
@@ -886,40 +883,6 @@
       <div>
         <div class="page-title">설정</div>
         <div class="page-subtitle">ClawBrid 연결 설정 관리</div>
-      </div>
-    </div>
-
-    <!-- Slack Section -->
-    <div class="settings-section">
-      <div class="settings-header">
-        <div class="settings-title">💬 Slack 설정</div>
-        <label class="toggle-switch">
-          <input type="checkbox" id="settings-slack-enabled">
-          <span class="toggle-slider"></span>
-        </label>
-      </div>
-      <div class="settings-fields">
-        <div class="settings-field">
-          <label>Bot Token (xoxb-...)</label>
-          <div class="input-wrap">
-            <input type="password" id="settings-slack-token" placeholder="xoxb-your-token">
-            <button class="input-eye" onclick="toggleTokenVisibility('settings-slack-token', this)" title="토큰 표시/숨김">👁</button>
-          </div>
-        </div>
-        <div class="settings-field">
-          <label>App Token (xapp-...)</label>
-          <div class="input-wrap">
-            <input type="password" id="settings-slack-app-token" placeholder="xapp-your-token">
-            <button class="input-eye" onclick="toggleTokenVisibility('settings-slack-app-token', this)" title="토큰 표시/숨김">👁</button>
-          </div>
-        </div>
-        <div class="settings-field">
-          <label>허용된 사용자 (쉼표 구분)</label>
-          <div class="users-field-wrap">
-            <input type="text" id="settings-slack-users" placeholder="U12345,U67890" readonly>
-            <button class="users-edit-btn" onclick="toggleUsersEdit('settings-slack-users', this)">수정</button>
-          </div>
-        </div>
       </div>
     </div>
 
@@ -997,7 +960,7 @@ document.querySelectorAll('.nav-item').forEach(item => {
 });
 
 // ── 로그 서브탭 ──
-let activeLogTab = 'slack';
+let activeLogTab = 'telegram';
 let activeLogMode = 'qa'; // 'qa'(대화) | 'system'(PM2)
 document.querySelectorAll('.log-tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -1104,9 +1067,7 @@ function cronToHuman(expr) {
 async function renderCards() {
   const container = document.getElementById('bridge-cards');
   const bridges = [
-    { name: 'slack', label: 'Slack Bridge', icon: '💬' },
     { name: 'telegram', label: 'Telegram Bridge', icon: '📱' },
-    { name: 'googlechat', label: 'Google Chat Bridge', icon: '💼' },
   ];
 
   // PM2 실제 프로세스 상태 조회
@@ -1195,7 +1156,7 @@ async function renderStatCards() {
 function renderActivity() {
   const container = document.getElementById('activity-list');
   const all = [];
-  ['slack', 'telegram', 'googlechat'].forEach(name => {
+  ['telegram'].forEach(name => {
     const s = bridge.readStatusSync(name);
     if (s && s.history) {
       s.history.forEach(h => all.push({ ...h, source: name }));
@@ -1210,7 +1171,7 @@ function renderActivity() {
 
   container.innerHTML = all.slice(0, 15).map(h => `
     <div class="activity-item">
-      <span class="activity-icon">${h.source === 'slack' ? '💬' : h.source === 'googlechat' ? '💼' : '📱'}</span>
+      <span class="activity-icon">📱</span>
       <div style="flex:1;min-width:0;">
         <div class="activity-text" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(h.message || '')}</div>
         <div class="activity-sub" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHtml(h.response || '')}</div>
@@ -1309,7 +1270,7 @@ async function renderCrons() {
       <td><strong>${escapeHtml(c.name)}</strong></td>
       <td>${c.type === 'claude' ? '🤖 Claude' : '💻 Shell'}</td>
       <td style="font-size:12px;color:var(--accent);" title="${escapeHtml(c.schedule || '')}">${cronToHuman(c.schedule)}</td>
-      <td>${c.target === 'slack' ? '💬 Slack' : c.target === 'telegram' ? '📱 Telegram' : c.target === 'googlechat' ? '💼 Google Chat' : '-'}</td>
+      <td>${c.target === 'telegram' ? '📱 Telegram' : '-'}</td>
       <td style="font-family:'Geist Mono',monospace;font-size:12px;">${c.lastRun ? formatTime(c.lastRun) : '-'}</td>
       <td>
         <span class="badge ${c.enabled ? 'badge-online' : 'badge-stopped'}" style="cursor:pointer;" onclick="toggleCron('${c.id}')">
@@ -1409,12 +1370,6 @@ function toggleUsersEdit(inputId, btn) {
 async function loadSettings() {
   try {
     const cfg = await bridge.loadConfig();
-    if (cfg.slack) {
-      document.getElementById('settings-slack-enabled').checked = cfg.slack.enabled !== false;
-      document.getElementById('settings-slack-token').value = cfg.slack.botToken || '';
-      document.getElementById('settings-slack-app-token').value = cfg.slack.appToken || '';
-      document.getElementById('settings-slack-users').value = (cfg.slack.allowedUsers || []).join(',');
-    }
     if (cfg.telegram) {
       document.getElementById('settings-tg-enabled').checked = cfg.telegram.enabled !== false;
       document.getElementById('settings-tg-token').value = cfg.telegram.botToken || '';
@@ -1463,12 +1418,6 @@ async function saveDashAgent() {
 async function saveSettings() {
   try {
     const cfg = await bridge.loadConfig();
-    cfg.slack = cfg.slack || {};
-    cfg.slack.enabled = document.getElementById('settings-slack-enabled').checked;
-    cfg.slack.botToken = document.getElementById('settings-slack-token').value.trim();
-    cfg.slack.appToken = document.getElementById('settings-slack-app-token').value.trim();
-    cfg.slack.allowedUsers = document.getElementById('settings-slack-users').value.split(',').map(s => s.trim()).filter(Boolean);
-
     cfg.telegram = cfg.telegram || {};
     cfg.telegram.enabled = document.getElementById('settings-tg-enabled').checked;
     cfg.telegram.botToken = document.getElementById('settings-tg-token').value.trim();
