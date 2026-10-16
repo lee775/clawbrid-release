@@ -205,8 +205,10 @@ function hasCodeChanges() {
   const cfg = config.load();
   try {
     const { execSync } = require('child_process');
-    const diff = execSync('git diff --shortstat', { cwd: cfg.claude.workDir, encoding: 'utf-8', windowsHide: true }).trim();
-    const staged = execSync('git diff --cached --shortstat', { cwd: cfg.claude.workDir, encoding: 'utf-8', windowsHide: true }).trim();
+    // workDir이 git 저장소가 아니면 git이 사용법 안내를 stderr로 쏟아내 에러 로그를 채우므로 버린다
+    const opts = { cwd: cfg.claude.workDir, encoding: 'utf-8', windowsHide: true, stdio: ['ignore', 'pipe', 'ignore'] };
+    const diff = execSync('git diff --shortstat', opts).trim();
+    const staged = execSync('git diff --cached --shortstat', opts).trim();
     return !!(diff || staged);
   } catch { return false; }
 }

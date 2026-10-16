@@ -43,6 +43,33 @@ function extractSessionIdFromJsonl(stdout) {
   return null;
 }
 
+// --json 모드에서 Codex는 실패 이유를 stderr가 아닌 stdout 이벤트로 낸다.
+// turn.failed → 최상위 error 순으로 마지막 메시지를 쓴다. (item.completed의 error 항목은 경고라 제외)
+function extractErrorFromJsonl(stdout) {
+  if (!stdout) return null;
+  let turnFailed = null;
+  let topError = null;
+  for (const line of stdout.split(/\r?\n/)) {
+    const s = line.trim();
+    if (!s.startsWith('{')) continue;
+    let obj;
+    try { obj = JSON.parse(s); } catch { continue; }
+    if (obj.type === 'turn.failed' && obj.error?.message) turnFailed = obj.error.message;
+    else if (obj.type === 'error' && obj.message) topError = obj.message;
+  }
+  let msg = turnFailed || topError;
+  if (!msg) return null;
+  // API 오류는 JSON 문자열로 감싸져 온다: {"type":"error","status":400,"error":{"message":...}}
+  try {
+    const inner = JSON.parse(msg);
+    msg = inner?.error?.message || inner?.message || msg;
+  } catch {}
+  if (/at capacity|overloaded|server_overloaded/i.test(msg)) {
+    return `OpenAI 모델 서버가 혼잡해 요청이 거절됐습니다. 잠시 후 다시 보내주세요.\n(${msg})`;
+  }
+  return msg;
+}
+
 function runCodex(prompt, options = {}) {
   const cfg = config.load();
   const {
@@ -166,7 +193,7 @@ function runCodex(prompt, options = {}) {
       }
 
       if (code !== 0 && !result) {
-        const errMsg = stderr.trim().slice(0, 1500) || `종료 코드 ${code}`;
+        const errMsg = (extractErrorFromJsonl(stdout) || stderr.trim() || `종료 코드 ${code}`).slice(0, 1500);
         reject(new Error(`Codex 오류: ${errMsg}`));
         return;
       }
