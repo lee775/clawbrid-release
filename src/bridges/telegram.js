@@ -604,7 +604,7 @@ async function handleMessage(msg) {
       const current = agentRouter.getActiveAgent('telegram', chatId);
       const globalDefault = agentRouter.getGlobalDefault();
       if (!target) {
-        await bot.sendMessage(chatId, `🤖 현재 Agent: *${current}*\n🌐 글로벌 기본: *${globalDefault}*\n\n전환: \`/agent claude\` 또는 \`/agent codex\``, { parse_mode: 'Markdown' });
+        await bot.sendMessage(chatId, `🤖 현재 Agent: *${current}*\n🌐 앱 기본 설정: *${globalDefault}*\n\n전환: \`/agent claude\` 또는 \`/agent codex\` (앱에서 기본 설정을 바꾸면 다시 앱 설정을 따름)`, { parse_mode: 'Markdown' });
         return;
       }
       if (!agentRouter.isValidAgent(target)) {

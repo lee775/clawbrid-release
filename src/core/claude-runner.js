@@ -4,7 +4,18 @@
  * - stdin 방식으로 프롬프트 전달
  */
 const { spawn } = require('child_process');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
 const config = require('./config');
+
+// Claude CLI 대화 기록(~/.claude/projects/<작업폴더>/<id>.jsonl)이 남아 있어 --resume 할 수 있는지
+function sessionExists(sessionId) {
+  const root = path.join(process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude'), 'projects');
+  try {
+    return fs.readdirSync(root).some(d => fs.existsSync(path.join(root, d, `${sessionId}.jsonl`)));
+  } catch { return true; } // 확인할 수 없으면 기존처럼 이어가기를 시도
+}
 
 function runClaude(prompt, options = {}) {
   const cfg = config.load();
@@ -213,4 +224,4 @@ function hasCodeChanges() {
   } catch { return false; }
 }
 
-module.exports = { runClaude, extractText, extractSessionId, runCodexReview, hasCodeChanges };
+module.exports = { runClaude, extractText, extractSessionId, sessionExists, runCodexReview, hasCodeChanges };

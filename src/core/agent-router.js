@@ -1,9 +1,11 @@
 /**
  * Agent Router
  * - 채팅별 현재 agent (claude/codex)와 agent별 세션 ID 관리
- * - 글로벌 디폴트는 config.agent.default
+ * - 글로벌 디폴트는 config.agent.default (대시보드 "기본" 설정)
+ * - 채팅별 agent는 /agent로 고른 경우에만 저장하고, 그때의 기본값(agentBase)이 그대로일 때만 쓴다.
+ *   대시보드에서 기본값을 바꾸면 모든 채팅이 새 기본값을 따른다.
  * - sessions.json 스키마 (하위 호환):
- *   { telegram: { chatId: "<session>" | { agent, sessions:{claude,codex} } } }
+ *   { telegram: { chatId: "<session>" | { agent, agentBase, sessions:{claude,codex} } } }
  */
 const fs = require('fs');
 const config = require('./config');
@@ -25,8 +27,9 @@ function normalizeRecord(raw) {
     return { agent: null, sessions: {} };
   }
   const agent = isValidAgent(raw.agent) ? raw.agent : null;
+  const agentBase = isValidAgent(raw.agentBase) ? raw.agentBase : null;
   const sessions = (raw.sessions && typeof raw.sessions === 'object') ? raw.sessions : {};
-  return { agent, sessions };
+  return { agent, agentBase, sessions };
 }
 
 function loadAll() {
@@ -69,20 +72,30 @@ function saveRecord(source, chatId, rec) {
 
 function getActiveAgent(source, chatId) {
   const rec = getRecord(source, chatId);
-  return rec.agent || getGlobalDefault();
+  const def = getGlobalDefault();
+  // agentBase가 없는 기록은 예전 버전이 첫 대화 때 자동으로 고정한 값이라 무시한다
+  if (rec.agent && rec.agentBase === def) return rec.agent;
+  return def;
 }
 
 function setActiveAgent(source, chatId, agent) {
   if (!isValidAgent(agent)) throw new Error(`unknown agent: ${agent}`);
   const rec = getRecord(source, chatId);
   rec.agent = agent;
+  rec.agentBase = getGlobalDefault();
   saveRecord(source, chatId, rec);
   return rec;
 }
 
 function getResumeSessionId(source, chatId, agent) {
   const rec = getRecord(source, chatId);
-  return rec.sessions?.[agent] || null;
+  const id = rec.sessions?.[agent] || null;
+  // Claude CLI는 오래된 대화 기록을 지운다(기본 30일). 기록이 없는 세션을 이어가면 오류가 나므로 새 세션으로 시작
+  if (id && agent === 'claude' && !claudeRunner.sessionExists(id)) {
+    clearSession(source, chatId, agent);
+    return null;
+  }
+  return id;
 }
 
 function updateSessionId(source, chatId, agent, sessionId) {
@@ -90,8 +103,6 @@ function updateSessionId(source, chatId, agent, sessionId) {
   const rec = getRecord(source, chatId);
   if (!rec.sessions) rec.sessions = {};
   rec.sessions[agent] = sessionId;
-  // 현재 active agent도 갱신
-  if (!rec.agent) rec.agent = agent;
   saveRecord(source, chatId, rec);
 }
 
