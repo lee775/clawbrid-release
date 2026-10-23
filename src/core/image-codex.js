@@ -95,7 +95,8 @@ User request: ${userText}`;
       try {
         const parsed = JSON.parse(stdout);
         const txt = (parsed.result || '').trim();
-        if (txt) return resolve(txt);
+        // is_error(사용 한도·인증 실패 등)면 안내문이 result 에 오므로 이미지 프롬프트로 쓰지 않는다
+        if (txt && !parsed.is_error) return resolve(txt);
       } catch {}
       resolve(userText);
     });

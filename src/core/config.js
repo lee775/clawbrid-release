@@ -22,6 +22,9 @@ const DEFAULT_CONFIG = {
     maxTurns: 100,
     timeout: 600000, // 10분
     confirmBeforeEdit: false, // true면 파일 수정/삭제 전 사용자 확인을 받도록 지시
+    // 계정 순서. 이름마다 ~/.claude-tokens/<이름>.txt 의 setup-token 을 쓰고, 사용 한도에 걸리면 다음 계정으로.
+    // 비어 있으면 PC에 로그인된 계정 하나만 쓴다. 예: ['aro', 'mtb']
+    accounts: [],
   },
   // Telegram 설정
   telegram: {

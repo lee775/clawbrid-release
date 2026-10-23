@@ -2,12 +2,14 @@
  * Claude Code 실행기
  * - 권한 확인 (confirmBeforeEdit) 지원
  * - stdin 방식으로 프롬프트 전달
+ * - config.claude.accounts 순서로 계정을 쓰고, 사용 한도에 걸리면 다음 계정으로 다시 실행 (claude-accounts.js)
  */
 const { spawn } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const config = require('./config');
+const claudeAccounts = require('./claude-accounts');
 
 // Claude CLI 대화 기록(~/.claude/projects/<작업폴더>/<id>.jsonl)이 남아 있어 --resume 할 수 있는지
 function sessionExists(sessionId) {
@@ -17,7 +19,8 @@ function sessionExists(sessionId) {
   } catch { return true; } // 확인할 수 없으면 기존처럼 이어가기를 시도
 }
 
-function runClaude(prompt, options = {}) {
+// 한 계정으로 한 번 실행. accountEnv: 계정 토큰 환경변수 (비어 있으면 PC 로그인)
+function runClaudeOnce(prompt, options, accountEnv) {
   const cfg = config.load();
   const {
     resumeSessionId = null,
@@ -68,7 +71,7 @@ function runClaude(prompt, options = {}) {
 
     const proc = spawn('claude', args, {
       cwd: cfg.claude.workDir,
-      env: { ...process.env, FORCE_COLOR: '0' },
+      env: { ...process.env, ...accountEnv, FORCE_COLOR: '0' },
       stdio: ['pipe', 'pipe', 'pipe'],
       windowsHide: true,
     });
@@ -138,6 +141,41 @@ function runClaude(prompt, options = {}) {
   });
 
   return { promise, proc: _proc };
+}
+
+/**
+ * Claude 실행. 계정이 사용 한도·인증 실패로 막히면 다음 계정으로 같은 요청을 다시 보낸다.
+ * 대화 기록은 PC(~/.claude/projects)에 있으므로 계정이 바뀌어도 --resume 으로 이어진다.
+ * @returns {{ promise, proc }} proc 은 /stop 용 고정 핸들 — 계정을 바꿔 다시 실행해도 지금 도는 프로세스를 멈춘다
+ */
+function runClaude(prompt, options = {}) {
+  let current = null;
+  let stopped = false;
+  const handle = {
+    kill(signal = 'SIGTERM') {
+      stopped = true;
+      try { if (current) current.kill(signal); } catch {}
+    },
+  };
+
+  const promise = (async () => {
+    let result = null;
+    const accounts = claudeAccounts.candidates();
+    for (let i = 0; i < accounts.length; i++) {
+      const account = accounts[i];
+      const run = runClaudeOnce(prompt, options, account.env);
+      current = run.proc;
+      result = await run.promise;
+      const reason = account.name ? claudeAccounts.unusableReason(result) : null;
+      if (!reason || stopped) return result;
+      const until = claudeAccounts.markUnavailable(account.name, result, reason);
+      const next = i + 1 < accounts.length ? `${accounts[i + 1].name} 계정으로 다시 실행` : '남은 계정 없음';
+      console.log(`[CLAUDE] 계정 ${account.name} ${reason === 'limit' ? '사용 한도' : '인증 실패'} → ${next} (${until.toLocaleString('ko-KR')}까지 뒤로)`);
+    }
+    return result; // 모든 계정이 막혔으면 마지막 안내(초기화 시각 등)를 그대로 보여준다
+  })();
+
+  return { promise, proc: handle };
 }
 
 function extractText(result) {

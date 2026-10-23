@@ -4,6 +4,7 @@
  * 실패·타임아웃 시 원본 텍스트를 그대로 반환한다.
  */
 const { spawn } = require('child_process');
+const claudeAccounts = require('./claude-accounts');
 
 const STRUCTURE_THRESHOLD = 100;
 const MAX_LENGTH = 5000; // 이상이면 이미 임베디드 데이터(웹페이지/영상 transcript) 포함 가능성 → 패스
@@ -46,6 +47,8 @@ function structurePrompt(text) {
 사용자 질문:
 ${text}`;
 
+    // 지금 쓸 수 있는 첫 계정으로 실행 (한도에 걸리면 표시해 두어 본 요청이 바로 다음 계정을 쓰게 함)
+    const account = claudeAccounts.candidates()[0];
     const proc = spawn('claude', [
       '-p', '-',
       '--output-format', 'json',
@@ -53,7 +56,7 @@ ${text}`;
     ], {
       stdio: ['pipe', 'pipe', 'pipe'],
       windowsHide: true,
-      env: { ...process.env, FORCE_COLOR: '0' },
+      env: { ...process.env, ...account.env, FORCE_COLOR: '0' },
     });
 
     let stdout = '';
@@ -69,6 +72,8 @@ ${text}`;
       clearTimeout(timer);
       try {
         const parsed = JSON.parse(stdout);
+        const reason = account.name ? claudeAccounts.unusableReason(parsed) : null;
+        if (reason) claudeAccounts.markUnavailable(account.name, parsed, reason);
         const md = (parsed.result || '').trim();
         // 신뢰 검증: 최소한 ## 맥락 + ## 요청 헤더가 있어야 채택
         if (md && md.includes('## 맥락') && md.includes('## 요청')) return resolve(md);

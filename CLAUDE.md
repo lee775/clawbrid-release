@@ -22,7 +22,8 @@ bin/clawbrid.js (CLI 엔트리)
 │   └── telegram-standalone.js
 ├── src/core/              # 핵심 모듈
 │   ├── agent-router.js    # claude/codex 선택, 세션 관리, 결과 파일 전송 규칙 주입
-│   ├── claude-runner.js   # Claude CLI 실행, 프롬프트 빌드
+│   ├── claude-runner.js   # Claude CLI 실행, 프롬프트 빌드, 한도 걸리면 다음 계정으로 재실행
+│   ├── claude-accounts.js # claude.accounts 계정 순서·토큰(~/.claude-tokens)·한도 초기화 시각까지 미루기
 │   ├── codex-runner.js    # Codex CLI 실행
 │   ├── config.js          # ~/.clawbrid/config.json 관리
 │   ├── cron-manager.js    # node-cron 스케줄러
@@ -130,6 +131,7 @@ clawbrid version        # 버전 출력
 | 크론 작업 | `~/.clawbrid/cron-tasks.json` |
 | 플러그인 | `~/.clawbrid/plugins/*.js` |
 | 모니터 exe | `~/.clawbrid/clawbrid-monitor.exe` |
+| Claude 계정 토큰 | `~/.claude-tokens/<이름>.txt` (`claude setup-token`, `config.claude.accounts` 순서로 사용) |
 
 ## 의존성 (package.json)
 
