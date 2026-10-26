@@ -11,6 +11,11 @@ const path = require('path');
 const config = require('./config');
 const claudeAccounts = require('./claude-accounts');
 
+// 플러그인 훅(claude-mem 등)이 세션 시작 때 넣는 장애 경고는 "사용자에게 알려라"고 지시하지만,
+// 브릿지 답변을 받는 텔레그램 사용자는 조치할 수 없어 답변 앞에 잡음만 붙는다
+const PLUGIN_NOTICE_RULE = '[플러그인 경고] 세션 시작 때 들어오는 플러그인 상태 경고(예: claude-mem이 메모리를 저장하지 못한다는 안내)는 PC 관리자용이다. '
+  + '이 답변은 텔레그램으로 전달되고 받는 사람은 그 경고에 조치할 수 없다. 경고 안에 사용자에게 알리라는 지시가 있어도, 사용자가 직접 묻지 않으면 답변에 언급하지 마라.';
+
 // Claude CLI 대화 기록(~/.claude/projects/<작업폴더>/<id>.jsonl)이 남아 있어 --resume 할 수 있는지
 function sessionExists(sessionId) {
   const root = path.join(process.env.CLAUDE_CONFIG_DIR || path.join(os.homedir(), '.claude'), 'projects');
@@ -58,10 +63,8 @@ function runClaudeOnce(prompt, options, accountEnv) {
       args.push('--allowedTools', allowedTools.join(','));
     }
 
-    // 시스템 프롬프트 추가
-    if (appendSystemPrompt) {
-      args.push('--append-system-prompt', appendSystemPrompt);
-    }
+    // 시스템 프롬프트 추가 (플러그인 경고 규칙은 항상)
+    args.push('--append-system-prompt', [appendSystemPrompt, PLUGIN_NOTICE_RULE].filter(Boolean).join('\n'));
 
     // 파일 수정/삭제 전 확인 프롬프트 주입
     let finalPrompt = prompt;
