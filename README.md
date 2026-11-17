@@ -87,6 +87,7 @@ clawbrid update         # 최신 버전으로 업데이트
 | `cron add\|list\|del\|toggle\|run` | 크론 작업 관리 |
 | `system [prompt]` | 시스템 프롬프트 설정 |
 | `adduser\|removeuser` | 사용자 권한 관리 (관리자 전용) |
+| `login [계정]` | Claude 다시 로그인 — 받은 링크에서 승인하고 나온 코드를 답장 (관리자 전용, Windows) |
 
 ## Video Analysis
 

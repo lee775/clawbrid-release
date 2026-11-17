@@ -20,6 +20,7 @@ const imageCodex = require('../core/image-codex');
 const promptStructurer = require('../core/prompt-structurer');
 const tgMtproto = require('../core/telegram-mtproto');
 const telegramPolling = require('../core/telegram-polling');
+const claudeLogin = require('../core/claude-login');
 
 let bot = null;
 let status = null;
@@ -30,6 +31,10 @@ const pendingTimeouts = new Map();
 
 // /admin 메뉴 force_reply 대기 (key=`${chatId}:${promptMessageId}` → { type, menuMessageId })
 const pendingAdminInputs = new Map();
+
+// /login 진행 중 (chatId → { session, requesterId, promptMessageId, timer })
+const pendingLogins = new Map();
+const LOGIN_TIMEOUT_MS = 10 * 60 * 1000;
 
 // 미디어그룹(앨범) 집계 — Telegram은 앨범의 사진/파일을 동일 media_group_id로 여러 메시지에 분할 전송함.
 // 짧은 디바운스 윈도우 동안 모아서 단일 합성 메시지로 처리한다. (사진+문서 혼합 앨범 지원)
@@ -469,6 +474,92 @@ async function sendFiles(chatId, files) {
   return unsent;
 }
 
+// ── /login: Claude 다시 로그인 (claude-login.js) ──
+const CANCEL_RE = /^(취소|cancel)$/i;
+
+function dropPendingLogin(chatId) {
+  const p = pendingLogins.get(chatId);
+  if (!p) return null;
+  pendingLogins.delete(chatId);
+  clearTimeout(p.timer);
+  return p;
+}
+
+// 계정을 안 주면 봇이 맨 먼저 쓰는 계정(accounts[0]) 토큰, 계정 목록이 비었으면 PC 로그인을 새로 한다
+async function startClaudeLogin(chatId, userId, arg) {
+  const old = dropPendingLogin(chatId);
+  if (old) old.session.cancel();
+  if (CANCEL_RE.test(arg || '')) {
+    await bot.sendMessage(chatId, old ? '🛑 로그인을 취소했습니다.' : 'ℹ️ 진행 중인 로그인이 없습니다.');
+    return;
+  }
+  const account = arg || config.load().claude.accounts?.[0] || null;
+  const target = account ? `계정 ${account} 토큰` : 'PC 로그인';
+  await bot.sendMessage(chatId, `🔐 Claude 로그인 링크를 만드는 중... (${target})`);
+  let session;
+  try {
+    session = await claudeLogin.start({ account });
+  } catch (err) {
+    await bot.sendMessage(chatId, `❌ 로그인 링크를 만들지 못했습니다: ${err.message}`);
+    return;
+  }
+  let prompt;
+  try {
+    prompt = await bot.sendMessage(chatId,
+      `🔐 Claude 로그인 (${target})\n\n`
+      + '1. 아래 링크를 열어 로그인할 계정이 맞는지 확인하고 승인하세요.\n'
+      + '2. 승인하면 나오는 코드를 이 메시지에 답장으로 보내세요. (10분 안에, 그만두려면 "취소")\n\n'
+      + session.url,
+      { disable_web_page_preview: true, reply_markup: { force_reply: true, input_field_placeholder: '승인 후 나온 코드' } });
+  } catch (err) {
+    session.cancel();
+    throw err;
+  }
+  const timer = setTimeout(() => {
+    if (pendingLogins.get(chatId)?.session !== session) return;
+    dropPendingLogin(chatId);
+    session.cancel();
+    bot.sendMessage(chatId, '⌛ 10분이 지나 로그인을 취소했습니다. 다시 /login 해 주세요.').catch(() => {});
+  }, LOGIN_TIMEOUT_MS);
+  pendingLogins.set(chatId, { session, requesterId: userId, promptMessageId: prompt.message_id, timer });
+}
+
+async function finishClaudeLogin(chatId, msg, text) {
+  const pending = pendingLogins.get(chatId);
+  if (CANCEL_RE.test(text)) {
+    dropPendingLogin(chatId);
+    pending.session.cancel();
+    await bot.sendMessage(chatId, '🛑 로그인을 취소했습니다.');
+    return;
+  }
+  if (!claudeLogin.looksLikeCode(text)) {
+    await bot.sendMessage(chatId, 'ℹ️ 코드는 승인 페이지에 나온 `xxxx#xxxx` 모양 그대로 답장해 주세요. (그만두려면 "취소")', { parse_mode: 'Markdown' });
+    return;
+  }
+  dropPendingLogin(chatId);
+  bot.deleteMessage(chatId, msg.message_id).catch(() => {}); // 한 번 쓰면 끝나는 코드지만 채팅에 남기지 않는다
+  console.log(`[TG] ▶ 로그인 코드 | user=${msg.from.id} | ${pending.session.account ? `계정 ${pending.session.account}` : 'PC 로그인'}`);
+  await bot.sendMessage(chatId, '⏳ 로그인 처리 중... (확인까지 30초쯤)');
+  let r;
+  try {
+    r = await pending.session.submit(text);
+  } catch (err) {
+    r = { ok: false, message: err.message };
+  }
+  if (!r.ok) {
+    console.log(`[TG] ◀ 로그인 실패 | ${r.message}`);
+    await bot.sendMessage(chatId, `❌ 로그인 실패: ${r.message}\n다시 /login 해 주세요.`);
+    return;
+  }
+  console.log(`[TG] ◀ 로그인 완료 | ${r.account ? `계정 ${r.account}` : 'PC 로그인'}`);
+  if (r.mode === 'login') {
+    await bot.sendMessage(chatId, `✅ PC 로그인을 새로 했습니다${r.email ? ` (${r.email})` : ''}. Claude 가 정상으로 답하는 것까지 확인했습니다.`);
+  } else {
+    await bot.sendMessage(chatId, `✅ 계정 ${r.account} 토큰을 새로 받았습니다 (1년). Claude 가 정상으로 답하는 것까지 확인했습니다.`
+      + (r.addedToAccounts ? `\n봇이 이제 ${r.account} 계정을 먼저 씁니다.` : ''));
+  }
+}
+
 // ── 메인 핸들러 ──
 const activeSessions = new Map(); // chatId → 실행 중인 에이전트 프로세스 (/stop용)
 // 작업 중인 채팅. 확인과 같은 동기 구간에서 표시해야 첫 await 사이에 들어온 메시지가 동시 실행되지 않는다
@@ -504,6 +595,14 @@ async function handleMessage(msg) {
   const hasPhoto = (Array.isArray(msg.photo) && msg.photo.length > 0) || groupPhotos.length > 0;
   // msg.caption (사진/문서 동봉 텍스트)도 본문으로 취급
   if (!text && msg.caption) text = msg.caption.trim();
+
+  // /login 코드 답장 — 코드가 질문 로그 · 대화 기록에 남지 않게 가장 먼저 가로챈다
+  const pendingLogin = pendingLogins.get(chatId);
+  if (pendingLogin && userId === pendingLogin.requesterId
+      && (msg.reply_to_message?.message_id === pendingLogin.promptMessageId || claudeLogin.looksLikeCode(text))) {
+    await finishClaudeLogin(chatId, msg, text);
+    return;
+  }
   // 첨부 정보 로깅 (앨범 외 단독 첨부도 표시 — 다운로드 실패 진단용)
   let attachmentTag = '';
   if (msg._mediaGroup) {
@@ -625,7 +724,7 @@ async function handleMessage(msg) {
     if (cmd === '/help') {
       const pluginCmds = plugins.getList().flatMap(p => p.commands).filter(c => c.startsWith('/'));
       const pluginHelp = pluginCmds.length ? `\n• 플러그인: ${pluginCmds.join(', ')}` : '';
-      await bot.sendMessage(chatId, `*ClawBrid 명령어*\n• /agent [claude|codex] 이 채팅의 AI 전환\n• /stop 작업 중단\n• /reset 세션 초기화\n• /queue 대기열 확인\n• /clear 대기열 비우기\n• /search [검색어] 웹 검색\n• /browse [URL] [질문] 웹페이지 분석\n• /ultraplan [주제] 심층 분석 + 실행 계획\n• /youtube [URL] [질문] 영상 분석 (프레임+음성)\n• /image [요청] Codex 이미지 생성 (자연어로도 가능: "강아지 그려줘")\n• /graph stats|add|link|find|del|list 지식 그래프\n• /memory list|add|del|search 장기 메모리\n• /plugins 플러그인 목록\n• /cron list|add|del|run|on|off 크론 관리\n• /admin 사용자 관리 메뉴 (관리자 전용)\n• /help 도움말\n• 🎤 음성 메시지 → 자동 텍스트 변환${pluginHelp}`);
+      await bot.sendMessage(chatId, `*ClawBrid 명령어*\n• /agent [claude|codex] 이 채팅의 AI 전환\n• /stop 작업 중단\n• /reset 세션 초기화\n• /queue 대기열 확인\n• /clear 대기열 비우기\n• /search [검색어] 웹 검색\n• /browse [URL] [질문] 웹페이지 분석\n• /ultraplan [주제] 심층 분석 + 실행 계획\n• /youtube [URL] [질문] 영상 분석 (프레임+음성)\n• /image [요청] Codex 이미지 생성 (자연어로도 가능: "강아지 그려줘")\n• /graph stats|add|link|find|del|list 지식 그래프\n• /memory list|add|del|search 장기 메모리\n• /plugins 플러그인 목록\n• /cron list|add|del|run|on|off 크론 관리\n• /admin 사용자 관리 메뉴 (관리자 전용)\n• /login [계정] Claude 다시 로그인 — 링크 승인 후 코드 답장 (관리자 전용)\n• /help 도움말\n• 🎤 음성 메시지 → 자동 텍스트 변환${pluginHelp}`);
       return;
     }
     if (cmd === '/ultraplan') {
@@ -911,6 +1010,14 @@ ${topic}
         return;
       }
       await renderUsersMenu(chatId, null);
+      return;
+    }
+    if (!browsePassthrough && cmd === '/login') {
+      if (!isAdmin(userId)) {
+        await bot.sendMessage(chatId, '🚫 관리자만 사용할 수 있습니다.');
+        return;
+      }
+      await startClaudeLogin(chatId, userId, text.split(/\s+/)[1] || null);
       return;
     }
     if (!browsePassthrough && cmd === '/adduser' && isAdmin(userId)) {

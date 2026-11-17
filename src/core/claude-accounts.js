@@ -96,4 +96,10 @@ function markUnavailable(name, result, reason, now = new Date()) {
   return new Date(until);
 }
 
-module.exports = { candidates, unusableReason, parseResetTime, markUnavailable, TOKEN_DIR };
+/** 토큰을 새로 받았을 때 — 미뤄 둔 것을 풀고 바로 다시 쓴다 */
+function markAvailable(name) {
+  skipUntil.delete(name);
+  warnedMissing.delete(name);
+}
+
+module.exports = { candidates, unusableReason, parseResetTime, markUnavailable, markAvailable, TOKEN_DIR };

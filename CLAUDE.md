@@ -24,6 +24,8 @@ bin/clawbrid.js (CLI 엔트리)
 │   ├── agent-router.js    # claude/codex 선택, 세션 관리, 결과 파일 전송 규칙 주입
 │   ├── claude-runner.js   # Claude CLI 실행, 프롬프트 빌드, 한도 걸리면 다음 계정으로 재실행
 │   ├── claude-accounts.js # claude.accounts 계정 순서·토큰(~/.claude-tokens)·한도 초기화 시각까지 미루기
+│   ├── claude-login.js    # /login: 브라우저 없이 로그인 링크 → 코드 → 토큰 파일 또는 PC 로그인 갱신
+│   ├── claude-login-pty.py # CLI 로그인을 가상 터미널(pywinpty)에서 실행, 링크 읽기·코드 입력 대행
 │   ├── codex-runner.js    # Codex CLI 실행
 │   ├── config.js          # ~/.clawbrid/config.json 관리
 │   ├── cron-manager.js    # node-cron 스케줄러
@@ -116,6 +118,7 @@ clawbrid version        # 버전 출력
 | `cron add/list/del/toggle/run` | 크론 작업 관리 |
 | `system [prompt]` | 시스템 프롬프트 설정 |
 | `adduser/removeuser`, `/admin` | 사용자 승인 관리 (관리자 전용 — 승인된 사용자는 그 외 모든 기능을 동일 권한으로 사용) |
+| `login [계정]` | Claude 다시 로그인 (관리자 전용). 계정을 주면 그 계정 토큰, 안 주면 `accounts[0]` 토큰, 목록이 비었으면 PC 로그인. 코드 메시지는 지우고 로그에 안 남김 |
 
 **결과 파일 전송**: 작업마다 `~/.clawbrid/temp/outbox/<chatId>_<ts>/` 폴더를 만들어 `runAgent`의 `outboxDir`로 넘기면, agent-router가 에이전트에 저장 규칙을 주입하고 작업 후 telegram.js가 그 폴더의 모든 파일을 해당 채팅으로 전송한다 (50MB 초과·실패 파일은 보존 + 경로 안내).
 
